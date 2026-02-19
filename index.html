@@ -787,7 +787,9 @@ function showPage(name) {
   if (name === 'photography') initPhotos();
 }
 
-/* ══ PHOTO GRID ══ */
+/* ══ INIT ══ */
+buildContact();
+showPage('about');
 let photosReady = false;
 function initPhotos() {
   if (photosReady) return;
@@ -876,7 +878,6 @@ document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYe
 
 /* ══ INIT ══ */
 buildContact();
-showPage('about');
 </script>
 
 </body>
