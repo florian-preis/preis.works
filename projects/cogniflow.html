@@ -644,7 +644,6 @@
                 <li><a href="#" id="readerLink" class="nav-active">Reader</a></li>
                 <li><a href="#" id="libraryLink">Library</a></li>
                 <li><a href="#" id="aboutLink">About</a></li>
-                <li><a href="#" id="authLink" class="nav-auth">Sign In</a></li>
             </ul>
 
             <!-- Hamburger (mobile only) -->
@@ -659,7 +658,6 @@
         <a href="#" id="mReaderLink"  class="mobile-link nav-active">Reader</a>
         <a href="#" id="mLibraryLink" class="mobile-link">Library</a>
         <a href="#" id="mAboutLink"   class="mobile-link">About</a>
-        <a href="#" id="mAuthLink"    class="mobile-link">Sign In</a>
     </div>
 
     <div class="main-content">
@@ -793,8 +791,8 @@
                 <p>Rapid Serial Visual Presentation keeps words in a fixed visual position, reducing the need for eye movement across lines and pages. This allows readers to maintain focus and sustain higher reading speeds, particularly for long-form content.</p>
                 <h2>Bionic Reading</h2>
                 <p>Subtle visual emphasis within words creates natural fixation points for the eye. These anchors support faster word recognition, reduce cognitive strain, and help maintain attention during extended reading sessions.</p>
-                <h2>A Persistent Reading Experience</h2>
-                <p>Your progress is saved as you read, allowing you to pause and resume without losing context. Whether you return later or pick up a different text, Cogniflow keeps your place so you can focus on reading, not navigation.</p>
+                <h2>Local Library</h2>
+                <p>Save books to your personal library as you read. Progress is stored locally in your browser, so you can pause and resume at any time without losing your place. No account required — everything stays on your device.</p>
             </div>
         </div>
 
@@ -895,7 +893,6 @@
             this.readerLink  = document.getElementById('readerLink');
             this.libraryLink = document.getElementById('libraryLink');
             this.aboutLink   = document.getElementById('aboutLink');
-            this.authLink    = document.getElementById('authLink');
 
             // Mobile nav
             this.hamburger    = document.getElementById('hamburger');
@@ -903,7 +900,6 @@
             this.mReaderLink  = document.getElementById('mReaderLink');
             this.mLibraryLink = document.getElementById('mLibraryLink');
             this.mAboutLink   = document.getElementById('mAboutLink');
-            this.mAuthLink    = document.getElementById('mAuthLink');
 
             this.deleteModal      = document.getElementById('deleteModal');
             this.deleteModalMsg   = document.getElementById('deleteModalMsg');
@@ -963,7 +959,6 @@
             this.mReaderLink.addEventListener('click',  (e) => { e.preventDefault(); closeMobile(); this.showSection('reader'); });
             this.mLibraryLink.addEventListener('click', (e) => { e.preventDefault(); closeMobile(); this.showSection('library'); });
             this.mAboutLink.addEventListener('click',   (e) => { e.preventDefault(); closeMobile(); this.showSection('about'); });
-            this.mAuthLink.addEventListener('click',    (e) => { e.preventDefault(); closeMobile(); this.triggerAuth(); });
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.navbar') && !e.target.closest('.mobile-menu')) closeMobile();
             });
@@ -1002,8 +997,7 @@
         }
 
         triggerAuth() {
-            // Dispatched to by the Firebase module via window.cogniflowAuth
-            if (window.cogniflowAuth) window.cogniflowAuth();
+            // Auth removed — no-op
         }
 
         loadLibrary()  { 
@@ -1045,7 +1039,7 @@
                         console.warn('Saved only 3 most recent books (minimal data) due to quota');
                     } catch (e2) {
                         // If even that fails, clear localStorage and save just IDs
-                        console.error('Extreme quota - clearing localStorage, Firebase will handle storage');
+                        console.error('Extreme quota - clearing localStorage');
                         try {
                             localStorage.removeItem('cogniflowLibrary');
                         } catch (e3) {
@@ -1061,7 +1055,6 @@
             console.log('Saving book:', this.currentBook.title, 'Words:', this.words.length, 'Chapters:', this.chapters.length);
             const idx = this.library.findIndex(b => b.id === this.currentBook.id);
             
-            // Create full book data object (will be saved to Firestore, metadata to localStorage)
             const data = { 
                 ...this.currentBook, 
                 progress: (this.currentIndex / this.words.length) * 100, 
@@ -1070,26 +1063,15 @@
                 lastRead: new Date().toISOString() 
             };
             
-            // Update or add to library (keeps full data in memory for Firestore)
             if (idx >= 0) this.library[idx] = data; 
             else this.library.push(data);
             
-            // Save metadata-only version to localStorage (Firebase will save full data)
             this.saveLibrary();
             
             console.log('Library after save:', this.library.length, 'books');
             const btn = this.saveBtn;
-            
-            // Check if user is signed in for cloud storage
-            const isSignedIn = typeof currentUser !== 'undefined' && currentUser !== null;
-            if (isSignedIn) {
-                btn.textContent = 'Saved ✓';
-                btn.title = 'Saved to cloud storage';
-            } else {
-                btn.textContent = 'Saved locally';
-                btn.title = 'Sign in to sync across devices';
-            }
-            
+            btn.textContent = 'Saved ✓';
+            btn.title = 'Saved to local library';
             setTimeout(() => { 
                 btn.textContent = 'Save'; 
                 btn.title = '';
@@ -1120,11 +1102,7 @@
                 const card = document.createElement('div');
                 card.className = 'book-card';
                 
-                // Check if this is metadata-only (from localStorage) or full book (from Firestore)
-                const isMetadataOnly = !book.words || book.words.length === 0;
-                const displayInfo = isMetadataOnly 
-                    ? `${book.wordCount || 0} words` 
-                    : `${book.words.length} words`;
+                const displayInfo = book.words ? `${book.words.length} words` : `${book.wordCount || 0} words`;
                 
                 card.innerHTML = `
                     <div class="book-cover" id="cover-${idx}">
@@ -1161,11 +1139,6 @@
                         return;
                     }
                     if (!e.target.closest('.book-menu-dropdown') && !e.target.isContentEditable) {
-                        // If metadata-only, show message that Firestore is needed
-                        if (isMetadataOnly) {
-                            alert('This book needs to be synced from Firestore. Please sign in to load your books.');
-                            return;
-                        }
                         this.loadBookFromLibrary(idx);
                     }
                 });
@@ -1600,149 +1573,6 @@
     }
 
     const reader = new SpeedReader();
-</script>
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc }
-        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBa1P1zuo1awZ-eGS4AYJ_xJ5tDunPm7Lw",
-        authDomain: "cogniflow-ed93c.firebaseapp.com",
-        projectId: "cogniflow-ed93c",
-        storageBucket: "cogniflow-ed93c.firebasestorage.app",
-        messagingSenderId: "595030567320",
-        appId: "1:595030567320:web:86ac05745b7b361af523ed"
-    };
-
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    let currentUser = null;
-
-    // UI helpers — update both desktop authLink and mobile mAuthLink
-    function setAuthLabel(label, signedIn) {
-        const desktop = document.getElementById('authLink');
-        const mobile  = document.getElementById('mAuthLink');
-        if (desktop) { desktop.textContent = label; desktop.classList.toggle('signed-in', signedIn); }
-        if (mobile)  { mobile.textContent  = label; }
-    }
-
-    // Expose auth trigger so the SpeedReader's triggerAuth() can call it
-    window.cogniflowAuth = async () => {
-        if (currentUser) {
-            await signOut(auth);
-        } else {
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-            catch (e) { console.error('Sign-in error:', e); }
-        }
-    };
-
-    // Desktop authLink click
-    document.getElementById('authLink').addEventListener('click', async (e) => {
-        e.preventDefault();
-        window.cogniflowAuth();
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-        currentUser = user;
-        if (user) {
-            const name = user.displayName?.split(' ')[0] || user.email;
-            setAuthLabel(`Sign Out (${name})`, true);
-            await syncLibraryFromFirestore();
-        } else {
-            setAuthLabel('Sign In', false);
-            reader.library = reader.loadLibrary();
-            reader.renderLibrary();
-        }
-    });
-
-    async function syncLibraryFromFirestore() {
-        if (!currentUser) return;
-        console.log('Syncing library from Firestore...');
-        try {
-            const snap = await getDocs(collection(db, 'users', currentUser.uid, 'library'));
-            const books = [];
-            snap.forEach(d => {
-                const b = d.data();
-                // Rejoin split word arrays
-                if (b.words_b?.length) b.words = [...(b.words || []), ...b.words_b];
-                delete b.words_b;
-                // Ensure words are plain strings (strip any rawWords objects that snuck in)
-                if (Array.isArray(b.words)) {
-                    b.words = b.words.map(w => (typeof w === 'object' && w !== null) ? (w.text || '') : w);
-                }
-                books.push(b);
-            });
-            books.sort((a, b) => new Date(b.lastRead || 0) - new Date(a.lastRead || 0));
-            reader.library = books;
-            console.log('Loaded from Firestore:', books.length, 'books');
-            
-            // Update localStorage with metadata only (don't save full books)
-            reader.saveLibrary();
-            
-            // Render the library UI
-            reader.renderLibrary();
-        } catch (e) { 
-            console.error('Firestore load error:', e); 
-        }
-    }
-
-    // Override saveToLibrary — fixes the save bug by ensuring only plain strings are stored
-    const _origSave = reader.saveToLibrary.bind(reader);
-    reader.saveToLibrary = async function () {
-        // Run the original (saves to localStorage and updates this.library)
-        _origSave();
-        if (!currentUser || !this.currentBook) return;
-        try {
-            // Find the freshly-saved book in the library
-            const book = this.library.find(b => b.id === this.currentBook.id);
-            if (!book) return;
-
-            // Always use this.words (plain string array) — never rawWords objects
-            const plainWords = (this.words || []).map(w =>
-                (typeof w === 'object' && w !== null) ? (w.text || '') : String(w)
-            );
-
-            // Split into two chunks to stay under Firestore's 1 MB document limit
-            const wordsA = plainWords.slice(0, 50000);
-            const wordsB = plainWords.slice(50000);
-
-            // Build the document — exclude rawWords and the full words array from currentBook
-            const { rawWords: _r, words: _w, chapters, ...meta } = book;
-
-            // Serialize chapters without the text bodies (too large) — keep only navigation data
-            const chaptersLite = (chapters || []).map(({ title, startIndex }) => ({ title, startIndex }));
-
-            const firestoreDoc = {
-                ...meta,
-                words:     wordsA,
-                words_b:   wordsB.length > 0 ? wordsB : null,
-                chapters:  chaptersLite,
-                lastRead:  new Date().toISOString()
-            };
-
-            await setDoc(
-                doc(db, 'users', currentUser.uid, 'library', book.id),
-                firestoreDoc
-            );
-        } catch (e) { console.error('Firestore save error:', e); }
-    };
-
-    // Override confirmDelete — also removes from Firestore
-    const _origDel = reader.confirmDelete.bind(reader);
-    reader.confirmDelete = async function () {
-        const idx  = this._pendingDeleteIndex;
-        const book = idx !== null ? this.library[idx] : null;
-        _origDel();
-        if (currentUser && book) {
-            try { await deleteDoc(doc(db, 'users', currentUser.uid, 'library', book.id)); }
-            catch (e) { console.error('Firestore delete error:', e); }
-        }
-    };
 </script>
 </body>
 </html>
