@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Florian Preis</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #888888;
+      --border: #e5e5e5;
+      --nav-h: 68px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════
+       NAVBAR — pill collapse on scroll
+    ══════════════════════════════════ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--bg);
+      height: var(--nav-h);
+      padding: 0 52px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.45s cubic-bezier(0.4,0,0.2,1),
+                  background 0.45s cubic-bezier(0.4,0,0.2,1),
+                  border-color 0.45s;
+    }
+    .navbar.scrolled {
+      background: transparent;
+      border-bottom-color: transparent;
+      padding: 10px 52px;
+    }
+    .navbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
+                  border-radius 0.45s cubic-bezier(0.4,0,0.2,1),
+                  padding 0.45s cubic-bezier(0.4,0,0.2,1),
+                  box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
+    }
+    .navbar.scrolled .navbar-inner {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 50px;
+      padding: 12px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .logo:hover { color: var(--muted); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: var(--text); }
+
+    /* ══ PAGES ══ */
+    .page { display: none; flex: 1; flex-direction: column; }
+    .page.active { display: flex; }
+
+    /* ══════════════════════════════════
+       ABOUT
+    ══════════════════════════════════ */
+    .about-wrap {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 72px 52px 100px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 72px;
+      align-items: start;
+    }
+    .about-photo-col { position: sticky; top: calc(var(--nav-h) + 24px); }
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    .about-text { padding-top: 4px; }
+    .about-text h1 {
+      font-size: 2.2em;
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      line-height: 1.1;
+    }
+    .about-subtitle {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .about-bio {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #444;
+      margin-bottom: 52px;
+    }
+    .contact-block h2 {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+    .contact-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .contact-reveal {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .contact-reveal:hover { text-decoration: underline; }
+
+    /* ══════════════════════════════════
+       PHOTOGRAPHY
+    ══════════════════════════════════ */
+    #page-photography {
+      padding-bottom: 64px; /* space between grid and footer */
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      width: 100%;
+      /* Items never grow wider than 1/5 of the grid */
+      grid-auto-rows: auto;
+    }
+    .photo-item {
+      aspect-ratio: 3 / 2;
+      overflow: hidden;
+      cursor: pointer;
+      background: #f2f2f2;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+      min-width: 0; /* prevents blowout on narrow screens */
+    }
+    .photo-item.visible { opacity: 1; transform: translateY(0); }
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .photo-item:hover img { transform: scale(1.05); }
+
+    /* ══════════════════════════════════
+       LIGHTBOX
+    ══════════════════════════════════ */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 9000;
+      background: #fff; display: none;
+      align-items: center; justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-inner {
+      position: relative; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 64px 80px 110px;
+    }
+    .lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .lightbox-close {
+      position: absolute; top: 22px; right: 26px;
+      background: none; border: none; cursor: pointer; padding: 6px;
+      color: #111; line-height: 0; z-index: 10; opacity: 0.4; transition: opacity 0.2s;
+    }
+    .lightbox-close:hover { opacity: 1; }
+    .lightbox-close svg { width: 20px; height: 20px; }
+    .lightbox-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 14px;
+      color: #111; opacity: 0.2; transition: opacity 0.2s; z-index: 10; line-height: 0;
+    }
+    .lightbox-btn:hover { opacity: 0.7; }
+    .lightbox-btn svg { width: 26px; height: 26px; }
+    .lightbox-prev { left: 12px; }
+    .lightbox-next { right: 12px; }
+    .lightbox-counter {
+      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: #bbb; letter-spacing: 0.12em;
+    }
+    /* Caption + date: sit bottom-left, above the counter */
+    .lightbox-meta {
+      position: absolute;
+      bottom: 52px;
+      left: 80px;
+      right: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      pointer-events: none;
+    }
+    .lightbox-caption {
+      font-size: 13px;
+      color: #333;
+      letter-spacing: 0.01em;
+      line-height: 1.4;
+    }
+    .lightbox-date {
+      font-size: 11px;
+      color: #aaa;
+      letter-spacing: 0.04em;
+    }
+
+    /* ══════════════════════════════════
+       PROJECTS
+    ══════════════════════════════════ */
+    .projects-wrap {
+      padding: 64px 52px 100px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .projects-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 40px;
+    }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1px;
+      background: var(--border);
+    }
+    .project-card {
+      background: var(--bg);
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      transition: background 0.2s;
+      overflow: hidden;
+    }
+    .project-card:hover { background: #fafafa; }
+
+    /* Live preview area at top of card */
+    .project-preview {
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      background: #000;
+      flex-shrink: 0;
+    }
+    /* The preview is a scaled-down iframe-like SVG snapshot */
+    .project-preview svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .project-info {
+      padding: 28px 32px 36px;
+    }
+    .project-tag {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+    .project-title {
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .project-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .project-link {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.2s;
+    }
+    .project-card:hover .project-link { gap: 10px; }
+
+    /* ══════════════════════════════════
+       FOOTER
+       ─────────────────────────────────
+       Approach: solid light-grey base (#cacaca).
+       On top: a CSS animation shimmer using a pseudo-
+       element with a translucent noise texture generated
+       via SVG feTurbulence — this matches Eduardo Ortiz's
+       subtle "film grain" without heavy pixel canvas noise.
+       The shimmer is almost imperceptible, just alive.
+    ══════════════════════════════════ */
+    .site-footer {
+      position: relative;
+      width: 100%;
+      height: 58px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 52px;
+      overflow: hidden;
+      margin-top: auto;
+      /* Base grey — clean, not white */
+      background: #c8c8c8;
+    }
+
+    /* Grain layer: SVG noise rendered via data URI,
+       animated to slowly drift — gives the organic shimmer */
+    .site-footer::before {
+      content: '';
+      position: absolute;
+      inset: -50%;           /* oversized so drift doesn't show edges */
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      opacity: 0.10;          /* very subtle — just alive, not heavy */
+      animation: grainDrift 8s steps(10, end) infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes grainDrift {
+      0%   { transform: translate(0,     0);   }
+      10%  { transform: translate(-3%,   2%);  }
+      20%  { transform: translate(2%,   -3%);  }
+      30%  { transform: translate(-2%,   3%);  }
+      40%  { transform: translate(3%,    1%);  }
+      50%  { transform: translate(-1%,  -2%);  }
+      60%  { transform: translate(2%,    3%);  }
+      70%  { transform: translate(-3%,  -1%);  }
+      80%  { transform: translate(1%,    2%);  }
+      90%  { transform: translate(-2%,   0%);  }
+      100% { transform: translate(0,     0);   }
+    }
+
+    .footer-copy,
+    .footer-social {
+      position: relative;
+      z-index: 1;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: #333;
+    }
+    .footer-social {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    .footer-social a {
+      color: #333;
+      display: flex;
+      align-items: center;
+      line-height: 0;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .footer-social a:hover { opacity: 1; }
+    /* Both icons: same 18×18 bounding box */
+    .footer-social svg { width: 18px; height: 18px; }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 720px) {
+      .navbar, .navbar.scrolled { padding: 0 20px; }
+      .navbar.scrolled { padding: 8px 20px; }
+      .about-wrap {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        padding: 40px 20px 80px;
+      }
+      .about-photo-col { position: static; }
+      .about-photo { max-width: 240px; }
+      .photo-grid { grid-template-columns: repeat(3, 1fr); }
+      .projects-wrap { padding: 40px 20px 80px; }
+      .site-footer { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a class="logo" onclick="showPage('about')">Florian Preis</a>
+    <ul class="nav-links">
+      <li><a onclick="showPage('about')"       data-page="about">About</a></li>
+      <li><a onclick="showPage('photography')" data-page="photography">Photography</a></li>
+      <li><a onclick="showPage('projects')"    data-page="projects">Projects</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ══════════ ABOUT ══════════ -->
+<section class="page active" id="page-about">
+  <div class="about-wrap">
+
+    <div class="about-photo-col">
+      <!--
+        Photo file: florian.jpg — upload to root of your GitHub repo.
+        Already included in this download as florian.jpg.
+      -->
+      <img class="about-photo" src="florian.jpg" alt="Florian Preis">
+    </div>
+
+    <div class="about-text">
+      <h1>Florian Preis</h1>
+      <p class="about-subtitle"><!-- e.g. "Consultant · Builder" --></p>
+
+      <p class="about-bio">
+        <!-- Edit your bio here -->
+        Add your bio here — a short paragraph about who you are,
+        what you do, and what drives you.
+      </p>
+
+      <div class="contact-block">
+        <h2>Contact</h2>
+
+        <!-- Email — assembled by JS to prevent harvesting -->
+        <div class="contact-item">
+          <!-- Feather: mail -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M2 7l10 7 10-7"/>
+          </svg>
+          <span id="contact-email"></span>
+        </div>
+
+        <!-- Phone — assembled by JS -->
+        <div class="contact-item">
+          <!-- Feather: phone -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.78 1.18 2 2 0 012.77 0h3a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/>
+          </svg>
+          <span id="contact-phone"></span>
+        </div>
+
+        <!-- LinkedIn — shown as @florianpreis handle only -->
+        <div class="contact-item">
+          <!-- Official LinkedIn "in" mark as a clean path -->
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="#bbb">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          <a class="contact-reveal" href="https://www.linkedin.com/in/florianpreis/" target="_blank" rel="noopener">
+            @florianpreis
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PHOTOGRAPHY ══════════ -->
+<section class="page" id="page-photography">
+  <div class="photo-grid" id="photoGrid"></div>
+</section>
+
+<!-- ══════════ PROJECTS ══════════ -->
+<section class="page" id="page-projects">
+  <div class="projects-wrap">
+    <p class="projects-label">Projects</p>
+    <div class="projects-grid">
+
+      <a class="project-card" href="projects/cogniflow.html" target="_blank">
+
+        <!-- ── cogniflow preview: inline SVG illustration of the reader UI ── -->
+        <div class="project-preview">
+          <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <!-- Background -->
+            <rect width="640" height="360" fill="#000000"/>
+
+            <!-- Navbar strip -->
+            <rect width="640" height="44" fill="#000000"/>
+            <rect y="43" width="640" height="1" fill="#1e1e1e"/>
+            <!-- Logo text -->
+            <text x="80" y="27" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13" fill="#ffffff" font-weight="700">cogni</text>
+            <text x="120" y="27" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13" fill="#ffffff" font-weight="400">flow</text>
+            <!-- Nav links -->
+            <text x="430" y="27" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#ffffff">Reader</text>
+            <text x="480" y="27" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#555">Library</text>
+            <text x="526" y="27" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="10" fill="#555">About</text>
+
+            <!-- Upload bar -->
+            <rect x="80" y="60" width="480" height="1" fill="#1a1a1a"/>
+            <rect x="80" y="61" width="480" height="32" fill="#000"/>
+            <text x="93" y="82" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" fill="#666" letter-spacing="1">UPLOAD FILE</text>
+            <text x="160" y="82" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" fill="#444" letter-spacing="1">PASTE TEXT</text>
+            <rect x="80" y="92" width="480" height="1" fill="#1a1a1a"/>
+
+            <!-- Main word display area -->
+            <rect x="80" y="94" width="480" height="140" fill="#000" stroke="#1a1a1a" stroke-width="1"/>
+            <!-- Big word -->
+            <text x="320" y="180" font-family="Georgia, serif" font-size="52" fill="#ffffff" text-anchor="middle" font-weight="400">Upload</text>
+
+            <!-- Play/controls row -->
+            <rect x="80" y="236" width="480" height="32" fill="#000"/>
+            <!-- Play button pill -->
+            <rect x="80" y="240" width="56" height="22" rx="11" fill="#ffffff"/>
+            <text x="108" y="255" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#000" text-anchor="middle" letter-spacing="1">PLAY</text>
+            <!-- Pause -->
+            <rect x="142" y="240" width="56" height="22" rx="11" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
+            <text x="170" y="255" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#666" text-anchor="middle" letter-spacing="1">PAUSE</text>
+            <!-- Reset -->
+            <rect x="204" y="240" width="56" height="22" rx="11" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
+            <text x="232" y="255" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#666" text-anchor="middle" letter-spacing="1">RESET</text>
+            <!-- Progress bar -->
+            <rect x="280" y="249" width="200" height="2" fill="#1a1a1a"/>
+            <rect x="280" y="249" width="0" height="2" fill="#fff700"/>
+            <text x="490" y="253" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="8" fill="#3a3a3a">0%</text>
+
+            <!-- Controls row: 3 panels -->
+            <rect x="80" y="270" width="480" height="60" fill="#000" stroke="#1a1a1a" stroke-width="1"/>
+            <rect x="240" y="270" width="1" height="60" fill="#1a1a1a"/>
+            <rect x="400" y="270" width="1" height="60" fill="#1a1a1a"/>
+            <!-- Panel labels -->
+            <text x="93" y="284" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="7" fill="#444" letter-spacing="2">READING SPEED</text>
+            <text x="253" y="284" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="7" fill="#444" letter-spacing="2">FONT</text>
+            <text x="413" y="284" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="7" fill="#444" letter-spacing="2">BIONIC</text>
+            <!-- Speed slider -->
+            <rect x="93" y="302" width="110" height="1" fill="#2a2a2a"/>
+            <circle cx="153" cy="302" r="5" fill="#fff700" stroke="#000" stroke-width="1.5"/>
+            <text x="210" y="307" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="end">300 WPM</text>
+            <!-- Font select pill -->
+            <rect x="253" y="294" width="100" height="18" rx="9" fill="#000" stroke="#222" stroke-width="1"/>
+            <text x="303" y="306" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="9" fill="#aaa" text-anchor="middle">Serif</text>
+            <!-- Toggle switch -->
+            <rect x="413" y="294" width="34" height="18" rx="9" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+            <circle cx="422" cy="303" r="7" fill="#ffffff"/>
+
+            <!-- Bottom footer strip -->
+            <rect y="340" width="640" height="20" fill="#000"/>
+            <rect y="340" width="640" height="1" fill="#1a1a1a"/>
+            <text x="80" y="354" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="7" fill="#333" letter-spacing="0.5">cogniflow — Reading Reimagined</text>
+
+            <!-- Subtle vignette overlay -->
+            <defs>
+              <radialGradient id="vig" cx="50%" cy="50%" r="70%">
+                <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0.45"/>
+              </radialGradient>
+            </defs>
+            <rect width="640" height="360" fill="url(#vig)"/>
+          </svg>
+        </div>
+
+        <div class="project-info">
+          <p class="project-tag">Tool &middot; Reading</p>
+          <h2 class="project-title">cogniflow</h2>
+          <p class="project-desc">A focused reading environment that presents text word-by-word at a custom speed. Supports EPUB, PDF, and plain text. Includes a personal library with cloud sync.</p>
+          <span class="project-link">Open project &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Add future project cards here -->
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ LIGHTBOX ══════════ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <button class="lightbox-btn lightbox-prev" onclick="lightboxNav(-1)" aria-label="Previous">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="">
+    <div class="lightbox-meta">
+      <span class="lightbox-caption" id="lightboxCaption"></span>
+      <span class="lightbox-date"    id="lightboxDate"></span>
+    </div>
+    <button class="lightbox-btn lightbox-next" onclick="lightboxNav(1)" aria-label="Next">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="site-footer">
+  <span class="footer-copy" id="footerCopy"></span>
+  <div class="footer-social">
+
+    <!-- Official LinkedIn "in" logomark — exact brand path, no rounding artifacts -->
+    <a href="https://www.linkedin.com/in/florianpreis/" target="_blank" rel="noopener" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+      </svg>
+    </a>
+
+    <!-- Official Instagram glyph — camera body + lens + dot, matches brand exactly -->
+    <a href="https://www.instagram.com/florianprice/" target="_blank" rel="noopener" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+      </svg>
+    </a>
+
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   PHOTO CONFIGURATION
+   ─────────────────────────────────────────────────────
+   HOW TO ADD A NEW PHOTO:
+     1. Upload the file to the "photography/" folder on GitHub
+     2. Add ONE line below in the ▼ ADD PHOTOS HERE ▼ section
+        following the exact format shown
+
+   NAMING CONVENTION — name every file like this:
+     YYYYMMDD_Your-caption-text.jpg
+     e.g.  20260219_Staircase-at-MBS-in-Singapore.jpg
+
+   Use hyphens instead of spaces — GitHub handles these
+   reliably. They display as spaces in the lightbox.
+
+   The date and caption are read from the filename
+   automatically — no other edits needed.
+
+   ORDER: Photos are sorted newest → oldest by date
+          automatically. List order does not matter.
+══════════════════════════════════════════════════════ */
+
+// ▼▼▼ ADD NEW PHOTOS HERE — one line each ▼▼▼
+const PHOTOS = [
+  // { src: "photography/20260219_Staircase-at-MBS-in-Singapore.jpg" },
+];
+// ▲▲▲ ADD NEW PHOTOS HERE — one line each ▲▲▲
+
+/* ══════════════════════════════════════════════════════
+   FILENAME PARSER
+   ─────────────────────────────────────────────────────
+   Parses "20260219_Staircase at MBS in Singapore.jpg"
+   into:
+     caption → "Staircase at MBS in Singapore"
+     date    → "19 February 2026"
+
+   If the filename doesn't match the pattern (no date
+   prefix or no underscore), caption shows the filename
+   without extension and date is left blank.
+══════════════════════════════════════════════════════ */
+const MONTHS = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+];
+
+function parsePhotoFilename(src) {
+  // Extract just the filename without path or extension
+  const full = src.split('/').pop().replace(/\.[^.]+$/, '');
+  // Match YYYYMMDD_ prefix
+  const match = full.match(/^(\d{4})(\d{2})(\d{2})_(.+)$/);
+  if (match) {
+    const year  = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const day   = parseInt(match[3], 10);
+    // Replace hyphens with spaces so "Staircase-at-MBS" displays as "Staircase at MBS"
+    const caption = match[4].trim().replace(/-/g, ' ');
+    const dateStr = day + ' ' + (MONTHS[month - 1] || '') + ' ' + year;
+    return { caption, date: dateStr };
+  }
+  // No date prefix — just show the filename as caption (hyphens → spaces)
+  return { caption: full.replace(/-/g, ' '), date: '' };
+}
+
+/* ══════════════════════════════════════════════════════
+   CONTACT — anti-spam: assembled in JS, never in HTML
+══════════════════════════════════════════════════════ */
+const _c = { eu: 'florian', ed: 'preis.works', ph: '+4550', pn: '331370' };
+function buildContact() {
+  const emailEl = document.getElementById('contact-email');
+  if (emailEl) {
+    const addr = _c.eu + '@' + _c.ed;
+    const a = document.createElement('a');
+    a.className = 'contact-reveal';
+    a.textContent = addr;
+    setTimeout(() => { a.href = 'mai' + 'lto:' + addr; }, 400);
+    emailEl.appendChild(a);
+  }
+  const phoneEl = document.getElementById('contact-phone');
+  if (phoneEl) {
+    const a = document.createElement('a');
+    a.className = 'contact-reveal';
+    a.textContent = '+45 50 33 13 70';
+    setTimeout(() => { a.href = 'tel:' + _c.ph + _c.pn; }, 400);
+    phoneEl.appendChild(a);
+  }
+}
+
+/* ══ NAVBAR PILL ══ */
+(function() {
+  const nav = document.getElementById('navbar');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        nav.classList.toggle('scrolled', window.scrollY > 20);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+})();
+
+/* ══ NAVIGATION ══ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('[data-page]').forEach(a => a.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const link = document.querySelector('[data-page="' + name + '"]');
+  if (link) link.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'photography') initPhotos();
+}
+
+/* ══ PHOTO GRID ══ */
+let photosReady = false;
+function initPhotos() {
+  if (photosReady) return;
+  photosReady = true;
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+
+  // If no photos added yet, show nothing — grid stays empty
+  if (!PHOTOS.length) return;
+
+  // Sort newest → oldest using the YYYYMMDD prefix from each filename
+  const sorted = [...PHOTOS].sort((a, b) => {
+    const dateA = (a.src.split('/').pop().match(/^(\d{8})/) || ['0'])[1];
+    const dateB = (b.src.split('/').pop().match(/^(\d{8})/) || ['0'])[1];
+    return dateB.localeCompare(dateA); // descending: newest first
+  });
+
+  sorted.forEach((photo, idx) => {
+    const item = document.createElement('div');
+    item.className = 'photo-item';
+    item.dataset.idx = idx;
+    const { caption } = parsePhotoFilename(photo.src);
+    const img = document.createElement('img');
+    img.src = photo.src;
+    img.alt = caption;
+    img.loading = 'lazy';
+    item.appendChild(img);
+    item.addEventListener('click', () => openLightbox(idx));
+    grid.appendChild(item);
+  });
+
+  // Replace PHOTOS with sorted order so lightbox indices stay correct
+  PHOTOS.length = 0;
+  sorted.forEach(p => PHOTOS.push(p));
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const i = parseInt(entry.target.dataset.idx || 0);
+        setTimeout(() => entry.target.classList.add('visible'), i * 35);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.04 });
+  document.querySelectorAll('.photo-item').forEach(el => obs.observe(el));
+}
+
+/* ══ LIGHTBOX ══ */
+let lbIndex = 0;
+function openLightbox(idx) {
+  if (!PHOTOS.length) return;
+  lbIndex = idx; updateLightbox();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lightboxNav(dir) {
+  lbIndex = (lbIndex + dir + PHOTOS.length) % PHOTOS.length;
+  updateLightbox();
+}
+function updateLightbox() {
+  const p = PHOTOS[lbIndex];
+  const { caption, date } = parsePhotoFilename(p.src);
+  document.getElementById('lightboxImg').src = p.src;
+  document.getElementById('lightboxImg').alt = caption;
+  document.getElementById('lightboxCounter').textContent = (lbIndex + 1) + ' / ' + PHOTOS.length;
+  document.getElementById('lightboxCaption').textContent = caption;
+  document.getElementById('lightboxDate').textContent    = date;
+}
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'ArrowLeft')  lightboxNav(-1);
+  if (e.key === 'ArrowRight') lightboxNav(1);
+  if (e.key === 'Escape')     closeLightbox();
+});
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target.id === 'lightbox') closeLightbox();
+});
+
+/* ══ FOOTER YEAR ══ */
+document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' Florian Preis';
+
+/* ══ INIT ══ */
+buildContact();
+showPage('about');
+</script>
+
+</body>
+</html>
