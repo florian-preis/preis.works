@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cogniflow</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><text x='4' y='24' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='20' fill='white'><tspan font-weight='700'>c</tspan><tspan font-weight='400'>f</tspan></text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='19' fill='white'><tspan font-weight='700'>c</tspan><tspan font-weight='400'>f</tspan></text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -120,6 +120,11 @@
             top: calc(var(--nav-h) + 16px);
             max-height: calc(100vh - var(--nav-h) - 26px);
             align-self: start;
+            /* Cap to same height as reader + controls combined */
+            height: fit-content;
+        }
+        .reader-layout.has-chapters .chapter-navigation {
+            max-height: var(--chapter-nav-max-h, calc(100vh - var(--nav-h) - 26px));
         }
         .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: 2 / 6; }
         .chapter-navigation.active { display: block; }
@@ -190,11 +195,15 @@
         .word-display strong { font-weight: 700; }
 
         /* ── BUTTONS + STATUS ROW ── */
-        .buttons-status-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+        .buttons-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .buttons-row button {
+            width: 100%;
+            padding: 11px 0;
         }
         button {
             padding: 11px 28px;
@@ -210,13 +219,16 @@
             letter-spacing: 1.5px;
             white-space: nowrap;
         }
-        .btn-play { background: #ffffff; color: #000000; border-color: #ffffff; }
-        .btn-play:hover:not(:disabled) { background: #fff700; border-color: #fff700; color: #000000; }
-        .btn-pause:hover:not(:disabled),
+        .btn-playpause { background: #ffffff; color: #000000; border-color: #ffffff; min-width: 72px; }
+        .btn-playpause:hover:not(:disabled) { background: #fff700; border-color: #fff700; color: #000000; }
+        .btn-playpause.is-playing { background: #000; color: #fff; border-color: #444; }
+        .btn-playpause.is-playing:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000; }
         .btn-reset:hover:not(:disabled),
         .btn-rewind:hover:not(:disabled),
-        .btn-forward:hover:not(:disabled),
+        .btn-forward:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000000; }
+        .btn-save { min-width: 64px; }
         .btn-save:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000000; }
+        .btn-save.saved { border-color: #fff700 !important; color: #fff700 !important; }
         button:disabled { opacity: 0.18; cursor: not-allowed; }
 
         .progress-area { flex: 1; min-width: 140px; }
@@ -226,14 +238,14 @@
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: #3a3a3a;
+            color: #666666;
             width: 50px;
             flex-shrink: 0;
         }
         .progress-bar { flex: 1; height: 2px; background: #1a1a1a; overflow: hidden; }
         .progress-fill { height: 100%; background: #fff700; width: 0%; transition: width 0.1s linear; }
         .progress-fill.chapter-fill { background: #555555; }
-        .progress-pct { font-size: 9px; color: #3a3a3a; width: 30px; text-align: right; }
+        .progress-pct { font-size: 9px; color: #666666; width: 30px; text-align: right; }
 
         /* ── CONTROLS ROW ── */
         .controls-row {
@@ -316,32 +328,59 @@
         input:checked + .slider { background-color: #fff700; border-color: #fff700; }
         input:checked + .slider:before { transform: translateX(24px); background-color: #000000; }
 
-        .font-selector {
+        /* Font pill toggle */
+        .font-toggle-btn {
             width: 100%;
             height: 36px;
-            padding: 0 36px 0 14px;
+            padding: 3px;
             border: 1px solid #222222;
             border-radius: 50px;
-            background: #000000;
-            color: #ffffff;
-            font-size: 13px;
+            background: #0a0a0a;
             cursor: pointer;
-            outline: none;
-            -webkit-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            position: relative;
             transition: border-color 0.2s;
+            overflow: hidden;
         }
-        .font-selector:hover, .font-selector:focus { border-color: #fff700; }
-        .font-selector option { background: #000; color: #fff; }
+        .font-toggle-btn:hover { border-color: #444; }
+        .font-toggle-label {
+            position: relative;
+            z-index: 2;
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-align: center;
+            padding: 6px 0;
+            transition: color 0.2s;
+            color: #666;
+            user-select: none;
+            text-transform: uppercase;
+        }
+        .font-toggle-pill {
+            position: absolute;
+            top: 3px; bottom: 3px;
+            width: calc(50% - 3px);
+            border-radius: 50px;
+            background: #ffffff;
+            transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+            left: 3px;
+            z-index: 1;
+        }
+        /* serif active = pill on left */
+        .font-toggle-btn.serif-active .font-toggle-pill { transform: translateX(0); }
+        .font-toggle-btn.serif-active .font-label-serif { color: #000; }
+        .font-toggle-btn.serif-active .font-label-sans  { color: #555; }
+        /* sans active = pill on right */
+        .font-toggle-btn.sans-active .font-toggle-pill { transform: translateX(calc(100% + 0px)); }
+        .font-toggle-btn.sans-active .font-label-sans  { color: #000; }
+        .font-toggle-btn.sans-active .font-label-serif { color: #555; }
 
         /* ── KEYBOARD HINT ── */
         .keyboard-hint {
             font-size: 10px;
-            color: #2a2a2a;
+            color: #555555;
             letter-spacing: 0.05em;
             line-height: 1.6;
             padding: 10px 0 28px;
@@ -350,11 +389,11 @@
         .keyboard-hint span { margin: 0 8px; }
         .key {
             display: inline-block;
-            border: 1px solid #2a2a2a;
+            border: 1px solid #444444;
             border-radius: 3px;
             padding: 1px 5px;
             font-size: 9px;
-            color: #2a2a2a;
+            color: #555555;
             margin-right: 3px;
         }
 
@@ -433,7 +472,7 @@
         }
         .btn-paste-load:hover:not(:disabled) { background: #fff700; border-color: #fff700; }
         .btn-paste-clear { padding: 9px 22px; font-size: 11px; }
-        .file-size-note { font-size: 10px; color: #2a2a2a; padding: 6px 28px 12px; letter-spacing: 0.5px; }
+        .file-size-note { font-size: 10px; color: #555555; padding: 6px 28px 12px; letter-spacing: 0.5px; }
 
         /* ── LIBRARY ── */
         .library-grid {
@@ -735,8 +774,8 @@
                         <button class="upload-tab" id="tabPaste">Paste Text</button>
                     </div>
                     <div class="upload-panel active" id="panelFile">
-                        <input type="file" id="fileInput" accept=".epub,.txt,.pdf" />
-                        <div class="file-size-note">Supports EPUB, TXT, PDF · Max 10 MB</div>
+                        <input type="file" id="fileInput" accept=".epub,.txt,.pdf,.docx,.html,.htm,.rtf" />
+                        <div class="file-size-note">Supports EPUB, TXT, PDF, DOCX, HTML, RTF · Max 10 MB</div>
                     </div>
                     <div class="upload-panel" id="panelPaste">
                         <textarea class="paste-area" id="pasteArea" placeholder="Paste or type your text here…" rows="5"></textarea>
@@ -754,7 +793,7 @@
                 </div>
 
                 <!-- Right column -->
-                <div class="reader-right">
+                <div class="reader-right reader-panel">
 
                     <!-- Word display -->
                     <div class="display-area">
@@ -763,27 +802,27 @@
                         </div>
                     </div>
 
-                    <!-- Buttons + progress -->
-                    <div class="buttons-status-row">
-                        <button class="btn-play"    id="playBtn"    disabled>Play</button>
-                        <button class="btn-pause"   id="pauseBtn"   disabled>Pause</button>
+                    <!-- Buttons row — always equal-spaced, never wraps into progress -->
+                    <div class="buttons-row">
+                        <button class="btn-playpause" id="playPauseBtn" disabled>Play</button>
                         <button class="btn-rewind"  id="rewindBtn"  disabled title="← 10 words">← 10</button>
                         <button class="btn-forward" id="forwardBtn" disabled title="→ 10 words">10 →</button>
                         <button class="btn-reset"   id="resetBtn"   disabled>Reset</button>
                         <button class="btn-save"    id="saveBtn"    disabled>Save</button>
+                    </div>
 
-                        <div class="progress-area">
-                            <div class="progress-bars">
-                                <div class="progress-row">
-                                    <span class="progress-label" id="bookProgressLabel">Book</span>
-                                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-                                    <span class="progress-pct" id="progressPct">0%</span>
-                                </div>
-                                <div class="progress-row" id="chapterProgressRow" style="display:none">
-                                    <span class="progress-label">Chapter</span>
-                                    <div class="progress-bar"><div class="progress-fill chapter-fill" id="chapterProgressFill"></div></div>
-                                    <span class="progress-pct" id="chapterProgressPct">0%</span>
-                                </div>
+                    <!-- Progress bars — own row below buttons -->
+                    <div class="progress-area">
+                        <div class="progress-bars">
+                            <div class="progress-row">
+                                <span class="progress-label" id="bookProgressLabel">Book</span>
+                                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                                <span class="progress-pct" id="progressPct">0%</span>
+                            </div>
+                            <div class="progress-row" id="chapterProgressRow" style="display:none">
+                                <span class="progress-label">Chapter</span>
+                                <div class="progress-bar"><div class="progress-fill chapter-fill" id="chapterProgressFill"></div></div>
+                                <span class="progress-pct" id="chapterProgressPct">0%</span>
                             </div>
                         </div>
                     </div>
@@ -800,12 +839,13 @@
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="fontSelector">Reading Font</label>
+                            <label>Reading Font</label>
                             <div class="control-inner">
-                                <select id="fontSelector" class="font-selector">
-                                    <option value="serif">Serif</option>
-                                    <option value="sans-serif">Sans-Serif</option>
-                                </select>
+                                <button id="fontToggleBtn" class="font-toggle-btn serif-active">
+                                    <span class="font-toggle-pill"></span>
+                                    <span class="font-toggle-label font-label-serif">Serif</span>
+                                    <span class="font-toggle-label font-label-sans">Sans</span>
+                                </button>
                             </div>
                         </div>
                         <div class="control-group">
@@ -961,7 +1001,8 @@ class SpeedReader {
 
         // Open DB then restore UI state from URL hash
         DB.open().then(() => {
-            this._applySection('reader');
+            const hash = window.location.hash.replace('#','');
+            this._applySection(['reader','library','about'].includes(hash) ? hash : 'reader');
         });
     }
 
@@ -976,13 +1017,14 @@ class SpeedReader {
         this.speedSlider         = $('speedSlider');
         this.speedValue          = $('speedValue');
         this.bionicToggle        = $('bionicToggle');
-        this.fontSelector        = $('fontSelector');
-        this.playBtn             = $('playBtn');
-        this.pauseBtn            = $('pauseBtn');
+        // fontSelector replaced by fontToggleBtn
+        this.playPauseBtn        = $('playPauseBtn');
         this.resetBtn            = $('resetBtn');
         this.rewindBtn           = $('rewindBtn');
         this.forwardBtn          = $('forwardBtn');
         this.saveBtn             = $('saveBtn');
+        this.fontToggleBtn       = $('fontToggleBtn');
+        this.currentFont         = 'serif'; // track state
         this.progressFill        = $('progressFill');
         this.progressPct         = $('progressPct');
         this.bookProgressLabel   = $('bookProgressLabel');
@@ -1022,12 +1064,12 @@ class SpeedReader {
         this.speedSlider.addEventListener('input', e => this.updateSpeed(e));
         this.bionicToggle.addEventListener('change', e => this.toggleBionic(e));
         this.fontSelector.addEventListener('change', e => this.changeFont(e));
-        this.playBtn.addEventListener('click',    () => this.play());
-        this.pauseBtn.addEventListener('click',   () => this.pause());
+        this.playPauseBtn.addEventListener('click', () => { this.isPlaying ? this.pause() : this.play(); });
         this.resetBtn.addEventListener('click',   () => this.reset());
         this.rewindBtn.addEventListener('click',  () => this.skip(-10));
         this.forwardBtn.addEventListener('click', () => this.skip(10));
         this.saveBtn.addEventListener('click',    () => this.saveToLibrary());
+        this.fontToggleBtn.addEventListener('click', () => this.toggleFont());
         this.pasteLoadBtn.addEventListener('click',  () => this._loadPaste());
         this.pasteClearBtn.addEventListener('click', () => { this.pasteArea.value = ''; });
 
@@ -1070,7 +1112,7 @@ class SpeedReader {
         document.addEventListener('keydown', e => {
             const tag = e.target.tagName;
             if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
-            if (e.key === ' ')           { e.preventDefault(); this.isPlaying ? this.pause() : this.play(); }
+            if (e.key === ' ')           { e.preventDefault(); this.playPauseBtn.click(); }
             if (e.key === 'ArrowLeft')   { e.preventDefault(); this.skip(-10); }
             if (e.key === 'ArrowRight')  { e.preventDefault(); this.skip(10);  }
             if (e.key === 'ArrowUp')     { e.preventDefault(); this.adjustSpeed(25);  }
@@ -1103,6 +1145,8 @@ class SpeedReader {
         this._navLinks[section].desk.classList.add('nav-active');
         this._navLinks[section].mob.classList.add('nav-active');
         if (section === 'library') this.renderLibrary();
+        // Update URL without triggering reload or hashchange
+        try { history.replaceState(null, '', '#' + section); } catch(e) {}
         window.scrollTo(0, 0);
     }
 
@@ -1161,13 +1205,8 @@ class SpeedReader {
         await DB.put(chapterData);
 
 
-        this.saveBtn.textContent = 'Saved ✓';
-        
-        // Navigate to library immediately so user sees the saved book
-        setTimeout(() => {
-            this.saveBtn.textContent = 'Save';
-            this.showSection('library');
-        }, 800);
+        this.saveBtn.classList.add('saved');
+        setTimeout(() => { this.saveBtn.classList.remove('saved'); }, 1600);
     }
 
     async _autoSaveProgress() {
@@ -1204,12 +1243,19 @@ class SpeedReader {
             const ext = file.name.toLowerCase().split('.').pop();
             if (ext === 'epub') {
                 await this._parseEPUB(file);
-            } else if (ext === 'txt') {
+            } else if (ext === 'txt' || ext === 'rtf') {
                 const text = await file.text();
-                this.chapters = [{ title: 'Full Text', text, startIndex: 0 }];
+                const clean = ext === 'rtf' ? this._stripRTF(text) : text;
+                this.chapters = [{ title: 'Full Text', text: clean, startIndex: 0 }];
                 this._processChapters();
             } else if (ext === 'pdf') {
                 await this._parsePDF(file);
+            } else if (ext === 'docx') {
+                await this._parseDOCX(file);
+            } else if (ext === 'html' || ext === 'htm') {
+                const text = await file.text();
+                this.chapters = [{ title: 'Full Text', text: this._stripHTML(text), startIndex: 0 }];
+                this._processChapters();
             }
             this._finishLoading();
         } catch(err) {
@@ -1238,6 +1284,7 @@ class SpeedReader {
     }
 
     _finishLoading() {
+        this.fontToggleBtn.classList.add('serif-active');
         const hasChapters = this.chapters.length > 1;
         this.setProgressMode(hasChapters);
         this.enableControls();
@@ -1370,16 +1417,16 @@ class SpeedReader {
     // ── Playback ──────────────────────────────────────────────────────────
     play() {
         if (!this.words.length) return;
-        this.isPlaying        = true;
-        this.playBtn.disabled  = true;
-        this.pauseBtn.disabled = false;
+        this.isPlaying = true;
+        this.playPauseBtn.textContent = 'Pause';
+        this.playPauseBtn.classList.add('is-playing');
         this._tick();
     }
 
     pause() {
-        this.isPlaying        = false;
-        this.playBtn.disabled  = false;
-        this.pauseBtn.disabled = true;
+        this.isPlaying = false;
+        this.playPauseBtn.textContent = 'Play';
+        this.playPauseBtn.classList.remove('is-playing');
         if (this.intervalId) { clearTimeout(this.intervalId); this.intervalId = null; }
     }
 
@@ -1453,10 +1500,50 @@ class SpeedReader {
             this.wordDisplay.innerHTML = this._bionic(this.words[this.currentIndex - 1] || '');
     }
 
-    changeFont(e) {
-        this.wordDisplay.style.fontFamily = e.target.value === 'serif'
-            ? "Georgia,'Times New Roman',Times,serif"
-            : "'Helvetica Neue',Helvetica,Arial,sans-serif";
+    // ── New format parsers ────────────────────────────────────────────────────
+    async _parseDOCX(file) {
+        // Use JSZip to unzip DOCX and extract document.xml
+        const zip = await JSZip.loadAsync(await file.arrayBuffer());
+        const xmlFile = zip.files['word/document.xml'];
+        if (!xmlFile) throw new Error('Invalid DOCX file');
+        const xml = await xmlFile.async('string');
+        // Strip XML tags and decode entities
+        let text = xml
+            .replace(/<w:p[ >][^>]*>/g, ' ')   // paragraph = space
+            .replace(/<w:br[^>]*>/g, ' ')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+            .replace(/\s+/g, ' ').trim();
+        this.chapters = [{ title: 'Full Text', text, startIndex: 0 }];
+        this._processChapters();
+    }
+
+    _stripHTML(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        doc.querySelectorAll('script,style,nav,header,footer').forEach(el => el.remove());
+        return (doc.body || doc.documentElement).textContent.replace(/\s+/g,' ').trim();
+    }
+
+    _stripRTF(rtf) {
+        // Remove RTF control words and groups, leaving plain text
+        return rtf
+            .replace(/\{[^{}]*\}/g, '')
+            .replace(/\\[a-z]+[-]?[0-9]*/g, ' ')
+            .replace(/[{}]/g, '')
+            .replace(/\s+/g, ' ').trim();
+    }
+
+    toggleFont() {
+        this.currentFont = this.currentFont === 'serif' ? 'sans' : 'serif';
+        if (this.currentFont === 'sans') {
+            this.wordDisplay.style.fontFamily = "'Helvetica Neue',Helvetica,Arial,sans-serif";
+            this.fontToggleBtn.classList.remove('serif-active');
+            this.fontToggleBtn.classList.add('sans-active');
+        } else {
+            this.wordDisplay.style.fontFamily = "Georgia,'Times New Roman',Times,serif";
+            this.fontToggleBtn.classList.remove('sans-active');
+            this.fontToggleBtn.classList.add('serif-active');
+        }
     }
 
     // ── Progress ──────────────────────────────────────────────────────────
@@ -1488,12 +1575,24 @@ class SpeedReader {
     }
 
     enableControls() {
-        [this.playBtn, this.resetBtn, this.rewindBtn, this.forwardBtn].forEach(b => b.disabled = false);
-        this.pauseBtn.disabled = true;
+        [this.playPauseBtn, this.resetBtn, this.rewindBtn, this.forwardBtn].forEach(b => b.disabled = false);
+        this.playPauseBtn.textContent = 'Play';
+        this.playPauseBtn.classList.remove('is-playing');
     }
 
     // ── Chapter nav ───────────────────────────────────────────────────────
     _displayChapterNav() {
+        // Align chapter nav bottom with the bottom of the controls-row (not keyboard hint)
+        requestAnimationFrame(() => {
+            const controlsRow = this.readerLayout.querySelector('.controls-row');
+            const chNav = this.chapterNav;
+            if (controlsRow && chNav) {
+                const navTop  = chNav.getBoundingClientRect().top;
+                const ctrlBot = controlsRow.getBoundingClientRect().bottom;
+                const h = ctrlBot - navTop;
+                if (h > 80) chNav.style.maxHeight = h + 'px';
+            }
+        });
         this.chapterList.innerHTML = '';
         this.chapters.forEach((ch, i) => {
             const li    = document.createElement('li');
@@ -1523,84 +1622,98 @@ class SpeedReader {
 
     // ── Library rendering ─────────────────────────────────────────────────
     async renderLibrary() {
-        // Always re-read from localStorage to stay in sync
         this.library = this._loadLibraryMeta();
-if (!this.library.length) {
-            this.libraryContent.innerHTML = `
-                <div class="empty-library">
-                    <h2>Your library is empty</h2>
-                    <p>Save books from the reader to build your collection</p>
-                </div>`;
+        if (!this.library.length) {
+            this.libraryContent.innerHTML = '<div class="empty-library"><h2>Your library is empty</h2><p>Save books from the reader to build your collection</p></div>';
             return;
         }
+
         const grid = document.createElement('div');
         grid.className = 'library-grid';
+
+        // Append grid FIRST so getElementById works when attaching listeners
+        this.libraryContent.innerHTML = '';
+        this.libraryContent.appendChild(grid);
 
         for (let i = 0; i < this.library.length; i++) {
             const book = this.library[i];
             const card = document.createElement('div');
             card.className = 'book-card';
-            card.innerHTML = `
-                <div class="book-cover" id="cover-${i}">
-                    <div class="book-cover-placeholder"><div class="book-icon"></div></div>
-                </div>
-                <button class="book-menu-btn" data-index="${i}" title="Options">⋯</button>
-                <div class="book-menu-dropdown" id="menu-${i}">
-                    <button class="book-menu-item" data-action="edit"   data-index="${i}">Edit</button>
-                    <button class="book-menu-item danger" data-action="delete" data-index="${i}">Delete</button>
-                </div>
-                <div class="book-meta">
-                    <div class="book-title"  id="title-${i}">${book.title}</div>
-                    <div class="book-author" id="author-${i}">${book.author || ''}</div>
-                    <div class="book-progress"><div class="book-progress-fill" style="width:${book.progress||0}%"></div></div>
-                    <div class="book-progress-text">${Math.round(book.progress||0)}% · ${(book.wordCount||0).toLocaleString()} words</div>
-                </div>`;
+            card.innerHTML = [
+                '<div class="book-cover" id="cover-' + i + '">',
+                '  <div class="book-cover-placeholder"><div class="book-icon"></div></div>',
+                '</div>',
+                '<button class="book-menu-btn" data-index="' + i + '" title="Options">⋯</button>',
+                '<div class="book-menu-dropdown" id="menu-' + i + '">',
+                '  <button class="book-menu-item" data-action="edit" data-index="' + i + '">Edit</button>',
+                '  <button class="book-menu-item danger" data-action="delete" data-index="' + i + '">Delete</button>',
+                '</div>',
+                '<div class="book-meta">',
+                '  <div class="book-title" id="title-' + i + '">' + book.title + '</div>',
+                '  <div class="book-author" id="author-' + i + '">' + (book.author || '') + '</div>',
+                '  <div class="book-progress"><div class="book-progress-fill" style="width:' + (book.progress||0) + '%"></div></div>',
+                '  <div class="book-progress-text">' + Math.round(book.progress||0) + '% · ' + (book.wordCount||0).toLocaleString() + ' words</div>',
+                '</div>'
+            ].join('');
 
-            card.addEventListener('click', e => {
-                const action   = e.target.dataset.action;
-                const menuBtn  = e.target.closest('.book-menu-btn');
-                if (action === 'edit')   { e.stopPropagation(); this._enableEditMode(i); return; }
-                if (action === 'delete') { e.stopPropagation(); this._openDeleteModal(i); return; }
-                if (menuBtn) {
-                    e.stopPropagation();
-                    const dd = document.getElementById(`menu-${menuBtn.dataset.index}`);
-                    document.querySelectorAll('.book-menu-dropdown.open').forEach(d => { if (d !== dd) d.classList.remove('open'); });
-                    dd.classList.toggle('open');
-                    return;
-                }
-                if (!e.target.closest('.book-menu-dropdown') && !e.target.isContentEditable)
-                    this.loadBookFromLibrary(i);
-            });
-
-            ['title','author'].forEach(field => {
-                // Query within card (not document) — card isn't in DOM yet at this point
-                const el = card.querySelector(`#${field}-${i}`);
-                if (!el) return;
-                el.addEventListener('blur', () => {
-                    if (el.isContentEditable) {
-                        this.library[i][field] = el.textContent.trim();
-                        this._saveLibraryMeta();
-                        el.removeAttribute('contenteditable');
-                        el.style.cursor = 'default';
-                    }
-                });
-                el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
-                el.addEventListener('click',   e => { if (el.isContentEditable) e.stopPropagation(); });
-            });
-
+            // Add to DOM BEFORE attaching listeners
             grid.appendChild(card);
 
-            // Async cover fetch
-            this._fetchCover(book.title, book.author).then(url => {
-                if (url) {
-                    const el = document.getElementById(`cover-${i}`);
-                    if (el) el.innerHTML = `<img src="${url}" alt="${book.title}" loading="lazy"/>`;
-                }
+            // Card click handler
+            card.addEventListener('click', (e => {
+                const idx = i;
+                return function(e) {
+                    const action  = e.target.dataset.action;
+                    const menuBtn = e.target.closest('.book-menu-btn');
+                    if (action === 'edit')   { e.stopPropagation(); reader._enableEditMode(idx); return; }
+                    if (action === 'delete') { e.stopPropagation(); reader._openDeleteModal(idx); return; }
+                    if (menuBtn) {
+                        e.stopPropagation();
+                        const dd = document.getElementById('menu-' + menuBtn.dataset.index);
+                        document.querySelectorAll('.book-menu-dropdown.open').forEach(d => { if (d !== dd) d.classList.remove('open'); });
+                        dd.classList.toggle('open');
+                        return;
+                    }
+                    if (!e.target.closest('.book-menu-dropdown') && !e.target.isContentEditable)
+                        reader.loadBookFromLibrary(idx);
+                };
+            })(i));
+
+            // Edit listeners — elements are in DOM now
+            ['title', 'author'].forEach(field => {
+                const el = document.getElementById(field + '-' + i);
+                if (!el) return;
+                const idx = i;
+                el.addEventListener('blur', function() {
+                    if (el.isContentEditable) {
+                        reader.library[idx][field] = el.textContent.trim();
+                        reader._saveLibraryMeta();
+                        el.removeAttribute('contenteditable');
+                        el.style.cursor = 'default';
+                        // Re-fetch cover if title or author changed
+                        const b = reader.library[idx];
+                        const coverEl2 = document.getElementById('cover-' + idx);
+                        if (coverEl2) {
+                            reader._fetchCover(b.title, b.author).then(function(url) {
+                                if (url && coverEl2) coverEl2.innerHTML = '<img src="' + url + '" alt="" loading="lazy"/>';
+                                else if (coverEl2 && !coverEl2.querySelector('img'))
+                                    coverEl2.innerHTML = '<div class="book-cover-placeholder"><div class="book-icon"></div></div>';
+                            });
+                        }
+                    }
+                });
+                el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+                el.addEventListener('click',   function(e) { if (el.isContentEditable) e.stopPropagation(); });
+            });
+
+            // Cover fetch — capture element reference now while it exists
+            const coverEl = document.getElementById('cover-' + i);
+            const bookTitle = book.title;
+            const bookAuthor = book.author;
+            this._fetchCover(bookTitle, bookAuthor).then(function(url) {
+                if (url && coverEl) coverEl.innerHTML = '<img src="' + url + '" alt="" loading="lazy"/>';
             });
         }
-
-        this.libraryContent.innerHTML = '';
-        this.libraryContent.appendChild(grid);
     }
 
     async _fetchCover(title, author) {
@@ -1617,16 +1730,21 @@ if (!this.library.length) {
 
     _enableEditMode(idx) {
         document.querySelectorAll('.book-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+        // Make both title and author editable
         ['title','author'].forEach(field => {
-            const el = document.getElementById(`${field}-${idx}`);
+            const el = document.getElementById(field + '-' + idx);
             if (!el) return;
             el.setAttribute('contenteditable','true');
             el.style.cursor = 'text';
-            el.focus();
-            const r = document.createRange(), s = window.getSelection();
-            r.selectNodeContents(el); r.collapse(false);
-            s.removeAllRanges(); s.addRange(r);
         });
+        // Focus title first and select all text
+        const titleEl = document.getElementById('title-' + idx);
+        if (titleEl) {
+            titleEl.focus();
+            const r = document.createRange(), s = window.getSelection();
+            r.selectNodeContents(titleEl);
+            s.removeAllRanges(); s.addRange(r);
+        }
     }
 
     _openDeleteModal(idx) {
