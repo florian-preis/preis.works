@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Florian Preis</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='white' letter-spacing='0.5'>FP</text></svg>">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -19,7 +20,7 @@
       --ham-stroke: 1.5px; /* hamburger & X line thickness */
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overscroll-behavior: none; }
 
     body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -62,15 +63,16 @@
       transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
                   border-radius 0.45s cubic-bezier(0.4,0,0.2,1),
                   padding 0.45s cubic-bezier(0.4,0,0.2,1),
-                  box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
+                  box-shadow 0.45s cubic-bezier(0.4,0,0.2,1),
+                  backdrop-filter 0.45s;
     }
     .navbar.scrolled .navbar-inner {
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(235,235,235,0.85);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
       border-radius: 50px;
       padding: 12px 28px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
     }
     .logo {
       font-size: 14px;
@@ -214,7 +216,7 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
-      background: #c8c8c8;
+      background: #d0cdc9;
     }
     .site-footer::before {
       content: '';
@@ -318,12 +320,13 @@
     <img class="about-photo" src="/assets/florianpreis.jpg" alt="Florian Preis">
   </div>
   <div class="about-text">
-    <h1>Florian Preis</h1>
-    <p class="about-subtitle"><!-- e.g. "Consultant · Builder" --></p>
     <p class="about-bio">
-      <!-- Edit your bio here -->
-      Add your bio here — a short paragraph about who you are,
-      what you do, and what drives you.
+      Hi, I'm Florian.<br><br>
+      By day I work in life science consulting, helping companies navigate their most complex problems. I enjoy breaking complicated topics down into clear thinking and practical decisions.<br><br>
+      Outside of work, I'm curious about almost everything else. This site is where those interests live. It's a place for side projects, photography, and the occasional deep dive into things that caught my attention.<br><br>
+      I tend to approach both my profession and personal projects in a similar way: Ask good questions, explore widely, and build things that are thoughtful and intentional.<br><br>
+      If you're here because of work, welcome.<br>
+      If you're here because of something I made, even better.
     </p>
     <div class="contact-block">
       <h2>Contact</h2>
@@ -366,7 +369,7 @@
 
 <script>
 /* ══ CONTACT — anti-spam ══ */
-const _c = { eu: 'florian', ed: 'preis.works', ph: '+4550', pn: '331370' };
+const _c = { eu: 'hello', ed: 'preis.works', ph: '+4550', pn: '331370' };
 (function() {
   const emailEl = document.getElementById('contact-email');
   if (emailEl) {
