@@ -67,7 +67,7 @@
                   backdrop-filter 0.45s;
     }
     .navbar.scrolled .navbar-inner {
-      background: rgba(235,235,235,0.60);
+      background: rgba(235,235,235,0.42);
       backdrop-filter: blur(20px) saturate(140%);
       -webkit-backdrop-filter: blur(20px) saturate(140%);
       border-radius: 50px;
@@ -322,11 +322,10 @@
   <div class="about-text">
     <p class="about-bio">
       Hi, I'm Florian.<br><br>
-      By day I work in life science consulting, helping companies navigate their most complex problems. I enjoy breaking complicated topics down into clear thinking and practical decisions.<br><br>
-      Outside of work, I'm curious about almost everything else. This site is where those interests live. It's a place for side projects, photography, and the occasional deep dive into things that caught my attention.<br><br>
-      I tend to approach both my profession and personal projects in a similar way: Ask good questions, explore widely, and build things that are thoughtful and intentional.<br><br>
-      If you're here because of work, welcome.<br>
-      If you're here because of something I made, even better.
+      I work in life science consulting, supporting companies as they navigate strategic and operational challenges. I enjoy turning complexity into clear thinking and practical decisions.<br><br>
+      Outside of work, I'm curious about almost everything else. This site is home to side projects, photography, and the occasional deep dive into topics that capture my attention.<br><br>
+      Whether professional or personal, I tend to approach things the same way: Ask good questions, explore broadly, and build with intent.<br><br>
+      If you're here because of work, welcome. If you're here because of something I made, I'm glad you found it.
     </p>
     <div class="contact-block">
       <h2>Contact</h2>
@@ -397,7 +396,7 @@ const _c = { eu: 'hello', ed: 'preis.works', ph: '+4550', pn: '331370' };
   window.addEventListener('scroll', () => {
     if (!ticking) {
       requestAnimationFrame(() => {
-        nav.classList.toggle('scrolled', window.scrollY > 20);
+        nav.classList.toggle('scrolled', window.scrollY > 1);
         ticking = false;
       });
       ticking = true;
