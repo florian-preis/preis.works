@@ -529,12 +529,12 @@ let lbIndex = 0;
 function alignMeta() {
   requestAnimationFrame(() => {
     const img    = document.getElementById('lightboxImg');
-    const meta   = document.getElementById('lightboxMeta');
-    const footer = meta.closest('.lightbox-footer');
+    const footer = document.querySelector('.lightbox-footer');
     const imgRect    = img.getBoundingClientRect();
     const footerRect = footer.getBoundingClientRect();
-    const offset = imgRect.left - footerRect.left;
-    meta.style.marginLeft = Math.max(0, offset) + 'px';
+    // Set left padding of footer to match image left edge
+    const leftOffset = Math.max(16, imgRect.left - footerRect.left);
+    footer.style.paddingLeft = leftOffset + 'px';
   });
 }
 
