@@ -5,7 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cogniflow - Reading Reimagined</title>
+    <title>cogniflow</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><text x='4' y='24' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='20' fill='white'><tspan font-weight='700'>c</tspan><tspan font-weight='400'>f</tspan></text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -853,7 +854,7 @@
                 <h2>Bionic Reading</h2>
                 <p>Subtle visual emphasis within words creates natural fixation points for the eye. These anchors support faster word recognition, reduce cognitive strain, and help maintain attention during extended reading sessions.</p>
                 <h2>Local Library</h2>
-                <p>Save books to your personal library as you read. Progress is stored locally in your browser, so you can pause and resume at any time without losing your place. No account required — everything stays on your device.</p>
+                <p>Save books to your personal library as you read. Progress is stored locally in your browser, so you can pause and resume at any time without losing your place. No account required. Everything stays on your device.</p>
             </div>
         </div>
 
@@ -1063,82 +1064,111 @@
             // Auth removed — no-op
         }
 
-        loadLibrary()  { 
-            const s = localStorage.getItem('cogniflowLibrary'); 
-            return s ? JSON.parse(s) : []; 
-        }
-        
-        saveLibrary()  { 
+        loadLibrary() {
             try {
-                // Save only metadata to localStorage (without words/chapters/rawWords to save space)
-                const metadata = this.library.map(book => {
-                    const { words, chapters, rawWords, ...meta } = book;
-                    return {
-                        ...meta,
-                        wordCount: words?.length || 0,
-                        chapterCount: chapters?.length || 0,
-                        hasChapters: (chapters?.length || 0) > 1
-                    };
-                });
-                localStorage.setItem('cogniflowLibrary', JSON.stringify(metadata));
-                console.log('Saved library metadata to localStorage:', metadata.length, 'books');
+                const s = localStorage.getItem('cogniflowLibrary');
+                return s ? JSON.parse(s) : [];
             } catch (e) {
-                console.warn('LocalStorage save error, falling back to minimal storage:', e.message);
-                // If quota exceeded, keep only most recent 3 books with minimal data
-                if (e.name === 'QuotaExceededError') {
-                    try {
-                        const recent = this.library
-                            .sort((a, b) => new Date(b.lastRead || 0) - new Date(a.lastRead || 0))
-                            .slice(0, 3)
-                            .map(book => ({
-                                id: book.id,
-                                title: book.title,
-                                author: book.author,
-                                progress: book.progress || 0,
-                                lastRead: book.lastRead,
-                                wordCount: book.words?.length || 0
-                            }));
-                        localStorage.setItem('cogniflowLibrary', JSON.stringify(recent));
-                        console.warn('Saved only 3 most recent books (minimal data) due to quota');
-                    } catch (e2) {
-                        // If even that fails, clear localStorage and save just IDs
-                        console.error('Extreme quota - clearing localStorage');
-                        try {
-                            localStorage.removeItem('cogniflowLibrary');
-                        } catch (e3) {
-                            console.error('Could not clear localStorage:', e3);
-                        }
-                    }
-                }
+                return [];
             }
         }
 
-        saveToLibrary() {
+        saveLibrary() {
+            // Save metadata index to localStorage (no words/chapters — too large)
+            try {
+                const metadata = this.library.map(book => ({
+                    id: book.id,
+                    title: book.title,
+                    author: book.author,
+                    progress: book.progress || 0,
+                    currentIndex: book.currentIndex || 0,
+                    currentChapterIndex: book.currentChapterIndex || 0,
+                    lastRead: book.lastRead,
+                    uploadDate: book.uploadDate,
+                    fileName: book.fileName,
+                    wordCount: book.words?.length || book.wordCount || 0,
+                    chapterCount: book.chapters?.length || book.chapterCount || 0
+                }));
+                localStorage.setItem('cogniflowLibrary', JSON.stringify(metadata));
+            } catch (e) {
+                console.warn('localStorage index save failed:', e.message);
+            }
+        }
+
+        async saveBookData(book) {
+            // Persist full word/chapter data so the book can actually be re-read
+            const key = 'cfbook:' + book.id;
+            const payload = JSON.stringify({
+                words: book.words || [],
+                chapters: book.chapters || [],
+                rawWords: book.rawWords || []
+            });
+            try {
+                // Try window.storage (Claude artifact persistent storage) first
+                if (typeof window.storage !== 'undefined') {
+                    await window.storage.set(key, payload);
+                } else {
+                    localStorage.setItem(key, payload);
+                }
+            } catch (e) {
+                // Fall back to localStorage even if window.storage fails
+                try { localStorage.setItem(key, payload); } catch (_) {}
+                console.warn('saveBookData failed:', e.message);
+            }
+        }
+
+        async loadBookData(bookId) {
+            const key = 'cfbook:' + bookId;
+            try {
+                if (typeof window.storage !== 'undefined') {
+                    const result = await window.storage.get(key);
+                    if (result) return JSON.parse(result.value);
+                }
+                // Fall back to localStorage
+                const s = localStorage.getItem(key);
+                return s ? JSON.parse(s) : null;
+            } catch (e) {
+                try {
+                    const s = localStorage.getItem(key);
+                    return s ? JSON.parse(s) : null;
+                } catch (_) { return null; }
+            }
+        }
+
+        async deleteBookData(bookId) {
+            const key = 'cfbook:' + bookId;
+            try {
+                if (typeof window.storage !== 'undefined') await window.storage.delete(key);
+                localStorage.removeItem(key);
+            } catch (e) {}
+        }
+
+        async saveToLibrary() {
             if (!this.currentBook) return;
-            console.log('Saving book:', this.currentBook.title, 'Words:', this.words.length, 'Chapters:', this.chapters.length);
             const idx = this.library.findIndex(b => b.id === this.currentBook.id);
-            
-            const data = { 
-                ...this.currentBook, 
-                progress: (this.currentIndex / this.words.length) * 100, 
-                currentIndex: this.currentIndex, 
-                currentChapterIndex: this.currentChapterIndex, 
-                lastRead: new Date().toISOString() 
+
+            const data = {
+                ...this.currentBook,
+                words: this.words,
+                chapters: this.chapters,
+                rawWords: this.rawWords,
+                progress: this.words.length > 0 ? (this.currentIndex / this.words.length) * 100 : 0,
+                currentIndex: this.currentIndex,
+                currentChapterIndex: this.currentChapterIndex,
+                lastRead: new Date().toISOString()
             };
-            
-            if (idx >= 0) this.library[idx] = data; 
+
+            if (idx >= 0) this.library[idx] = data;
             else this.library.push(data);
-            
+
+            // Save metadata index + full book data in parallel
             this.saveLibrary();
-            
-            console.log('Library after save:', this.library.length, 'books');
+            await this.saveBookData(data);
+
             const btn = this.saveBtn;
             btn.textContent = 'Saved ✓';
             btn.title = 'Saved to local library';
-            setTimeout(() => { 
-                btn.textContent = 'Save'; 
-                btn.title = '';
-            }, 1600);
+            setTimeout(() => { btn.textContent = 'Save'; btn.title = ''; }, 1600);
         }
 
         async fetchBookCover(title, author) {
@@ -1220,26 +1250,37 @@
             this.libraryContent.appendChild(grid);
         }
 
-        loadBookFromLibrary(index) {
+        async loadBookFromLibrary(index) {
             const book = this.library[index];
             this.currentBook = book;
-            this.words = book.words || [];
-            this.chapters = book.chapters || [];
             this.currentIndex = book.currentIndex || 0;
             this.currentChapterIndex = book.currentChapterIndex || 0;
-            
-            // Use saved rawWords if available, otherwise reconstruct
-            if (book.rawWords && Array.isArray(book.rawWords)) {
-                this.rawWords = book.rawWords;
+
+            this.wordDisplay.textContent = 'Loading…';
+
+            // Load the full word/chapter data from persistent storage
+            const stored = await this.loadBookData(book.id);
+            if (stored && stored.words && stored.words.length > 0) {
+                this.words    = stored.words;
+                this.chapters = stored.chapters || [];
+                this.rawWords = stored.rawWords && stored.rawWords.length > 0
+                    ? stored.rawWords
+                    : this.words.map(w => {
+                        let pause = 1.0;
+                        if (/[.!?]$/.test(w)) pause = 2.0;
+                        else if (/[,;:]$/.test(w)) pause = 1.25;
+                        return { text: w, pause };
+                    });
             } else {
-                this.rawWords = this.words.map(word => {
-                    let pause = 1.0;
-                    if (/[.!?]$/.test(word)) pause = 2.0;
-                    else if (/[,;:]$/.test(word)) pause = 1.25;
-                    return { text: word, pause };
-                });
+                // Fallback: book was saved before this fix, no word data available
+                this.words = [];
+                this.chapters = [];
+                this.rawWords = [];
+                this.wordDisplay.textContent = 'Book data unavailable — please re-upload the file.';
+                this.showSection('reader');
+                return;
             }
-            
+
             const hasChapters = this.chapters.length > 1;
             this.setProgressMode(hasChapters);
             if (hasChapters) this.displayChapterNavigation();
@@ -1628,8 +1669,10 @@
 
         confirmDelete() {
             if (this._pendingDeleteIndex === null) return;
+            const bookId = this.library[this._pendingDeleteIndex]?.id;
             this.library.splice(this._pendingDeleteIndex, 1);
             this.saveLibrary();
+            if (bookId) this.deleteBookData(bookId);
             this.closeDeleteModal();
             this.renderLibrary();
         }
