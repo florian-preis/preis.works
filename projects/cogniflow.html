@@ -68,12 +68,13 @@
                         box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
         }
         .navbar.scrolled .navbar-inner {
-            background: linear-gradient(135deg, #1c1c1c 0%, #0f0f0f 55%, #1c1c1c 100%);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background: rgba(10, 10, 10, 0.45);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
             border-radius: 50px;
             padding: 12px 28px;
-            box-shadow: 0 6px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .logo { font-size: 1.4em; font-weight: 400; color: #ffffff; text-decoration: none; letter-spacing: -0.02em; transition: color 0.2s ease; }
         .logo strong { font-weight: 700; }
@@ -120,13 +121,8 @@
             top: calc(var(--nav-h) + 16px);
             max-height: calc(100vh - var(--nav-h) - 26px);
             align-self: start;
-            /* Cap to same height as reader + controls combined */
-            height: fit-content;
         }
-        .reader-layout.has-chapters .chapter-navigation {
-            max-height: var(--chapter-nav-max-h, calc(100vh - var(--nav-h) - 26px));
-        }
-        .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: 2 / 6; }
+        .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: 2; }
         .chapter-navigation.active { display: block; }
         .chapter-navigation h3 {
             padding: 16px 18px 12px;
@@ -165,18 +161,19 @@
         .chapter-title-text { flex: 1; }
         .chapter-navigation::-webkit-scrollbar { width: 3px; }
         .chapter-navigation::-webkit-scrollbar-track { background: #000; }
-        .chapter-navigation::-webkit-scrollbar-thumb { background: #fff700; }
+        .chapter-navigation::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .chapter-navigation::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* ── READER RIGHT COL ── */
-        .reader-right { display: flex; flex-direction: column; gap: 14px; }
+        .reader-right { display: flex; flex-direction: column; gap: 0; }
         .reader-layout.has-chapters .reader-right { grid-column: 2; grid-row: 2 / 6; }
 
         /* ── DISPLAY AREA ── */
         .display-area {
             background: #000000;
-            padding: 80px 60px;
+            padding: 32px 60px;
             flex: 1;
-            min-height: 260px;
+            min-height: 180px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -196,14 +193,38 @@
 
         /* ── BUTTONS + STATUS ROW ── */
         .buttons-row {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            display: flex;
+            align-items: center;
             gap: 8px;
-            margin-bottom: 10px;
+            flex-wrap: wrap;
+            padding: 0;
+            border-top: 1px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
+            justify-content: space-between;
         }
-        .buttons-row button {
-            width: 100%;
-            padding: 11px 0;
+        .buttons-row .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding: 14px 0;
+        }
+        .progress-area {
+            flex: 1 1 200px;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 14px 0;
+        }
+        .progress-area .progress-bars {
+            flex: 1;
+            min-width: 100px;
+        }
+        /* When progress wraps to next line, it takes full width and Save aligns right */
+        .progress-area .btn-save {
+            flex-shrink: 0;
         }
         button {
             padding: 11px 28px;
@@ -219,7 +240,7 @@
             letter-spacing: 1.5px;
             white-space: nowrap;
         }
-        .btn-playpause { background: #ffffff; color: #000000; border-color: #ffffff; min-width: 72px; }
+        .btn-playpause { background: #ffffff; color: #000000; border-color: #ffffff; min-width: 88px; }
         .btn-playpause:hover:not(:disabled) { background: #fff700; border-color: #fff700; color: #000000; }
         .btn-playpause.is-playing { background: #000; color: #fff; border-color: #444; }
         .btn-playpause.is-playing:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000; }
@@ -231,7 +252,6 @@
         .btn-save.saved { border-color: #fff700 !important; color: #fff700 !important; }
         button:disabled { opacity: 0.18; cursor: not-allowed; }
 
-        .progress-area { flex: 1; min-width: 140px; }
         .progress-bars { display: flex; flex-direction: column; gap: 6px; }
         .progress-row { display: flex; align-items: center; gap: 9px; }
         .progress-label {
@@ -253,7 +273,10 @@
             grid-template-columns: 1fr 1fr 1fr;
             gap: 1px;
             background: #1a1a1a;
-            border: 1px solid #1a1a1a;
+            border-top: none;
+            border-left: 1px solid #1a1a1a;
+            border-right: 1px solid #1a1a1a;
+            border-bottom: 1px solid #1a1a1a;
         }
         .control-group {
             background: #000000;
@@ -331,7 +354,7 @@
         /* Font pill toggle */
         .font-toggle-btn {
             width: 100%;
-            height: 36px;
+            height: 34px;
             padding: 3px;
             border: 1px solid #222222;
             border-radius: 50px;
@@ -339,24 +362,28 @@
             cursor: pointer;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            align-items: center;
+            align-items: stretch;
             position: relative;
             transition: border-color 0.2s;
             overflow: hidden;
+            box-sizing: border-box;
         }
         .font-toggle-btn:hover { border-color: #444; }
         .font-toggle-label {
             position: relative;
             z-index: 2;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 400;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             text-align: center;
-            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: color 0.2s;
             color: #666;
             user-select: none;
             text-transform: uppercase;
+            white-space: nowrap;
         }
         .font-toggle-pill {
             position: absolute;
@@ -371,11 +398,11 @@
         /* serif active = pill on left */
         .font-toggle-btn.serif-active .font-toggle-pill { transform: translateX(0); }
         .font-toggle-btn.serif-active .font-label-serif { color: #000; }
-        .font-toggle-btn.serif-active .font-label-sans  { color: #555; }
+        .font-toggle-btn.serif-active .font-label-sans  { color: #666; }
         /* sans active = pill on right */
         .font-toggle-btn.sans-active .font-toggle-pill { transform: translateX(calc(100% + 0px)); }
         .font-toggle-btn.sans-active .font-label-sans  { color: #000; }
-        .font-toggle-btn.sans-active .font-label-serif { color: #555; }
+        .font-toggle-btn.sans-active .font-label-serif { color: #666; }
 
         /* ── KEYBOARD HINT ── */
         .keyboard-hint {
@@ -802,27 +829,27 @@
                         </div>
                     </div>
 
-                    <!-- Buttons row — always equal-spaced, never wraps into progress -->
+                    <!-- Buttons + progress: playback left, progress+save right, save wraps right -->
                     <div class="buttons-row">
-                        <button class="btn-playpause" id="playPauseBtn" disabled>Play</button>
-                        <button class="btn-rewind"  id="rewindBtn"  disabled title="← 10 words">← 10</button>
-                        <button class="btn-forward" id="forwardBtn" disabled title="→ 10 words">10 →</button>
-                        <button class="btn-reset"   id="resetBtn"   disabled>Reset</button>
-                        <button class="btn-save"    id="saveBtn"    disabled>Save</button>
-                    </div>
-
-                    <!-- Progress bars — own row below buttons -->
-                    <div class="progress-area">
-                        <div class="progress-bars">
-                            <div class="progress-row">
-                                <span class="progress-label" id="bookProgressLabel">Book</span>
-                                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-                                <span class="progress-pct" id="progressPct">0%</span>
-                            </div>
-                            <div class="progress-row" id="chapterProgressRow" style="display:none">
-                                <span class="progress-label">Chapter</span>
-                                <div class="progress-bar"><div class="progress-fill chapter-fill" id="chapterProgressFill"></div></div>
-                                <span class="progress-pct" id="chapterProgressPct">0%</span>
+                        <div class="btn-group">
+                            <button class="btn-playpause" id="playPauseBtn" disabled>Play</button>
+                            <button class="btn-rewind"  id="rewindBtn"  disabled title="← 10 words">← 10</button>
+                            <button class="btn-forward" id="forwardBtn" disabled title="→ 10 words">10 →</button>
+                            <button class="btn-reset"   id="resetBtn"   disabled>Reset</button>
+                            <button class="btn-save"    id="saveBtn"    disabled>Save</button>
+                        </div>
+                        <div class="progress-area">
+                            <div class="progress-bars">
+                                <div class="progress-row">
+                                    <span class="progress-label" id="bookProgressLabel">Book</span>
+                                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                                    <span class="progress-pct" id="progressPct">0%</span>
+                                </div>
+                                <div class="progress-row" id="chapterProgressRow" style="display:none">
+                                    <span class="progress-label">Chapter</span>
+                                    <div class="progress-bar"><div class="progress-fill chapter-fill" id="chapterProgressFill"></div></div>
+                                    <span class="progress-pct" id="chapterProgressPct">0%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1063,7 +1090,6 @@ class SpeedReader {
         this.fileInput.addEventListener('change',  e => this._handleFile(e));
         this.speedSlider.addEventListener('input', e => this.updateSpeed(e));
         this.bionicToggle.addEventListener('change', e => this.toggleBionic(e));
-        this.fontSelector.addEventListener('change', e => this.changeFont(e));
         this.playPauseBtn.addEventListener('click', () => { this.isPlaying ? this.pause() : this.play(); });
         this.resetBtn.addEventListener('click',   () => this.reset());
         this.rewindBtn.addEventListener('click',  () => this.skip(-10));
@@ -1105,6 +1131,9 @@ class SpeedReader {
         this.deleteCancelBtn.addEventListener('click',  () => this._closeDeleteModal());
         this.deleteConfirmBtn.addEventListener('click', () => this._confirmDelete());
         this.deleteModal.addEventListener('click', e => { if (e.target === this.deleteModal) this._closeDeleteModal(); });
+
+        // Sync chapter nav height on resize
+        window.addEventListener('resize', () => this._syncChapterNavHeight(), { passive: true });
 
         // No hash routing - causes page reload on Jekyll sites
 
@@ -1581,18 +1610,18 @@ class SpeedReader {
     }
 
     // ── Chapter nav ───────────────────────────────────────────────────────
+    _syncChapterNavHeight() {
+        if (!this.chapterNav || !this.chapterNav.classList.contains('active')) return;
+        const controlsRow = this.readerLayout && this.readerLayout.querySelector('.controls-row');
+        if (!controlsRow) return;
+        const navRect  = this.chapterNav.getBoundingClientRect();
+        const ctrlRect = controlsRow.getBoundingClientRect();
+        if (navRect.top > 0 && ctrlRect.bottom > navRect.top) {
+            this.chapterNav.style.maxHeight = (ctrlRect.bottom - navRect.top) + 'px';
+        }
+    }
+
     _displayChapterNav() {
-        // Align chapter nav bottom with the bottom of the controls-row (not keyboard hint)
-        requestAnimationFrame(() => {
-            const controlsRow = this.readerLayout.querySelector('.controls-row');
-            const chNav = this.chapterNav;
-            if (controlsRow && chNav) {
-                const navTop  = chNav.getBoundingClientRect().top;
-                const ctrlBot = controlsRow.getBoundingClientRect().bottom;
-                const h = ctrlBot - navTop;
-                if (h > 80) chNav.style.maxHeight = h + 'px';
-            }
-        });
         this.chapterList.innerHTML = '';
         this.chapters.forEach((ch, i) => {
             const li    = document.createElement('li');
@@ -1604,6 +1633,8 @@ class SpeedReader {
         this.chapterNav.classList.add('active');
         this.readerLayout.classList.add('has-chapters');
         this.chapterProgressRow.style.display = 'flex';
+        // Sync height after layout settles
+        requestAnimationFrame(() => this._syncChapterNavHeight());
     }
 
     jumpToChapter(idx) {
