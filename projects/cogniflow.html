@@ -941,22 +941,6 @@ const DB = {
     }
 };
 
-
-window._dbg = (msg) => {
-    const el = document.getElementById('debugLog');
-    if (el) {
-        const time = new Date().toLocaleTimeString();
-        el.innerHTML = `[${time}] ${msg}`;
-        const panel = document.getElementById('debugPanel');
-        if (panel) {
-            const line = document.createElement('div');
-            line.textContent = '[' + time + '] ' + msg;
-            panel.appendChild(line);
-        }
-    }
-    console.log('[DBG]', msg);
-};
-
 // ── SpeedReader ────────────────────────────────────────────────────────────
 class SpeedReader {
     constructor() {
@@ -972,14 +956,12 @@ class SpeedReader {
         this.currentBook         = null;
         this.library             = this._loadLibraryMeta();
 
-        this._initElements(); window._dbg('Elements initialized');
-        this._attachListeners(); window._dbg('Listeners attached');
+        this._initElements();
+        this._attachListeners();
 
         // Open DB then restore UI state from URL hash
-        window._dbg('Opening DB...'); DB.open().then(() => { window._dbg('DB opened, rendering library');
-            this.renderLibrary();
-            const hash = window.location.hash.replace('#', '') || 'reader';
-            this._applySection(hash);
+        DB.open().then(() => {
+            this._applySection('reader');
         });
     }
 
@@ -1082,11 +1064,7 @@ class SpeedReader {
         this.deleteConfirmBtn.addEventListener('click', () => this._confirmDelete());
         this.deleteModal.addEventListener('click', e => { if (e.target === this.deleteModal) this._closeDeleteModal(); });
 
-        // Hash routing
-        window.addEventListener('hashchange', () => {
-            const section = window.location.hash.replace('#', '') || 'reader';
-            this._applySection(section);
-        });
+        // No hash routing - causes page reload on Jekyll sites
 
         // Keyboard
         document.addEventListener('keydown', e => {
@@ -1107,8 +1085,7 @@ class SpeedReader {
 
     // ── Section routing ───────────────────────────────────────────────────
     showSection(section) {
-        window.location.hash = section;
-        // hashchange fires _applySection
+        this._applySection(section);
     }
 
     _applySection(section) {
@@ -1153,8 +1130,7 @@ class SpeedReader {
     }
 
     async saveToLibrary() {
-        window._dbg('saveToLibrary called, currentBook=' + (this.currentBook ? this.currentBook.title : 'NULL'));
-        if (!this.currentBook) { window._dbg('ERROR: currentBook is null!'); return; }
+        if (!this.currentBook) return;
 
         const meta = {
             id:                   this.currentBook.id,
@@ -1175,20 +1151,21 @@ class SpeedReader {
         else this.library.push(meta);
 
         // 1. Save tiny metadata index to localStorage
-        window._dbg('Saving metadata, library count=' + this.library.length);
-            this._saveLibraryMeta();
+        this._saveLibraryMeta();
 
         // 2. Save chapter text to IndexedDB (survives refresh, no size issues)
         const chapterData = {
             id:       this.currentBook.id,
             chapters: this.chapters.map(ch => ({ title: ch.title, text: ch.text, startIndex: ch.startIndex }))
         };
-        window._dbg('Saving to IDB, chapters=' + chapterData.chapters.length);
         await DB.put(chapterData);
-        window._dbg('IDB save complete');
 
         this.saveBtn.textContent = 'Saved ✓';
         setTimeout(() => { this.saveBtn.textContent = 'Save'; }, 1600);
+
+        // Show confirmation that save worked
+        console.log('Saved to library. Library now has', this.library.length, 'books');
+        console.log('localStorage check:', localStorage.getItem('cogniflowLibrary')?.length, 'chars');
     }
 
     async _autoSaveProgress() {
@@ -1203,7 +1180,7 @@ class SpeedReader {
     }
 
     // ── File loading ──────────────────────────────────────────────────────
-    async _handleFile(event) { window._dbg('File selected');
+    async _handleFile(event) {
         const file = event.target.files[0];
         if (!file) return;
         if (file.size > 10 * 1024 * 1024) { this.wordDisplay.textContent = 'File too large (max 10 MB).'; return; }
@@ -1258,7 +1235,7 @@ class SpeedReader {
         this._finishLoading();
     }
 
-    _finishLoading() { window._dbg('finishLoading: words=' + this.words.length + ' chapters=' + this.chapters.length);
+    _finishLoading() {
         const hasChapters = this.chapters.length > 1;
         this.setProgressMode(hasChapters);
         this.enableControls();
@@ -1544,6 +1521,8 @@ class SpeedReader {
 
     // ── Library rendering ─────────────────────────────────────────────────
     async renderLibrary() {
+        // Always re-read from localStorage to stay in sync
+        this.library = this._loadLibraryMeta();
         if (!this.library.length) {
             this.libraryContent.innerHTML = `
                 <div class="empty-library">
@@ -1672,8 +1651,5 @@ class SpeedReader {
 const reader = new SpeedReader();
 </script>
 
-
-<div id='debugPanel' style='position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font-family:monospace;font-size:11px;padding:8px 12px;z-index:9999;max-height:120px;overflow-y:auto;border-top:1px solid #333;'>
-  <strong style='color:#fff700'>DEBUG</strong> <span id='debugLog'>Initializing...</span>
-</div></body>
+</body>
 </html>
