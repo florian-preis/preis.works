@@ -918,13 +918,18 @@
             this.bionicEnabled = true;
             this.intervalId    = null;
             this.currentBook   = null;
-            this.rawWords      = []; // Initialize rawWords array
+            this.rawWords      = [];
             this.library       = this.loadLibrary();
+            this.db            = null; // IndexedDB instance
 
             this.initElements();
             this.attachEventListeners();
-            console.log('Library loaded:', this.library.length, 'books'); // Debug log
-            this.renderLibrary();
+            this.openDB().then(() => {
+                this.renderLibrary();
+                // Restore section from URL hash on load
+                const hash = window.location.hash.replace('#', '') || 'reader';
+                this.showSection(hash, true);
+            });
         }
 
         initElements() {
@@ -1036,9 +1041,18 @@
             document.addEventListener('click', () => {
                 document.querySelectorAll('.book-menu-dropdown.open').forEach(d => d.classList.remove('open'));
             });
+
+            // Hash-based routing — back/forward button support
+            window.addEventListener('hashchange', () => {
+                const section = window.location.hash.replace('#', '') || 'reader';
+                this.showSection(section, true);
+            });
         }
 
-        showSection(section) {
+        showSection(section, skipHashUpdate) {
+            // Normalise unknown hashes to 'reader'
+            if (!['reader','library','about'].includes(section)) section = 'reader';
+            if (!skipHashUpdate) window.location.hash = section;
             this.pause();
             ['readerSection','librarySection','aboutSection'].forEach(id => document.getElementById(id).classList.remove('active'));
             document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('nav-active'));
@@ -1064,111 +1078,134 @@
             // Auth removed — no-op
         }
 
-        loadLibrary() {
-            try {
-                const s = localStorage.getItem('cogniflowLibrary');
-                return s ? JSON.parse(s) : [];
-            } catch (e) {
-                return [];
-            }
-        }
-
-        saveLibrary() {
-            // Save metadata index to localStorage (no words/chapters — too large)
-            try {
-                const metadata = this.library.map(book => ({
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                    progress: book.progress || 0,
-                    currentIndex: book.currentIndex || 0,
-                    currentChapterIndex: book.currentChapterIndex || 0,
-                    lastRead: book.lastRead,
-                    uploadDate: book.uploadDate,
-                    fileName: book.fileName,
-                    wordCount: book.words?.length || book.wordCount || 0,
-                    chapterCount: book.chapters?.length || book.chapterCount || 0
-                }));
-                localStorage.setItem('cogniflowLibrary', JSON.stringify(metadata));
-            } catch (e) {
-                console.warn('localStorage index save failed:', e.message);
-            }
-        }
-
-        async saveBookData(book) {
-            // Persist full word/chapter data so the book can actually be re-read
-            const key = 'cfbook:' + book.id;
-            const payload = JSON.stringify({
-                words: book.words || [],
-                chapters: book.chapters || [],
-                rawWords: book.rawWords || []
+        // ── IndexedDB helpers ──────────────────────────────────────────────────
+        openDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('cogniflowDB', 1);
+                req.onupgradeneeded = e => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('books')) db.createObjectStore('books', { keyPath: 'id' });
+                };
+                req.onsuccess = e => { this.db = e.target.result; resolve(); };
+                req.onerror   = e => { console.warn('IndexedDB failed, falling back to localStorage'); resolve(); };
             });
-            try {
-                // Try window.storage (Claude artifact persistent storage) first
-                if (typeof window.storage !== 'undefined') {
-                    await window.storage.set(key, payload);
-                } else {
-                    localStorage.setItem(key, payload);
-                }
-            } catch (e) {
-                // Fall back to localStorage even if window.storage fails
-                try { localStorage.setItem(key, payload); } catch (_) {}
-                console.warn('saveBookData failed:', e.message);
+        }
+
+        async saveBookData(bookData) {
+            // Store chapter text only (not word arrays — those are re-derived on load)
+            const record = {
+                id: bookData.id,
+                chapters: (bookData.chapters || []).map(ch => ({ title: ch.title, text: ch.text, startIndex: ch.startIndex }))
+            };
+            if (this.db) {
+                return new Promise((resolve) => {
+                    const tx  = this.db.transaction('books', 'readwrite');
+                    const req = tx.objectStore('books').put(record);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror   = () => { this._lsFallbackSave(record); resolve(false); };
+                });
+            } else {
+                this._lsFallbackSave(record);
             }
+        }
+
+        _lsFallbackSave(record) {
+            try { localStorage.setItem('cfbook:' + record.id, JSON.stringify(record)); } catch(e) {}
         }
 
         async loadBookData(bookId) {
-            const key = 'cfbook:' + bookId;
-            try {
-                if (typeof window.storage !== 'undefined') {
-                    const result = await window.storage.get(key);
-                    if (result) return JSON.parse(result.value);
-                }
-                // Fall back to localStorage
-                const s = localStorage.getItem(key);
-                return s ? JSON.parse(s) : null;
-            } catch (e) {
+            if (this.db) {
+                return new Promise((resolve) => {
+                    const tx  = this.db.transaction('books', 'readonly');
+                    const req = tx.objectStore('books').get(bookId);
+                    req.onsuccess = e => {
+                        if (e.target.result) { resolve(e.target.result); return; }
+                        // Not in IDB — try localStorage fallback
+                        try {
+                            const s = localStorage.getItem('cfbook:' + bookId);
+                            resolve(s ? JSON.parse(s) : null);
+                        } catch(_) { resolve(null); }
+                    };
+                    req.onerror = () => resolve(null);
+                });
+            } else {
                 try {
-                    const s = localStorage.getItem(key);
+                    const s = localStorage.getItem('cfbook:' + bookId);
                     return s ? JSON.parse(s) : null;
-                } catch (_) { return null; }
+                } catch(e) { return null; }
             }
         }
 
         async deleteBookData(bookId) {
-            const key = 'cfbook:' + bookId;
+            if (this.db) {
+                const tx = this.db.transaction('books', 'readwrite');
+                tx.objectStore('books').delete(bookId);
+            }
+            try { localStorage.removeItem('cfbook:' + bookId); } catch(e) {}
+        }
+
+        // ── Library metadata (localStorage — tiny, just IDs + progress) ────────
+        loadLibrary() {
             try {
-                if (typeof window.storage !== 'undefined') await window.storage.delete(key);
-                localStorage.removeItem(key);
-            } catch (e) {}
+                const s = localStorage.getItem('cogniflowLibrary');
+                return s ? JSON.parse(s) : [];
+            } catch(e) { return []; }
+        }
+
+        saveLibrary() {
+            try {
+                const metadata = this.library.map(b => ({
+                    id: b.id, title: b.title, author: b.author,
+                    progress: b.progress || 0,
+                    currentIndex: b.currentIndex || 0,
+                    currentChapterIndex: b.currentChapterIndex || 0,
+                    lastRead: b.lastRead, uploadDate: b.uploadDate, fileName: b.fileName,
+                    wordCount: b.wordCount || 0, chapterCount: b.chapterCount || 0
+                }));
+                localStorage.setItem('cogniflowLibrary', JSON.stringify(metadata));
+            } catch(e) { console.warn('saveLibrary failed:', e.message); }
         }
 
         async saveToLibrary() {
             if (!this.currentBook) return;
             const idx = this.library.findIndex(b => b.id === this.currentBook.id);
 
-            const data = {
-                ...this.currentBook,
-                words: this.words,
-                chapters: this.chapters,
-                rawWords: this.rawWords,
+            const meta = {
+                id: this.currentBook.id,
+                title: this.currentBook.title,
+                author: this.currentBook.author,
+                fileName: this.currentBook.fileName,
+                uploadDate: this.currentBook.uploadDate,
                 progress: this.words.length > 0 ? (this.currentIndex / this.words.length) * 100 : 0,
                 currentIndex: this.currentIndex,
                 currentChapterIndex: this.currentChapterIndex,
-                lastRead: new Date().toISOString()
+                lastRead: new Date().toISOString(),
+                wordCount: this.words.length,
+                chapterCount: this.chapters.length
             };
 
-            if (idx >= 0) this.library[idx] = data;
-            else this.library.push(data);
+            if (idx >= 0) this.library[idx] = meta;
+            else this.library.push(meta);
 
-            // Save metadata index + full book data in parallel
+            // Save metadata to localStorage (tiny) + chapter text to IndexedDB (large)
             this.saveLibrary();
-            await this.saveBookData(data);
+            await this.saveBookData({ id: this.currentBook.id, chapters: this.chapters });
 
             const btn = this.saveBtn;
             btn.textContent = 'Saved ✓';
-            btn.title = 'Saved to local library';
+            btn.title = 'Saved to library';
             setTimeout(() => { btn.textContent = 'Save'; btn.title = ''; }, 1600);
+        }
+
+        async autoSaveProgress() {
+            if (!this.currentBook) return;
+            const idx = this.library.findIndex(b => b.id === this.currentBook.id);
+            if (idx < 0) return; // only auto-save if already in library
+            this.library[idx].progress = this.words.length > 0 ? (this.currentIndex / this.words.length) * 100 : 0;
+            this.library[idx].currentIndex = this.currentIndex;
+            this.library[idx].currentChapterIndex = this.currentChapterIndex;
+            this.library[idx].lastRead = new Date().toISOString();
+            this.saveLibrary();
         }
 
         async fetchBookCover(title, author) {
@@ -1195,7 +1232,7 @@
                 const card = document.createElement('div');
                 card.className = 'book-card';
                 
-                const displayInfo = book.words ? `${book.words.length} words` : `${book.wordCount || 0} words`;
+                const displayInfo = book.wordCount ? `${book.wordCount.toLocaleString()} words` : '';
                 
                 card.innerHTML = `
                     <div class="book-cover" id="cover-${idx}">
@@ -1252,34 +1289,25 @@
 
         async loadBookFromLibrary(index) {
             const book = this.library[index];
-            this.currentBook = book;
-            this.currentIndex = book.currentIndex || 0;
-            this.currentChapterIndex = book.currentChapterIndex || 0;
-
             this.wordDisplay.textContent = 'Loading…';
 
-            // Load the full word/chapter data from persistent storage
             const stored = await this.loadBookData(book.id);
-            if (stored && stored.words && stored.words.length > 0) {
-                this.words    = stored.words;
-                this.chapters = stored.chapters || [];
-                this.rawWords = stored.rawWords && stored.rawWords.length > 0
-                    ? stored.rawWords
-                    : this.words.map(w => {
-                        let pause = 1.0;
-                        if (/[.!?]$/.test(w)) pause = 2.0;
-                        else if (/[,;:]$/.test(w)) pause = 1.25;
-                        return { text: w, pause };
-                    });
-            } else {
-                // Fallback: book was saved before this fix, no word data available
-                this.words = [];
-                this.chapters = [];
-                this.rawWords = [];
-                this.wordDisplay.textContent = 'Book data unavailable — please re-upload the file.';
+            if (!stored || !stored.chapters || stored.chapters.length === 0) {
+                this.wordDisplay.textContent = 'Book data not found. Please re-upload the file.';
                 this.showSection('reader');
                 return;
             }
+
+            // Restore metadata
+            this.currentBook = { ...book };
+            this.chapters = stored.chapters;
+
+            // Re-derive words + rawWords from chapter text (no storage bloat)
+            this.processAllChapters();
+
+            // Restore reading position
+            this.currentIndex = book.currentIndex || 0;
+            this.currentChapterIndex = book.currentChapterIndex || 0;
 
             const hasChapters = this.chapters.length > 1;
             this.setProgressMode(hasChapters);
@@ -1372,9 +1400,7 @@
         }
 
         finishLoading() {
-            this.currentBook.words = this.words;
-            this.currentBook.chapters = this.chapters;
-            this.currentBook.rawWords = this.rawWords; // Save rawWords for pause data
+            // Don't bloat currentBook with word arrays — they live on this.words/rawWords
             const hasChapters = this.chapters.length > 1;
             this.setProgressMode(hasChapters);
             this.enableControls();
@@ -1527,6 +1553,8 @@
             this.wordDisplay.innerHTML = this.applyBionicReading(wordObj.text);
             this.currentIndex++;
             this.updateProgress();
+            // Auto-save progress every 50 words if book is in library
+            if (this.currentIndex % 50 === 0) this.autoSaveProgress();
 
             // Schedule next word with dynamic pause
             if (this.isPlaying) {
