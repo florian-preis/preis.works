@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects | Florian Preis</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='white' letter-spacing='0.5'>FP</text></svg>">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -19,7 +20,7 @@
       --ham-stroke: 1.5px;
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overscroll-behavior: none; }
 
     body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -57,20 +58,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: transparent;
       border-radius: 0;
+      background: transparent;
       transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
                   border-radius 0.45s cubic-bezier(0.4,0,0.2,1),
                   padding 0.45s cubic-bezier(0.4,0,0.2,1),
                   box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
     }
     .navbar.scrolled .navbar-inner {
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(235,235,235,0.85);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
       border-radius: 50px;
       padding: 12px 28px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
     }
     .logo {
       font-size: 14px;
@@ -169,23 +170,20 @@
       border: 1px solid var(--border);
       margin-bottom: 1px;
       transition: background 0.2s;
-      overflow: hidden;
-      min-height: 280px;
     }
     .project-card:hover { background: #fafafa; }
 
     .project-preview {
-      overflow: hidden;
-      position: relative;
       background: #000;
-      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
     .project-preview svg {
       width: 100%;
-      height: 100%;
+      height: auto;
       display: block;
-      position: absolute;
-      inset: 0;
     }
 
     .project-info {
@@ -194,6 +192,21 @@
       flex-direction: column;
       justify-content: center;
       border-right: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .project-card {
+        grid-template-columns: 1fr;
+      }
+      .project-preview {
+        order: 2;
+        border-top: 1px solid var(--border);
+      }
+      .project-info {
+        order: 1;
+        border-right: none;
+        padding: 28px 24px 36px;
+      }
     }
     .project-tag {
       font-size: 10px;
@@ -236,7 +249,7 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
-      background: #c8c8c8;
+      background: #d0cdc9;
     }
     .site-footer::before {
       content: '';
@@ -299,20 +312,6 @@
       .navbar { padding: 0 20px; }
       .navbar.scrolled { padding: 10px 20px; }
       .navbar-inner { max-width: 100%; }
-      /* Stack preview above info on mobile */
-      .project-card {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-      }
-      .project-preview {
-        position: relative;
-        aspect-ratio: 16/9;
-      }
-      .project-info {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 28px 24px 36px;
-      }
       .project-title { font-size: 22px; }
       .projects-wrap { padding: 40px 20px 80px; }
       .footer-inner { padding: 0 20px; }
@@ -349,75 +348,66 @@
 
   <a class="project-card" href="/projects/cogniflow" target="_blank">
     <div class="project-info">
-      <p class="project-tag">Tool &middot; Reading</p>
+      <p class="project-tag">Reading Tool</p>
       <h2 class="project-title">cogniflow</h2>
       <p class="project-desc">A focused reading environment that presents text word-by-word at a custom speed. Supports EPUB, PDF, and plain text. Includes bionic reading and a personal library saved locally in your browser.</p>
-      <span class="project-link">Open project &rarr;</span>
+      <span class="project-link">Open &rarr;</span>
     </div>
     <div class="project-preview">
-      <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
         <!-- background -->
         <rect width="640" height="360" fill="#000"/>
         <!-- navbar -->
-        <rect width="640" height="52" fill="#0a0a0a"/>
-        <rect y="52" width="640" height="1" fill="#1e1e1e"/>
-        <!-- logo: cogni (bold) flow (regular) -->
-        <text x="80" y="33" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="15" fill="#fff" font-weight="700" letter-spacing="-0.02em">cogni</text>
-        <text x="133" y="33" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="15" fill="#fff" font-weight="400" letter-spacing="-0.02em">flow</text>
-        <!-- nav links -->
-        <text x="420" y="31" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11" fill="#fff" font-weight="500">Reader</text>
-        <text x="476" y="31" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11" fill="#555">Library</text>
-        <text x="530" y="31" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11" fill="#555">About</text>
-        <!-- upload tab bar -->
-        <rect x="80" y="68" width="640" height="28" fill="#000"/>
-        <text x="80" y="86" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#aaa" letter-spacing="1.5">UPLOAD FILE</text>
-        <rect x="80" y="93" width="74" height="2" fill="#fff700"/>
-        <text x="175" y="86" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#444" letter-spacing="1.5">PASTE TEXT</text>
-        <rect x="80" y="95" width="480" height="1" fill="#1a1a1a"/>
+        <rect width="640" height="48" fill="#0a0a0a"/>
+        <rect y="48" width="640" height="1" fill="#1e1e1e"/>
+        <!-- logo -->
+        <text x="32" y="30" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="14" fill="#fff" letter-spacing="-0.02em" dominant-baseline="middle"><tspan font-weight="700">cogni</tspan><tspan font-weight="400">flow</tspan></text>
+        <!-- nav links right-aligned -->
+        <text x="608" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#555" text-anchor="end">About</text>
+        <text x="548" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#555" text-anchor="end">Library</text>
+        <text x="490" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" font-weight="500" text-anchor="end">Reader</text>
+        <!-- tab bar -->
+        <rect x="0" y="49" width="640" height="26" fill="#000"/>
+        <text x="32" y="66" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#aaa" letter-spacing="1.5">UPLOAD FILE</text>
+        <rect x="32" y="72" width="68" height="1.5" fill="#fff700"/>
+        <text x="116" y="66" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#444" letter-spacing="1.5">PASTE TEXT</text>
+        <rect x="0" y="75" width="640" height="1" fill="#1a1a1a"/>
         <!-- main display area -->
-        <rect x="80" y="96" width="480" height="130" fill="#000"/>
-        <text x="320" y="178" font-family="Georgia,serif" font-size="58" fill="#ffffff" text-anchor="middle" font-weight="400" letter-spacing="-0.02em">Upload</text>
+        <rect x="0" y="76" width="640" height="160" fill="#000"/>
+        <text x="320" y="168" font-family="Georgia,serif" font-size="46" fill="#ffffff" text-anchor="middle" font-weight="400" letter-spacing="-0.02em">Start reading</text>
         <!-- controls bar -->
-        <rect x="80" y="226" width="480" height="1" fill="#1a1a1a"/>
-        <rect x="80" y="227" width="480" height="36" fill="#000"/>
-        <!-- play button (white pill) -->
-        <rect x="80" y="232" width="54" height="22" rx="11" fill="#fff"/>
-        <text x="107" y="247" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8" fill="#000" text-anchor="middle" letter-spacing="1.2">PLAY</text>
-        <!-- pause button -->
-        <rect x="138" y="232" width="54" height="22" rx="11" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
-        <text x="165" y="247" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8" fill="#555" text-anchor="middle" letter-spacing="1.2">PAUSE</text>
-        <!-- reset button -->
-        <rect x="196" y="232" width="54" height="22" rx="11" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
-        <text x="223" y="247" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8" fill="#555" text-anchor="middle" letter-spacing="1.2">RESET</text>
-        <!-- progress bar -->
-        <rect x="264" y="241" width="210" height="2" rx="1" fill="#1a1a1a"/>
-        <text x="484" y="245" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8" fill="#333">0%</text>
+        <rect x="0" y="236" width="640" height="1" fill="#1a1a1a"/>
+        <rect x="0" y="237" width="640" height="34" fill="#000"/>
+        <rect x="32" y="242" width="46" height="20" rx="10" fill="#fff"/>
+        <text x="55" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#000" text-anchor="middle" letter-spacing="1">PLAY</text>
+        <rect x="82" y="242" width="46" height="20" rx="10" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
+        <text x="105" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#555" text-anchor="middle" letter-spacing="1">PAUSE</text>
+        <rect x="132" y="242" width="46" height="20" rx="10" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
+        <text x="155" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#555" text-anchor="middle" letter-spacing="1">RESET</text>
+        <rect x="192" y="250" width="420" height="1.5" rx="1" fill="#1a1a1a"/>
+        <text x="620" y="254" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#333" text-anchor="end">0%</text>
         <!-- settings panel -->
-        <rect x="80" y="263" width="480" height="1" fill="#1a1a1a"/>
-        <rect x="80" y="264" width="480" height="72" fill="#000"/>
-        <rect x="240" y="264" width="1" height="72" fill="#1a1a1a"/>
-        <rect x="400" y="264" width="1" height="72" fill="#1a1a1a"/>
+        <rect x="0" y="271" width="640" height="1" fill="#1a1a1a"/>
+        <rect x="0" y="272" width="640" height="88" fill="#000"/>
+        <rect x="214" y="272" width="1" height="88" fill="#1a1a1a"/>
+        <rect x="428" y="272" width="1" height="88" fill="#1a1a1a"/>
         <!-- WPM -->
-        <text x="93" y="280" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" fill="#444" letter-spacing="2">READING SPEED</text>
-        <rect x="93" y="296" width="110" height="2" rx="1" fill="#2a2a2a"/>
-        <circle cx="148" cy="297" r="6" fill="#fff700" stroke="#000" stroke-width="1.5"/>
-        <text x="210" y="302" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11" fill="#fff" text-anchor="end">300 WPM</text>
+        <text x="32" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">READING SPEED</text>
+        <rect x="32" y="306" width="148" height="1.5" rx="1" fill="#2a2a2a"/>
+        <circle cx="106" cy="307" r="6" fill="#fff700" stroke="#000" stroke-width="1.5"/>
+        <text x="190" y="311" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" text-anchor="end">300 WPM</text>
         <!-- Font picker -->
-        <text x="253" y="280" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" fill="#444" letter-spacing="2">FONT</text>
-        <rect x="253" y="288" width="100" height="20" rx="10" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
-        <text x="303" y="302" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#999" text-anchor="middle">Serif</text>
+        <text x="234" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">FONT</text>
+        <rect x="234" y="298" width="120" height="20" rx="10" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
+        <text x="294" y="312" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#999" text-anchor="middle">Serif</text>
         <!-- Bionic toggle -->
-        <text x="413" y="280" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" fill="#444" letter-spacing="2">BIONIC READING</text>
-        <rect x="413" y="290" width="36" height="18" rx="9" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="1"/>
-        <circle cx="422" cy="299" r="7" fill="#fff"/>
-        <!-- footer -->
-        <rect y="336" width="640" height="24" fill="#000"/>
-        <rect y="336" width="640" height="1" fill="#1a1a1a"/>
-        <text x="80" y="352" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#333" letter-spacing="0.5">cogniflow — Reading Reimagined</text>
+        <text x="448" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">BIONIC READING</text>
+        <rect x="448" y="298" width="34" height="18" rx="9" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="1"/>
+        <circle cx="457" cy="307" r="7" fill="#fff"/>
         <!-- vignette -->
         <defs>
           <radialGradient id="vig" cx="50%" cy="50%" r="70%">
-            <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+            <stop offset="55%" stop-color="#000" stop-opacity="0"/>
             <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
           </radialGradient>
         </defs>
