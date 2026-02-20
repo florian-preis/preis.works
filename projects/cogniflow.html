@@ -1,4 +1,4 @@
--e ---
+---
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -14,15 +14,13 @@
             background: #000000;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
             padding: 0;
             color: #000;
         }
 
         .container {
             background: #000000;
-            max-width: 100%;
             width: 100%;
             min-height: 100vh;
             padding: 0;
@@ -31,25 +29,36 @@
         }
 
         /* ── NAVBAR ── */
+        :root {
+            --nav-h: 68px;
+            --max-w: 1500px;
+        }
         .navbar {
             background: #000000;
             position: sticky;
             top: 0;
             z-index: 1000;
+            height: var(--nav-h);
+            border-bottom: 1px solid #1a1a1a;
             display: flex;
             justify-content: center;
-            padding: 0;
+            padding: 0 52px;
             transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
+                        border-color 0.45s,
                         padding 0.45s cubic-bezier(0.4,0,0.2,1);
         }
-        .navbar.scrolled { background: transparent; padding: 10px 0; }
+        .navbar.scrolled {
+            background: transparent;
+            border-bottom-color: transparent;
+            padding: 10px 52px;
+        }
         .navbar-inner {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            max-width: 1500px;
-            padding: 24px 80px;
+            max-width: calc(var(--max-w) - 104px);
+            padding: 0;
             border-radius: 0;
             background: transparent;
             transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
@@ -59,10 +68,11 @@
         }
         .navbar.scrolled .navbar-inner {
             background: linear-gradient(135deg, #1c1c1c 0%, #0f0f0f 55%, #1c1c1c 100%);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             border-radius: 50px;
-            padding: 11px 28px;
+            padding: 12px 28px;
             box-shadow: 0 6px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
-            max-width: calc(1500px - 160px);
         }
         .logo { font-size: 1.4em; font-weight: 400; color: #ffffff; text-decoration: none; letter-spacing: -0.02em; transition: color 0.2s ease; }
         .logo strong { font-weight: 700; }
@@ -74,9 +84,9 @@
 
         /* ── MAIN CONTENT ── */
         .main-content {
-            padding: 48px 80px 80px;
+            padding: 48px 52px 80px;
             background: #000000;
-            max-width: 1400px;
+            max-width: var(--max-w);
             width: 100%;
             margin: 0 auto;
             flex: 1;
@@ -106,8 +116,8 @@
             border: 1px solid #1e1e1e;
             overflow-y: auto;
             position: sticky;
-            top: 84px;
-            max-height: calc(100vh - 110px);
+            top: calc(var(--nav-h) + 16px);
+            max-height: calc(100vh - var(--nav-h) - 26px);
             align-self: start;
         }
         .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: 2 / 6; }
@@ -546,20 +556,54 @@
 
         /* ── FOOTER ── */
         .site-footer {
-            background: #fff700;
+            position: relative;
+            width: 100%;
+            height: 58px;
+            flex-shrink: 0;
             display: flex;
             justify-content: center;
+            overflow: hidden;
+            background: #fff700;
             margin-top: auto;
         }
+        .site-footer::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+            opacity: 0.10;
+            animation: grainDrift 8s steps(10, end) infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes grainDrift {
+            0%   { transform: translate(0,    0);  }
+            10%  { transform: translate(-3%,  2%); }
+            20%  { transform: translate(2%,  -3%); }
+            30%  { transform: translate(-2%,  3%); }
+            40%  { transform: translate(3%,   1%); }
+            50%  { transform: translate(-1%, -2%); }
+            60%  { transform: translate(2%,   3%); }
+            70%  { transform: translate(-3%, -1%); }
+            80%  { transform: translate(1%,   2%); }
+            90%  { transform: translate(-2%,  0%); }
+            100% { transform: translate(0,    0);  }
+        }
         .footer-inner {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            max-width: 1500px;
-            padding: 16px 80px;
+            max-width: var(--max-w);
+            padding: 0 52px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 100%;
         }
-        .footer-copy, .footer-credit { font-size: 12px; color: #000000; font-weight: 400; letter-spacing: 0.01em; }
+        .footer-copy, .footer-credit { font-size: 11px; letter-spacing: 0.04em; color: #000000; font-weight: 400; }
 
         /* ── NAV AUTH LINK ── */
         .nav-auth {
@@ -607,7 +651,7 @@
             background: #000000;
             border-bottom: 1px solid #1a1a1a;
             position: sticky;
-            top: 60px;
+            top: var(--nav-h);
             z-index: 999;
         }
         .mobile-menu.open { display: flex; }
@@ -627,11 +671,12 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .navbar-inner { padding: 14px 20px; }
-            .navbar.scrolled .navbar-inner { padding: 10px 18px; }
+            .navbar { padding: 0 20px; }
+            .navbar.scrolled { padding: 10px 20px; }
+            .navbar-inner { max-width: 100%; }
             .nav-menu { display: none; }
             .hamburger { display: flex; }
-            .main-content { padding: 24px 20px 60px; }
+            .main-content { padding: 24px 20px 60px; max-width: 100%; }
             .footer-inner { padding: 14px 20px; }
             .reader-layout.has-chapters { grid-template-columns: 1fr; }
             .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: auto; position: static; max-height: 180px; }
@@ -641,7 +686,7 @@
             .display-area { padding: 40px 24px; }
             .keyboard-hint { display: none; }
             .site-footer { flex-direction: column; }
-            .footer-inner { padding: 14px 20px; flex-direction: column; gap: 4px; text-align: center; }
+            .footer-inner { padding: 0 20px; flex-direction: row; gap: 0; text-align: left; }
             .buttons-status-row { gap: 8px; }
             button { padding: 10px 18px; font-size: 10px; }
         }
