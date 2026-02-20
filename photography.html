@@ -502,7 +502,7 @@ function parsePhotoFilename(src) {
     const img = document.createElement('img');
     img.src = photo.src;
     img.alt = caption;
-    img.loading = 'lazy';
+    img.loading = idx === 0 ? 'eager' : 'lazy';
     item.appendChild(img);
     item.addEventListener('click', () => openLightbox(idx));
     grid.appendChild(item);
