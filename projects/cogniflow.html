@@ -68,13 +68,13 @@
                         box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
         }
         .navbar.scrolled .navbar-inner {
-            background: rgba(10, 10, 10, 0.45);
-            backdrop-filter: blur(20px) saturate(160%);
-            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            background: rgba(22, 22, 22, 0.75);
+            backdrop-filter: blur(20px) saturate(140%);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
             border-radius: 50px;
             padding: 12px 28px;
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+            border: none;
+            box-shadow: none;
         }
         .logo { font-size: 1.4em; font-weight: 400; color: #ffffff; text-decoration: none; letter-spacing: -0.02em; transition: color 0.2s ease; }
         .logo strong { font-weight: 700; }
@@ -98,14 +98,17 @@
 
         /* ── READER LAYOUT ── */
         .reader-layout {
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 0;
         }
-        .reader-layout.has-chapters {
-            grid-template-columns: 210px 1fr;
-            column-gap: 20px;
+        .reader-body {
+            display: flex;
+            flex-direction: row;
+            gap: 0;
+            align-items: flex-start;
         }
+
         .upload-section {
             grid-column: 1 / -1;
             margin-bottom: 20px;
@@ -114,16 +117,19 @@
         /* ── CHAPTER NAV ── */
         .chapter-navigation {
             display: none;
+            width: 210px;
+            flex-shrink: 0;
             background: #000000;
             border: 1px solid #1e1e1e;
             overflow-y: auto;
             position: sticky;
             top: calc(var(--nav-h) + 16px);
-            max-height: calc(100vh - var(--nav-h) - 26px);
-            align-self: start;
+            align-self: flex-start;
         }
-        .reader-layout.has-chapters .chapter-navigation { grid-column: 1; grid-row: 2; }
-        .chapter-navigation.active { display: block; }
+        .chapter-navigation.active {
+            display: flex;
+            flex-direction: column;
+        }
         .chapter-navigation h3 {
             padding: 16px 18px 12px;
             color: #ffffff;
@@ -165,8 +171,16 @@
         .chapter-navigation::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* ── READER RIGHT COL ── */
-        .reader-right { display: flex; flex-direction: column; gap: 0; }
-        .reader-layout.has-chapters .reader-right { grid-column: 2; grid-row: 2 / 6; }
+        .reader-right {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            flex: 1;
+            min-width: 0;
+        }
+        .chapter-navigation.active + .reader-right {
+            margin-left: 20px;
+        }
 
         /* ── DISPLAY AREA ── */
         .display-area {
@@ -195,28 +209,21 @@
         .buttons-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            column-gap: 8px;
+            row-gap: 28px;
             flex-wrap: wrap;
-            padding: 0;
+            padding: 12px 0 28px 0;
             border-top: 1px solid #1a1a1a;
             border-bottom: 1px solid #1a1a1a;
-            justify-content: space-between;
         }
-        .buttons-row .btn-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-            padding: 14px 0;
-        }
+        
         .progress-area {
-            flex: 1 1 200px;
-            min-width: 0;
+            flex: 1 1 auto;
+            min-width: 160px;
             display: flex;
             align-items: center;
             gap: 12px;
             justify-content: flex-end;
-            padding: 14px 0;
         }
         .progress-area .progress-bars {
             flex: 1;
@@ -240,7 +247,7 @@
             letter-spacing: 1.5px;
             white-space: nowrap;
         }
-        .btn-playpause { background: #ffffff; color: #000000; border-color: #ffffff; min-width: 88px; }
+        .btn-playpause { background: #ffffff; color: #000000; border-color: #ffffff; width: 96px; }
         .btn-playpause:hover:not(:disabled) { background: #fff700; border-color: #fff700; color: #000000; }
         .btn-playpause.is-playing { background: #000; color: #fff; border-color: #444; }
         .btn-playpause.is-playing:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000; }
@@ -249,7 +256,8 @@
         .btn-forward:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000000; }
         .btn-save { min-width: 64px; }
         .btn-save:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; color: #000000; }
-        .btn-save.saved { border-color: #fff700 !important; color: #fff700 !important; }
+        .btn-save.saved { border-color: #fff700 !important; color: #fff700 !important; background: #000000 !important; }
+        .btn-save.saved:hover { background: #000000 !important; border-color: #fff700 !important; color: #fff700 !important; }
         button:disabled { opacity: 0.18; cursor: not-allowed; }
 
         .progress-bars { display: flex; flex-direction: column; gap: 6px; }
@@ -813,13 +821,15 @@
                     </div>
                 </div>
 
-                <!-- Chapter nav -->
+                <!-- Reader body: chapter nav + reading pane side by side -->
+                <div class="reader-body">
+
                 <div class="chapter-navigation" id="chapterNav">
                     <h3>Chapters</h3>
                     <ul class="chapter-list" id="chapterList"></ul>
                 </div>
 
-                <!-- Right column -->
+                <!-- Reading pane -->
                 <div class="reader-right reader-panel">
 
                     <!-- Word display -->
@@ -831,13 +841,11 @@
 
                     <!-- Buttons + progress: playback left, progress+save right, save wraps right -->
                     <div class="buttons-row">
-                        <div class="btn-group">
-                            <button class="btn-playpause" id="playPauseBtn" disabled>Play</button>
-                            <button class="btn-rewind"  id="rewindBtn"  disabled title="← 10 words">← 10</button>
-                            <button class="btn-forward" id="forwardBtn" disabled title="→ 10 words">10 →</button>
-                            <button class="btn-reset"   id="resetBtn"   disabled>Reset</button>
-                            <button class="btn-save"    id="saveBtn"    disabled>Save</button>
-                        </div>
+                        <button class="btn-playpause" id="playPauseBtn" disabled>Play</button>
+                        <button class="btn-rewind"  id="rewindBtn"  disabled title="← 10 words">← 10</button>
+                        <button class="btn-forward" id="forwardBtn" disabled title="→ 10 words">10 →</button>
+                        <button class="btn-reset"   id="resetBtn"   disabled>Reset</button>
+                        <button class="btn-save"    id="saveBtn"    disabled>Save</button>
                         <div class="progress-area">
                             <div class="progress-bars">
                                 <div class="progress-row">
@@ -897,6 +905,8 @@
                     </div>
 
                 </div><!-- /reader-right -->
+
+                </div><!-- /reader-body -->
             </div><!-- /reader-layout -->
         </div>
 
@@ -1235,7 +1245,7 @@ class SpeedReader {
 
 
         this.saveBtn.classList.add('saved');
-        setTimeout(() => { this.saveBtn.classList.remove('saved'); }, 1600);
+        setTimeout(() => { this.saveBtn.classList.remove('saved'); }, 1000);
     }
 
     async _autoSaveProgress() {
@@ -1614,10 +1624,11 @@ class SpeedReader {
         if (!this.chapterNav || !this.chapterNav.classList.contains('active')) return;
         const controlsRow = this.readerLayout && this.readerLayout.querySelector('.controls-row');
         if (!controlsRow) return;
-        const navRect  = this.chapterNav.getBoundingClientRect();
-        const ctrlRect = controlsRow.getBoundingClientRect();
-        if (navRect.top > 0 && ctrlRect.bottom > navRect.top) {
-            this.chapterNav.style.maxHeight = (ctrlRect.bottom - navRect.top) + 'px';
+        // Height = from top of chapter nav to bottom of controls-row
+        const navTop  = this.chapterNav.getBoundingClientRect().top;
+        const ctrlBot = controlsRow.getBoundingClientRect().bottom;
+        if (navTop > 0 && ctrlBot > navTop) {
+            this.chapterNav.style.maxHeight = (ctrlBot - navTop) + 'px';
         }
     }
 
