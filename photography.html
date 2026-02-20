@@ -66,7 +66,7 @@
                   box-shadow 0.45s cubic-bezier(0.4,0,0.2,1);
     }
     .navbar.scrolled .navbar-inner {
-      background: rgba(235,235,235,0.60);
+      background: rgba(235,235,235,0.42);
       backdrop-filter: blur(20px) saturate(140%);
       -webkit-backdrop-filter: blur(20px) saturate(140%);
       border-radius: 50px;
@@ -488,7 +488,7 @@ function parsePhotoFilename(src) {
   window.addEventListener('scroll', () => {
     if (!ticking) {
       requestAnimationFrame(() => {
-        nav.classList.toggle('scrolled', window.scrollY > 20);
+        nav.classList.toggle('scrolled', window.scrollY > 1);
         ticking = false;
       });
       ticking = true;
