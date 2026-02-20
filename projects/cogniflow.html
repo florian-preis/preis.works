@@ -1160,12 +1160,18 @@ class SpeedReader {
         };
         await DB.put(chapterData);
 
+        // Verify the save actually worked by reading back immediately
+        const verify = localStorage.getItem('cogniflowLibrary');
+        const verifyParsed = verify ? JSON.parse(verify) : [];
+        console.log('[saveToLibrary] localStorage now has', verifyParsed.length, 'books');
+        
         this.saveBtn.textContent = 'Saved ✓';
-        setTimeout(() => { this.saveBtn.textContent = 'Save'; }, 1600);
-
-        // Show confirmation that save worked
-        console.log('Saved to library. Library now has', this.library.length, 'books');
-        console.log('localStorage check:', localStorage.getItem('cogniflowLibrary')?.length, 'chars');
+        
+        // Navigate to library immediately so user sees the saved book
+        setTimeout(() => {
+            this.saveBtn.textContent = 'Save';
+            this.showSection('library');
+        }, 800);
     }
 
     async _autoSaveProgress() {
@@ -1523,6 +1529,7 @@ class SpeedReader {
     async renderLibrary() {
         // Always re-read from localStorage to stay in sync
         this.library = this._loadLibraryMeta();
+        console.log('[renderLibrary] found', this.library.length, 'books in localStorage');
         if (!this.library.length) {
             this.libraryContent.innerHTML = `
                 <div class="empty-library">
