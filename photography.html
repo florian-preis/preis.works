@@ -188,7 +188,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 60px 52px 16px;
+      /* horizontal: space for nav arrows (54px each side) + breathing room
+         vertical top: space for X button */
+      padding: 56px 96px 12px;
+      box-sizing: border-box;
     }
     .lightbox-img {
       max-width: 100%;
@@ -197,7 +200,7 @@
       display: block;
     }
     .lightbox-close {
-      position: absolute; top: 22px; right: 26px;
+      position: absolute; top: 16px; right: 20px;
       background: none; border: none; cursor: pointer; padding: 6px;
       color: #111; line-height: 0; z-index: 10; opacity: 0.4; transition: opacity 0.2s;
     }
@@ -209,14 +212,14 @@
       color: #111; opacity: 0.2; transition: opacity 0.2s; z-index: 10; line-height: 0;
     }
     .lightbox-btn:hover { opacity: 0.7; }
-    .lightbox-btn svg { width: 26px; height: 26px; }
-    .lightbox-prev { left: 12px; }
-    .lightbox-next { right: 12px; }
+    .lightbox-btn svg { width: 22px; height: 22px; }
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
 
     /* Meta row sits below the image, left-aligned to the image edge */
     .lightbox-footer {
       width: 100%;
-      padding: 16px 52px 36px;
+      padding: 12px 96px 32px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
@@ -315,8 +318,8 @@
       .navbar-inner { max-width: 100%; }
       .photo-grid { grid-template-columns: repeat(3, 1fr); }
       :root { --gap: clamp(4px, 2vw, 12px); --gap-bottom: clamp(16px, 6vw, 40px); }
-      .lightbox-stage { padding: 60px 32px 16px; }
-      .lightbox-footer { padding: 12px 32px 24px; }
+      .lightbox-stage { padding: 56px 64px 12px; }
+      .lightbox-footer { padding: 12px 64px 24px; }
       .lightbox-btn svg { width: 20px; height: 20px; }
       .lightbox-prev { left: 4px; }
       .lightbox-next { right: 4px; }
