@@ -427,7 +427,18 @@
 
 // ▼▼▼ ADD NEW PHOTOS HERE — one line each ▼▼▼
 const PHOTOS = [
-  { src: "/photography/20260219_Staircase at MBS in Singapore.jpg" },  // ← keep the leading /
+  { src: "/photography/20260219_Marina Bay Sands, Singapore.jpg" },
+  { src: "/photography/20250731_Langkawi, Malaysia.jpg" },
+  { src: "/photography/20250727_Kek Lok Si, George Town, Malaysia.jpg" },
+  { src: "/photography/20250725_George Town, Malaysia.jpg" },
+  { src: "/photography/20250722_Kuala Lumpur, Malaysia.jpg" },
+  { src: "/photography/20250721_Chinatown Complex, Singapore.jpg" },
+  { src: "/photography/20250315_Skeleton Coast, Namibia.jpg" },
+  { src: "/photography/20250314_Spitzkoppe, Namibia.jpg" },
+  { src: "/photography/20250312_Sandwich Harbour, Namibia.jpg" },
+  { src: "/photography/20250310_Sossusvlei, Namibia.jpg" },
+  { src: "/photography/20250310_Deadvlei, Namibia.jpg" },
+  { src: "/photography/20250308_Naukluft Mountains, Namibia.jpg" },
 ];
 // ▲▲▲ ADD NEW PHOTOS HERE — one line each ▲▲▲
 
@@ -502,7 +513,7 @@ function parsePhotoFilename(src) {
     const img = document.createElement('img');
     img.src = photo.src;
     img.alt = caption;
-    img.loading = idx === 0 ? 'eager' : 'lazy';
+    img.loading = 'lazy';
     item.appendChild(img);
     item.addEventListener('click', () => openLightbox(idx));
     grid.appendChild(item);
