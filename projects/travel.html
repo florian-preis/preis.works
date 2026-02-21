@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Diary — Florian Preis</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>✈</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ocean:  #a8cce0;
+      --unvis:  #e8e2d6;
+      --vis:    #3a4a5c;
+      --mapbdr: #c8c0b2;
+      --grat:   rgba(0,0,0,0.05);
+      --olabel: rgba(40,90,135,0.30);
+      --bg:     #ffffff;
+      --text:   #111111;
+      --muted:  #888888;
+      --border: #e5e5e5;
+      --label:  #bbbbbb;
+    }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); cursor: none;
+    }
+
+    /* ── Cursor ── */
+    #cursor {
+      position: fixed; pointer-events: none; z-index: 9999;
+      width: 26px; height: 26px; transform: translate(-50%,-50%);
+    }
+    #cursor svg { width: 100%; height: 100%; fill: #111; }
+
+    /* ── Loader ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 8000;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #lv {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; opacity: 0.9;
+    }
+    /* Darkening overlay sits above video, below text */
+    #loader::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.38); pointer-events: none; z-index: 1;
+    }
+    .lc {
+      position: relative; z-index: 2; text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .lt {
+      font-size: clamp(13px,2.2vw,24px); font-weight: 300;
+      letter-spacing: 0.44em; text-transform: uppercase;
+      color: rgba(255,255,255,0.90); margin-bottom: 22px;
+    }
+    /* Track (2px — slightly heavier than before) */
+    .pt {
+      width: clamp(160px,26vw,280px); height: 2px;
+      background: rgba(255,255,255,0.14); margin: 0 auto 10px; overflow: hidden;
+    }
+    .pf { height: 100%; width: 0%; background: rgba(255,255,255,0.75); }
+    .pp { font-size: 8px; letter-spacing: .28em; color: rgba(255,255,255,0.32); text-transform: uppercase; }
+    #loader.fo { animation: fo .6s ease forwards; }
+    @keyframes fo { to { opacity: 0; pointer-events: none; } }
+
+    /* ── Map ── */
+    #mw { position: fixed; inset: 0; overflow: hidden; }
+    #mc { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    /* Hit SVG: NO CSS fill override — each path gets fill set in JS */
+    #mhit { position: absolute; inset: 0; overflow: visible; }
+
+    /* ── Tooltip ── */
+    #tip {
+      position: fixed; pointer-events: none; z-index: 600;
+      background: rgba(255,255,255,0.93); color: #111;
+      font-size: 9px; font-weight: 400; letter-spacing: .12em;
+      text-transform: uppercase; padding: 4px 9px;
+      white-space: nowrap; opacity: 0; transition: opacity .1s;
+      transform: translate(14px,-50%); border: 1px solid #e5e5e5;
+    }
+
+    /* ── Title ── */
+    #title-wrap { position: fixed; top: 26px; left: 28px; z-index: 600; }
+    .ui-title {
+      font-size: 10px; font-weight: 400; letter-spacing: .30em;
+      text-transform: uppercase; color: var(--text); opacity: .45;
+    }
+
+    /* ── Panel ── */
+    #panel {
+      position: fixed; bottom: 28px; left: 28px; z-index: 600;
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 16px 18px; display: flex; flex-direction: column; gap: 13px;
+      min-width: 168px;
+    }
+    .panel-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .panel-label { font-size: 10px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .count-val { font-size: 13px; font-weight: 300; color: var(--text); }
+    .legend-row { display: flex; align-items: center; gap: 14px; }
+    .lrow { display: flex; align-items: center; gap: 6px; }
+    .lsw { width: 11px; height: 7px; flex-shrink: 0; }
+    .lsw.v { background: var(--vis); }
+    .lsw.u { background: var(--unvis); border: 1px solid var(--mapbdr); }
+    .llbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .panel-divider { height: 1px; background: var(--border); }
+    .zoom-row { display: flex; gap: 4px; }
+    .zb {
+      width: 24px; height: 24px; border: 1px solid var(--border);
+      background: transparent; color: var(--text); font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; user-select: none; line-height: 1;
+    }
+    .zb:hover { background: #f5f5f5; }
+
+    /* ── Sidebar ── */
+    #sb {
+      position: fixed; top: 0; right: 0;
+      width: min(380px,100vw); height: 100%;
+      background: var(--bg); border-left: 1px solid var(--border);
+      z-index: 700; transform: translateX(100%);
+      transition: transform .38s cubic-bezier(.4,0,.2,1);
+      overflow-y: auto;
+    }
+    #sb.open { transform: translateX(0); }
+    .sbh {
+      padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      position: sticky; top: 0; background: var(--bg); z-index: 1;
+    }
+    .sbf { width: 30px; height: 20px; object-fit: cover; display: block; flex-shrink: 0; }
+    .sbn { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text); }
+    .sbbdg { font-size: 7px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); padding: 1px 5px; }
+    /* Plain × — no border, no box */
+    .sbc {
+      margin-left: auto; flex-shrink: 0; background: none; border: none;
+      cursor: none; color: var(--text); font-size: 20px; line-height: 1;
+      opacity: 0.4; transition: opacity 0.15s; padding: 2px 4px;
+    }
+    .sbc:hover { opacity: 1; }
+    .sbb { padding: 0 20px 36px; }
+    .nonote { padding: 22px 0; font-size: 13px; color: var(--muted); }
+    .trip { padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .trip:last-child { border-bottom: none; }
+    .trip-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; flex-wrap: wrap; }
+    .trip-date-row { display: flex; align-items: center; gap: 5px; }
+    .trip-date-row svg { width: 10px; height: 10px; opacity: 0.4; flex-shrink: 0; }
+    .td { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); }
+    .trip-with-row { display: flex; align-items: center; gap: 5px; }
+    .trip-with-row svg { width: 10px; height: 10px; opacity: 0.4; flex-shrink: 0; }
+    .twn { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
+    .tn { font-size: 13px; line-height: 1.75; color: var(--text); font-style: normal; font-weight: 400; }
+
+    @media (max-width: 600px) {
+      #sb { width: 100vw; }
+      #panel { bottom: 14px; left: 14px; }
+      #title-wrap { top: 14px; left: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor">
+  <svg id="cursor-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <path d="M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75ZM28,19.15,18,15v9.24l4,2v1.43l-6-1.75-6,1.75V26.24l4-2V15L4,19.15V16.3l10-5.07V6a2,2,0,0,1,4,0v5.23L28,16.3Z"/>
+  </svg>
+</div>
+
+<!-- Loader
+     travel.html is in /projects/ — video is in /assets/ — so the relative path is ../assets/loading.mp4 -->
+<div id="loader">
+  <video id="lv" src="../assets/loading.mp4" autoplay muted playsinline preload="auto"></video>
+  <div class="lc">
+    <div class="lt">Travel Diary</div>
+    <div class="pt"><div class="pf" id="pf"></div></div>
+    <div class="pp" id="pp">0%</div>
+  </div>
+</div>
+
+<!-- Map -->
+<div id="mw">
+  <canvas id="mc"></canvas>
+  <svg id="mhit" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div id="tip"></div>
+<div id="title-wrap"><div class="ui-title">Travel Diary</div></div>
+
+<!-- Panel (night mode removed) -->
+<div id="panel">
+  <div class="panel-row">
+    <span class="panel-label">Countries</span>
+    <span class="count-val" id="cnt">— / 197</span>
+  </div>
+  <div class="legend-row">
+    <div class="lrow"><div class="lsw v"></div><span class="llbl">Visited</span></div>
+    <div class="lrow"><div class="lsw u"></div><span class="llbl">Not yet</span></div>
+  </div>
+  <div class="panel-divider"></div>
+  <div class="panel-row">
+    <span class="panel-label">Zoom</span>
+    <div class="zoom-row">
+      <button class="zb" id="zin">+</button>
+      <button class="zb" id="zout">−</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div id="sb">
+  <div class="sbh">
+    <img class="sbf" id="sbf" src="" alt="">
+    <span class="sbn" id="sbn"></span>
+    <span class="sbbdg" id="sbbdg" style="display:none"></span>
+    <button class="sbc" id="sbc">×</button>
+  </div>
+  <div class="sbb" id="sbb"></div>
+</div>
+
+<script>
+/* ── Travel data ─────────────────────────────────────────────── */
+const T = {
+  "EG":{ name:"Egypt",                     v:true,  trips:[] },
+  "KE":{ name:"Kenya",                     v:true,  trips:[] },
+  "MA":{ name:"Morocco",                   v:true,  trips:[] },
+  "NA":{ name:"Namibia",                   v:true,  trips:[] },
+  "CN":{ name:"China",                     v:true,  trips:[] },
+  "HK":{ name:"Hong Kong",                v:true,  ter:"SAR",       trips:[] },
+  "IN":{ name:"India",                     v:true,  trips:[] },
+  "IL":{ name:"Israel",                    v:true,  trips:[] },
+  "JO":{ name:"Jordan",                    v:true,  trips:[] },
+  "MY":{ name:"Malaysia",                  v:true,  trips:[] },
+  "PS":{ name:"Palestine",                 v:true,  ter:"Observer",  trips:[] },
+  "PH":{ name:"Philippines",               v:true,  trips:[] },
+  "SG":{ name:"Singapore",                v:true,  trips:[] },
+  "KR":{ name:"South Korea",              v:true,  trips:[] },
+  "TR":{ name:"Turkey",                    v:true,  trips:[] },
+  "AE":{ name:"United Arab Emirates",     v:true,  trips:[] },
+  "VN":{ name:"Vietnam",                  v:true,  trips:[] },
+  "TW":{ name:"Taiwan",                    v:false, ter:"Territory", trips:[] },
+  "AL":{ name:"Albania",                   v:true,  trips:[] },
+  "AT":{ name:"Austria",                   v:true,  trips:[] },
+  "BE":{ name:"Belgium",                   v:true,  trips:[] },
+  "BA":{ name:"Bosnia and Herzegovina",    v:true,  trips:[] },
+  "BG":{ name:"Bulgaria",                 v:true,  trips:[] },
+  "HR":{ name:"Croatia",                  v:true,  trips:[] },
+  "CZ":{ name:"Czechia",                  v:true,  trips:[] },
+  "DK":{ name:"Denmark",                  v:true,  trips:[] },
+  "FR":{ name:"France",                    v:true,  trips:[] },
+  "DE":{ name:"Germany",                  v:true,  trips:[
+    { date:"FEBRUARY 2026", with:"Ellen", note:"Went clubbing at Tresor." },
+    { date:"JUNE 2023",     with:"Solo",  note:"Internship at Federal Ministry of Finance." }
+  ]},
+  "GR":{ name:"Greece",                   v:true,  trips:[] },
+  "HU":{ name:"Hungary",                  v:true,  trips:[] },
+  "IS":{ name:"Iceland",                  v:true,  trips:[] },
+  "IE":{ name:"Ireland",                  v:true,  trips:[] },
+  "IT":{ name:"Italy",                    v:true,  trips:[] },
+  "LV":{ name:"Latvia",                   v:true,  trips:[] },
+  "ME":{ name:"Montenegro",               v:true,  trips:[] },
+  "NL":{ name:"Netherlands",              v:true,  trips:[] },
+  "MK":{ name:"North Macedonia",          v:true,  trips:[] },
+  "NO":{ name:"Norway",                   v:true,  trips:[] },
+  "PL":{ name:"Poland",                   v:true,  trips:[] },
+  "PT":{ name:"Portugal",                 v:true,  trips:[] },
+  "RO":{ name:"Romania",                  v:true,  trips:[] },
+  "RS":{ name:"Serbia",                   v:true,  trips:[] },
+  "SK":{ name:"Slovakia",                 v:true,  trips:[] },
+  "SI":{ name:"Slovenia",                 v:true,  trips:[] },
+  "ES":{ name:"Spain",                    v:true,  trips:[] },
+  "SE":{ name:"Sweden",                   v:true,  trips:[] },
+  "CH":{ name:"Switzerland",              v:true,  trips:[] },
+  "UA":{ name:"Ukraine",                  v:true,  trips:[] },
+  "GB":{ name:"United Kingdom",           v:true,  trips:[] },
+  "VA":{ name:"Vatican",                  v:true,  ter:"City State", trips:[] },
+  "CA":{ name:"Canada",                   v:true,  trips:[] },
+  "CR":{ name:"Costa Rica",               v:true,  trips:[] },
+  "CU":{ name:"Cuba",                     v:true,  trips:[] },
+  "MX":{ name:"Mexico",                   v:true,  trips:[] },
+  "PA":{ name:"Panama",                   v:true,  trips:[] },
+  "US":{ name:"United States of America", v:true,  trips:[] },
+  "AU":{ name:"Australia",                v:true,  trips:[] },
+  "NZ":{ name:"New Zealand",              v:true,  trips:[] },
+  "BO":{ name:"Bolivia",                  v:true,  trips:[] },
+  "BR":{ name:"Brazil",                   v:true,  trips:[] },
+  "CO":{ name:"Colombia",                 v:true,  trips:[] },
+  "PE":{ name:"Peru",                     v:true,  trips:[] },
+};
+
+/* ── All country names (numeric topojson ID → display name) ─── */
+const ALL_NAMES = {
+  4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",
+  40:"Austria",50:"Bangladesh",56:"Belgium",64:"Bhutan",68:"Bolivia",76:"Brazil",
+  100:"Bulgaria",104:"Myanmar",108:"Burundi",116:"Cambodia",120:"Cameroon",124:"Canada",
+  140:"Central African Republic",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",
+  174:"Comoros",180:"DR Congo",188:"Costa Rica",191:"Croatia",192:"Cuba",196:"Cyprus",
+  203:"Czechia",208:"Denmark",214:"Dominican Republic",218:"Ecuador",222:"El Salvador",
+  231:"Ethiopia",233:"Estonia",246:"Finland",250:"France",266:"Gabon",276:"Germany",
+  288:"Ghana",300:"Greece",320:"Guatemala",328:"Guyana",332:"Haiti",340:"Honduras",
+  348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",
+  372:"Ireland",376:"Israel",380:"Italy",384:"Ivory Coast",388:"Jamaica",392:"Japan",
+  398:"Kazakhstan",400:"Jordan",404:"Kenya",408:"North Korea",410:"South Korea",
+  414:"Kuwait",417:"Kyrgyzstan",418:"Laos",422:"Lebanon",426:"Lesotho",428:"Latvia",
+  434:"Libya",440:"Lithuania",442:"Luxembourg",454:"Malawi",458:"Malaysia",462:"Maldives",
+  480:"Mauritius",484:"Mexico",496:"Mongolia",499:"Montenegro",504:"Morocco",
+  508:"Mozambique",512:"Oman",516:"Namibia",524:"Nepal",528:"Netherlands",
+  540:"New Caledonia",554:"New Zealand",558:"Nicaragua",566:"Nigeria",578:"Norway",
+  586:"Pakistan",591:"Panama",600:"Paraguay",604:"Peru",608:"Philippines",616:"Poland",
+  620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",646:"Rwanda",682:"Saudi Arabia",
+  686:"Senegal",688:"Serbia",690:"Seychelles",703:"Slovakia",704:"Vietnam",705:"Slovenia",
+  706:"Somalia",710:"South Africa",716:"Zimbabwe",724:"Spain",729:"Sudan",740:"Suriname",
+  748:"Eswatini",752:"Sweden",756:"Switzerland",760:"Syria",762:"Tajikistan",764:"Thailand",
+  788:"Tunisia",792:"Turkey",795:"Turkmenistan",800:"Uganda",804:"Ukraine",
+  807:"North Macedonia",818:"Egypt",826:"United Kingdom",834:"Tanzania",840:"United States of America",
+  858:"Uruguay",860:"Uzbekistan",862:"Venezuela",887:"Yemen",894:"Zambia",
+  70:"Bosnia and Herzegovina",275:"Palestine",336:"Vatican",
+};
+
+/* ── Numeric ID → ISO-2 alpha ── */
+const N2A = {
+  4:"AF",8:"AL",12:"DZ",24:"AO",32:"AR",36:"AU",40:"AT",50:"BD",56:"BE",64:"BT",
+  68:"BO",76:"BR",100:"BG",104:"MM",116:"KH",120:"CM",124:"CA",140:"CF",152:"CL",
+  156:"CN",170:"CO",180:"CD",188:"CR",191:"HR",192:"CU",196:"CY",203:"CZ",208:"DK",
+  214:"DO",218:"EC",818:"EG",222:"SV",231:"ET",246:"FI",250:"FR",266:"GA",276:"DE",
+  288:"GH",300:"GR",320:"GT",332:"HT",340:"HN",348:"HU",356:"IN",360:"ID",364:"IR",
+  368:"IQ",372:"IE",376:"IL",380:"IT",388:"JM",392:"JP",400:"JO",398:"KZ",404:"KE",
+  408:"KP",410:"KR",414:"KW",418:"LA",422:"LB",434:"LY",440:"LT",442:"LU",504:"MA",
+  484:"MX",496:"MN",508:"MZ",516:"NA",524:"NP",528:"NL",554:"NZ",558:"NI",566:"NG",
+  578:"NO",586:"PK",591:"PA",600:"PY",604:"PE",608:"PH",616:"PL",620:"PT",634:"QA",
+  642:"RO",643:"RU",646:"RW",682:"SA",686:"SN",706:"SO",710:"ZA",724:"ES",144:"LK",
+  729:"SD",752:"SE",756:"CH",760:"SY",158:"TW",764:"TH",792:"TR",800:"UG",804:"UA",
+  784:"AE",840:"US",858:"UY",862:"VE",704:"VN",887:"YE",894:"ZM",716:"ZW",807:"MK",
+  688:"RS",703:"SK",705:"SI",70:"BA",499:"ME",428:"LV",352:"IS",826:"GB",336:"VA",275:"PS",
+};
+
+const OCEAN_LABELS = [
+  { t:"Pacific Ocean",  lon:-145, lat:8  },
+  { t:"Atlantic Ocean", lon:-38,  lat:25 },
+  { t:"Indian Ocean",   lon:76,   lat:-22},
+  { t:"Southern Ocean", lon:20,   lat:-56},
+];
+
+/* ── Map engine ──────────────────────────────────────────────── */
+const MW = 1200, MH = 620;
+const DPR = () => window.devicePixelRatio || 1;
+let tx = 0, ty = 0, scale = 1;
+let geoFeatures = null;
+let paths2D = [];
+
+/* Mercator — normalise lon to [-180,180) first.
+   world-atlas topojson stores Russia's Chukotka with lon > 180°.
+   Without normalisation those coords project past x = MW, creating
+   the diagonal streak across the Pacific. */
+function merc(lon, lat) {
+  lon = ((lon + 180) % 360 + 360) % 360 - 180;
+  const x  = ((lon + 180) / 360) * MW;
+  const lr = Math.max(-85, Math.min(85, lat)) * Math.PI / 180;
+  const y  = MH / 2 - (MW / (2 * Math.PI)) * Math.log(Math.tan(Math.PI / 4 + lr / 2));
+  return [x, y];
+}
+
+/* Build one canvas Path2D tile.
+   FIX: compare rawMx values (not cx = rawMx+offsetX) for antimeridian detection. */
+function buildPath2D(geo, offsetX) {
+  const p = new Path2D();
+  try {
+    const polys = geo.type === 'Polygon' ? [geo.coordinates] : geo.coordinates;
+    for (const poly of polys) {
+      for (const ring of poly) {
+        let prevRaw = null, penDown = false;
+        for (const [lon, lat] of ring) {
+          const [rawMx, my] = merc(lon, lat);
+          if (prevRaw !== null && Math.abs(rawMx - prevRaw) > MW * 0.5) {
+            p.closePath(); penDown = false;
+          }
+          const cx = rawMx + offsetX;
+          if (!penDown) { p.moveTo(cx, my); penDown = true; }
+          else p.lineTo(cx, my);
+          prevRaw = rawMx;
+        }
+        p.closePath();
+      }
+    }
+  } catch(e) {}
+  return p;
+}
+
+function buildPaths(features) {
+  paths2D = [];
+  for (const feat of features) {
+    const numId = parseInt(feat.id);
+    const a2   = N2A[numId];
+    const data = a2 ? T[a2] : null;
+    const vis  = !!data?.v;
+    const name = data?.name || ALL_NAMES[numId] || '';
+    paths2D.push({
+      p0: buildPath2D(feat.geometry,   0),
+      pL: buildPath2D(feat.geometry, -MW),
+      pR: buildPath2D(feat.geometry,  MW),
+      vis, name, a2, numId,
+    });
+  }
+}
+
+function getColors() {
+  const s = getComputedStyle(document.documentElement);
+  const g = v => s.getPropertyValue(v).trim();
+  return { ocean:g('--ocean'), unvis:g('--unvis'), vis:g('--vis'),
+           border:g('--mapbdr'), grat:g('--grat'), olabel:g('--olabel') };
+}
+
+function draw() {
+  const cv = document.getElementById('mc');
+  const dpr = DPR();
+  const ctx = cv.getContext('2d');
+  const C   = getColors();
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.save();
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = C.ocean;
+  ctx.fillRect(0, 0, cv.width / dpr, cv.height / dpr);
+
+  ctx.translate(tx, ty);
+  ctx.scale(scale, scale);
+
+  const sw = 0.4 / scale;
+
+  /* Graticule */
+  ctx.strokeStyle = C.grat; ctx.lineWidth = sw;
+  for (let lat = -80; lat <= 80; lat += 20) {
+    const [,y] = merc(0, lat);
+    ctx.beginPath(); ctx.moveTo(-MW, y); ctx.lineTo(2*MW, y); ctx.stroke();
+  }
+  for (let lon = -180; lon <= 180; lon += 30) {
+    for (const tile of [0, -MW, MW]) {
+      ctx.beginPath(); let first = true;
+      for (let lt = -85; lt <= 85; lt += 2) {
+        const [x,y] = merc(lon, lt);
+        if (first) { ctx.moveTo(x+tile, y); first=false; } else ctx.lineTo(x+tile, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  /* Countries: unvisited then visited */
+  ctx.lineWidth = sw;
+  for (const pass of [false, true]) {
+    ctx.fillStyle   = pass ? C.vis : C.unvis;
+    ctx.strokeStyle = C.border;
+    for (const f of paths2D) {
+      if (f.vis !== pass) continue;
+      ctx.fill(f.p0); ctx.stroke(f.p0);
+      ctx.fill(f.pL); ctx.stroke(f.pL);
+      ctx.fill(f.pR); ctx.stroke(f.pR);
+    }
+  }
+
+  /* Ocean labels */
+  const lblPx = Math.max(6, Math.min(10, 7.5 / scale));
+  ctx.font = `300 italic ${lblPx}px 'Helvetica Neue',Helvetica,Arial,sans-serif`;
+  ctx.fillStyle = C.olabel; ctx.textAlign = 'center';
+  for (const ol of OCEAN_LABELS) {
+    const [ox, oy] = merc(ol.lon, ol.lat);
+    ctx.fillText(ol.t.toUpperCase(), ox, oy);
+  }
+
+  ctx.restore();
+}
+
+function resizeCanvas() {
+  const cv = document.getElementById('mc'), dpr = DPR();
+  cv.width  = window.innerWidth  * dpr; cv.style.width  = window.innerWidth  + 'px';
+  cv.height = window.innerHeight * dpr; cv.style.height = window.innerHeight + 'px';
+}
+
+function initTransform() {
+  scale = Math.max(window.innerWidth / MW, window.innerHeight / MH) * 1.02;
+  tx = (window.innerWidth  - MW * scale) / 2;
+  ty = (window.innerHeight - MH * scale) / 2;
+}
+
+function wrapTx() {
+  const tw = MW * scale;
+  while (tx > window.innerWidth / 2)      tx -= tw;
+  while (tx + tw < window.innerWidth / 2) tx += tw;
+}
+function clampTy() {
+  const mh = MH * scale;
+  ty = Math.max(window.innerHeight - mh - window.innerHeight * 0.15,
+        Math.min(window.innerHeight * 0.15, ty));
+}
+
+/* ── Hit layer ───────────────────────────────────────────────────
+   KEY FIXES:
+   1. fill="rgba(0,0,0,0.001)" — nearly invisible but browsers treat
+      filled areas as pointer-event targets. "transparent" / "none" cause
+      events to fire only on strokes (which are invisible here) → hover
+      fails for most countries.
+   2. No CSS rule overrides the fill (removed #mhit path { fill:transparent }).
+   3. Hit layer is fully rebuilt (not appended) on resize.
+   4. prevRaw tracks raw merc x, not offset-adjusted cx.                   */
+function buildSVGd(geo, offsetX) {
+  try {
+    const polys = geo.type === 'Polygon' ? [geo.coordinates] : geo.coordinates;
+    let d = '';
+    for (const poly of polys) {
+      for (const ring of poly) {
+        let prevRaw = null, seg = '';
+        for (const [lon, lat] of ring) {
+          const [rawMx, my] = merc(lon, lat);
+          if (prevRaw !== null && Math.abs(rawMx - prevRaw) > MW * 0.5) {
+            if (seg) d += seg + 'Z'; seg = '';
+          }
+          const cx = (rawMx + offsetX).toFixed(1), cy = my.toFixed(1);
+          seg += (seg === '' ? 'M' : 'L') + cx + ',' + cy;
+          prevRaw = rawMx;
+        }
+        if (seg) d += seg + 'Z';
+      }
+    }
+    return d;
+  } catch(e) { return ''; }
+}
+
+function buildHitLayer(features) {
+  const hit = document.getElementById('mhit');
+  const ns  = 'http://www.w3.org/2000/svg';
+  /* Clear previous */
+  while (hit.firstChild) hit.removeChild(hit.firstChild);
+  hit.setAttribute('width',  window.innerWidth);
+  hit.setAttribute('height', window.innerHeight);
+
+  const g = document.createElementNS(ns, 'g');
+  g.setAttribute('class', 'hit-g');
+  g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+
+  for (const feat of features) {
+    const numId = parseInt(feat.id);
+    const a2   = N2A[numId];
+    const data = a2 ? T[a2] : null;
+    const vis  = !!data?.v;
+    const name = data?.name || ALL_NAMES[numId] || '';
+
+    for (const offset of [0, -MW, MW]) {
+      const d = buildSVGd(feat.geometry, offset);
+      if (!d) continue;
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'rgba(0,0,0,0.001)');
+      path.setAttribute('stroke', 'none');
+      path.setAttribute('pointer-events', 'all');
+      path.addEventListener('mouseenter', e => showTip(e, name));
+      path.addEventListener('mousemove',  moveTip);
+      path.addEventListener('mouseleave', hideTip);
+      if (vis && a2) path.addEventListener('click', e => { e.stopPropagation(); openSb(a2); });
+      g.appendChild(path);
+    }
+  }
+  hit.appendChild(g);
+}
+
+function updateHitTransform() {
+  const g = document.querySelector('#mhit g.hit-g');
+  if (g) g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+}
+
+function applyTransform() { wrapTx(); clampTy(); draw(); updateHitTransform(); }
+
+/* ── Pan & zoom ─────────────────────────────────────────────── */
+function initPanZoom() {
+  const wrap = document.getElementById('mw');
+  let drag = false, lx = 0, ly = 0;
+
+  wrap.addEventListener('mousedown', e => { drag=true; lx=e.clientX; ly=e.clientY; e.preventDefault(); });
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY;
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => drag = false);
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    const raw = e.deltaMode===1 ? e.deltaY*20 : e.deltaMode===2 ? e.deltaY*400 : e.deltaY;
+    const ns  = Math.max(0.5, Math.min(16, scale * (1 - Math.sign(raw)*Math.min(Math.abs(raw)*0.0005, 0.06))));
+    tx = e.clientX - (e.clientX - tx) * (ns/scale);
+    ty = e.clientY - (e.clientY - ty) * (ns/scale);
+    scale = ns; applyTransform();
+  }, { passive: false });
+
+  let ltd = null;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length===1) { drag=true; lx=e.touches[0].clientX; ly=e.touches[0].clientY; }
+    else if (e.touches.length===2) { ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); drag=false; }
+  });
+  wrap.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length===1 && drag) {
+      tx+=e.touches[0].clientX-lx; ty+=e.touches[0].clientY-ly;
+      lx=e.touches[0].clientX; ly=e.touches[0].clientY; applyTransform();
+    } else if (e.touches.length===2 && ltd) {
+      const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2, my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const ns=Math.max(0.5,Math.min(16,scale*nd/ltd));
+      tx=mx-(mx-tx)*(ns/scale); ty=my-(my-ty)*(ns/scale); scale=ns; ltd=nd; applyTransform();
+    }
+  }, { passive: false });
+  wrap.addEventListener('touchend', () => { drag=false; ltd=null; });
+
+  const doZoom = f => {
+    const cx=window.innerWidth/2, cy=window.innerHeight/2;
+    const ns=Math.max(0.5,Math.min(16,scale*f));
+    tx=cx-(cx-tx)*(ns/scale); ty=cy-(cy-ty)*(ns/scale); scale=ns; applyTransform();
+  };
+  document.getElementById('zin').addEventListener('click',  () => doZoom(1.3));
+  document.getElementById('zout').addEventListener('click', () => doZoom(0.77));
+
+  window.addEventListener('resize', () => { resizeCanvas(); initTransform(); buildHitLayer(geoFeatures); draw(); });
+
+  /* Click anywhere on map → close sidebar */
+  wrap.addEventListener('click', () => closeSb());
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────── */
+function showTip(e, n) {
+  if (!n) return;
+  const t = document.getElementById('tip');
+  t.textContent = n; t.style.left=e.clientX+'px'; t.style.top=e.clientY+'px'; t.style.opacity='1';
+}
+function moveTip(e) { const t=document.getElementById('tip'); t.style.left=e.clientX+'px'; t.style.top=e.clientY+'px'; }
+function hideTip() { document.getElementById('tip').style.opacity='0'; }
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+function openSb(a2) {
+  const d = T[a2]; if (!d) return;
+  document.getElementById('sbf').src = `https://flagcdn.com/w40/${a2.toLowerCase()}.png`;
+  document.getElementById('sbf').alt = d.name;
+  document.getElementById('sbn').textContent = d.name;
+  const bdg = document.getElementById('sbbdg');
+  if (d.ter) { bdg.textContent=d.ter; bdg.style.display=''; } else bdg.style.display='none';
+  const body = document.getElementById('sbb');
+  body.innerHTML = '';
+  if (!d.trips || !d.trips.length) {
+    body.innerHTML = '<p class="nonote">No trip notes yet.</p>';
+  } else {
+    const MO={JANUARY:0,FEBRUARY:1,MARCH:2,APRIL:3,MAY:4,JUNE:5,JULY:6,AUGUST:7,SEPTEMBER:8,OCTOBER:9,NOVEMBER:10,DECEMBER:11};
+    const pd = s => { const p=s.trim().split(' '); return parseInt(p[p.length-1])*100+(MO[p[0]]??0); };
+    const calIcon    = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="12" rx="1.5"/><path d="M1 7h14"/><path d="M5 1v4M11 1v4"/></svg>`;
+    const personIcon = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6"/></svg>`;
+    [...d.trips].sort((a,b)=>pd(b.date)-pd(a.date)).forEach(tr => {
+      const el = document.createElement('div'); el.className='trip';
+      el.innerHTML = `
+        <div class="trip-meta">
+          <div class="trip-date-row">${calIcon}<span class="td">${tr.date}</span></div>
+          ${tr.with?`<div class="trip-with-row">${personIcon}<span class="twn">${tr.with}</span></div>`:''}
+        </div>
+        ${tr.note?`<p class="tn">${tr.note}</p>`:''}`;
+      body.appendChild(el);
+    });
+  }
+  document.getElementById('sb').classList.add('open');
+}
+const closeSb = () => document.getElementById('sb').classList.remove('open');
+document.getElementById('sbc').addEventListener('click', e => { e.stopPropagation(); closeSb(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeSb(); });
+/* Clicks inside sidebar must NOT bubble to the map (which would immediately close it) */
+document.getElementById('sb').addEventListener('click', e => e.stopPropagation());
+
+/* ── Loader: video-synced progress bar ──────────────────────────
+   Progress bar duration = video duration.
+   Falls back to 4 s if video fails or metadata is delayed.           */
+(function initLoader() {
+  const video  = document.getElementById('lv');
+  const pfEl   = document.getElementById('pf');
+  const ppEl   = document.getElementById('pp');
+  const loader = document.getElementById('loader');
+  let rafId = null, startTime = null, duration = 0;
+
+  function dismiss() {
+    cancelAnimationFrame(rafId);
+    pfEl.style.width = '100%'; ppEl.textContent = '100%';
+    setTimeout(() => { loader.classList.add('fo'); setTimeout(()=>loader.style.display='none', 650); }, 300);
+  }
+
+  function tick() {
+    if (!startTime) startTime = performance.now();
+    const pct = Math.min((performance.now()-startTime)/1000/duration, 1);
+    pfEl.style.width = (pct*100).toFixed(1)+'%';
+    ppEl.textContent = Math.floor(pct*100)+'%';
+    if (pct < 1) rafId = requestAnimationFrame(tick); else dismiss();
+  }
+
+  function start(dur) {
+    if (duration) return; /* already started */
+    duration = dur;
+    video.play().catch(()=>{});
+    rafId = requestAnimationFrame(tick);
+  }
+
+  video.addEventListener('loadedmetadata', () => start(video.duration || 4));
+  video.addEventListener('ended', dismiss);
+  video.addEventListener('error', () => { video.style.display='none'; start(4); });
+  setTimeout(() => { if (!duration) { video.style.display='none'; start(4); } }, 2000);
+})();
+
+/* ── Map init ────────────────────────────────────────────────── */
+async function initMap() {
+  let topo;
+  try {
+    const r = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    topo = await r.json();
+  } catch(e) { console.error('Map fetch failed', e); return; }
+  if (typeof topojson === 'undefined') { console.error('topojson missing'); return; }
+  geoFeatures = topojson.feature(topo, topo.objects.countries).features;
+  resizeCanvas(); initTransform();
+  buildPaths(geoFeatures);
+  buildHitLayer(geoFeatures);
+  draw();
+  document.getElementById('cnt').textContent = `${Object.values(T).filter(d=>d.v).length} / 197`;
+  initPanZoom();
+}
+
+/* ── Cursor ──────────────────────────────────────────────────── */
+const cur = document.getElementById('cursor');
+const csv = document.getElementById('cursor-svg');
+let clx=0, cly=0;
+document.addEventListener('mousemove', e => {
+  cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px';
+  const dx=e.clientX-clx, dy=e.clientY-cly;
+  if (Math.hypot(dx,dy)>1.5) csv.style.transform=`rotate(${Math.atan2(dy,dx)*180/Math.PI+90}deg)`;
+  clx=e.clientX; cly=e.clientY;
+});
+
+initMap();
+</script>
+</body>
+</html>
