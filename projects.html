@@ -164,25 +164,24 @@
     .project-card {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      height: 340px;
       background: var(--bg);
       text-decoration: none;
       color: var(--text);
       border: 1px solid var(--border);
-      margin-bottom: 1px;
+      margin-bottom: 24px;
       transition: background 0.2s;
     }
     .project-card:hover { background: #fafafa; }
 
     .project-preview {
-      background: #000;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: stretch;
       overflow: hidden;
     }
     .project-preview svg {
       width: 100%;
-      height: auto;
+      height: 100%;
       display: block;
     }
 
@@ -197,10 +196,12 @@
     @media (max-width: 900px) {
       .project-card {
         grid-template-columns: 1fr;
+        height: auto;
       }
       .project-preview {
         order: 2;
         border-top: 1px solid var(--border);
+        min-height: 240px;
       }
       .project-info {
         order: 1;
@@ -350,10 +351,10 @@
     <div class="project-info">
       <p class="project-tag">Reading Tool</p>
       <h2 class="project-title">cogniflow</h2>
-      <p class="project-desc">A focused reading environment that presents text word-by-word at a custom speed. Supports EPUB, PDF, and plain text. Includes bionic reading and a personal library saved locally in your browser.</p>
+      <p class="project-desc">A focused reading environment that presents text word-by-word at a custom speed. Supports EPUB, PDF, and plain text and includes a personal library saved locally in your browser.</p>
       <span class="project-link">Open &rarr;</span>
     </div>
-    <div class="project-preview">
+    <div class="project-preview" style="background:#000;">
       <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
         <!-- background -->
         <rect width="640" height="360" fill="#000"/>
@@ -416,60 +417,163 @@
     </div>
   </a>
 
-  <!-- Add future project cards here -->
-
-</div>
-
-<!-- ══ FOOTER ══ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <span class="footer-copy" id="footerCopy"></span>
-    <div class="footer-social">
-      <a href="https://www.linkedin.com/in/florianpreis/" target="_blank" rel="noopener" aria-label="LinkedIn">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-      </a>
-      <a href="https://www.instagram.com/florianprice/" target="_blank" rel="noopener" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-      </a>
+  <a class="project-card" href="/projects/travel" target="_blank">
+    <div class="project-info">
+      <p class="project-tag">World Map</p>
+      <h2 class="project-title">Travel Diary</h2>
+      <p class="project-desc">An interactive world map tracking every country I visited. Click any highlighted country to see trip notes, dates, and travel companions.</p>
+      <span class="project-link">Open &rarr;</span>
     </div>
-  </div>
-</footer>
+    <div class="project-preview">
+      <svg viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <!-- Deep space background gradient -->
+          <radialGradient id="space" cx="80%" cy="20%" r="70%">
+            <stop offset="0%" stop-color="#1a2744"/>
+            <stop offset="40%" stop-color="#0d1520"/>
+            <stop offset="100%" stop-color="#050a10"/>
+          </radialGradient>
+          <!-- Earth surface (dark landmass) -->
+          <radialGradient id="earthglow" cx="30%" cy="75%" r="80%">
+            <stop offset="0%" stop-color="#1a1a1a"/>
+            <stop offset="60%" stop-color="#0d0d0d"/>
+            <stop offset="100%" stop-color="#050505"/>
+          </radialGradient>
+          <!-- Sunrise glow on right -->
+          <radialGradient id="sunrise" cx="100%" cy="38%" r="55%">
+            <stop offset="0%" stop-color="#c8a84b" stop-opacity="0.55"/>
+            <stop offset="30%" stop-color="#8a6020" stop-opacity="0.30"/>
+            <stop offset="70%" stop-color="#3a3010" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Blue atmospheric rim right -->
+          <radialGradient id="atmo" cx="95%" cy="35%" r="35%">
+            <stop offset="0%" stop-color="#4a7aaa" stop-opacity="0.6"/>
+            <stop offset="50%" stop-color="#2a4a7a" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <!-- City light glow -->
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="softglow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="card"><rect width="640" height="380"/></clipPath>
+        </defs>
 
-<script>
-/* ══ NAVBAR PILL ══ */
-(function() {
-  const nav = document.getElementById('navbar');
-  let ticking = false;
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        nav.classList.toggle('scrolled', window.scrollY > 1);
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-})();
+        <g clip-path="url(#card)">
+          <!-- Space background -->
+          <rect width="640" height="380" fill="url(#space)"/>
 
-/* ══ HAMBURGER ══ */
-(function() {
-  const btn  = document.getElementById('hamburger');
-  const menu = document.getElementById('mobileMenu');
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    btn.classList.toggle('open');
-    menu.classList.toggle('open');
-  });
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#navbar') && !e.target.closest('#mobileMenu')) {
-      btn.classList.remove('open');
-      menu.classList.remove('open');
-    }
-  });
-})();
+          <!-- Stars -->
+          <g fill="white" opacity="0.7">
+            <circle cx="420" cy="18" r="0.8"/><circle cx="460" cy="32" r="0.5"/>
+            <circle cx="498" cy="12" r="0.9"/><circle cx="530" cy="28" r="0.6"/>
+            <circle cx="555" cy="8"  r="0.7"/><circle cx="580" cy="22" r="0.5"/>
+            <circle cx="600" cy="40" r="0.8"/><circle cx="615" cy="15" r="0.6"/>
+            <circle cx="628" cy="55" r="0.5"/><circle cx="440" cy="50" r="0.4"/>
+            <circle cx="472" cy="65" r="0.6"/><circle cx="510" cy="48" r="0.5"/>
+            <circle cx="545" cy="60" r="0.7"/><circle cx="568" cy="42" r="0.4"/>
+            <circle cx="592" cy="70" r="0.6"/><circle cx="610" cy="80" r="0.5"/>
+            <circle cx="625" cy="98" r="0.8"/><circle cx="635" cy="118" r="0.4"/>
+            <circle cx="430" cy="80" r="0.5"/><circle cx="450" cy="96" r="0.7"/>
+          </g>
 
-/* ══ FOOTER YEAR ══ */
-document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' Florian Preis';
-</script>
-</body>
-</html>
+          <!-- Earth curvature — dark landmass fills lower ~65% -->
+          <ellipse cx="200" cy="520" rx="580" ry="440" fill="url(#earthglow)"/>
+
+          <!-- Sunrise glow -->
+          <rect width="640" height="380" fill="url(#sunrise)"/>
+          <!-- Atmospheric blue rim -->
+          <rect width="640" height="380" fill="url(#atmo)"/>
+
+          <!-- Continent outlines in very dark grey (visible only faintly) -->
+          <!-- Europe outline -->
+          <path d="M60,200 Q80,185 105,182 Q125,178 138,188 Q148,196 144,210 Q138,222 124,228 Q108,232 92,225 Q74,218 65,208 Q58,204 60,200Z" fill="#1a1a1a" stroke="#252525" stroke-width="0.5"/>
+          <!-- Italy peninsula -->
+          <path d="M108,228 Q118,225 125,235 Q128,248 120,262 Q112,270 105,262 Q100,252 102,240 Q104,232 108,228Z" fill="#1a1a1a"/>
+          <!-- Iberian -->
+          <path d="M48,218 Q62,210 72,218 Q78,228 70,240 Q60,248 48,242 Q40,234 42,224 Q44,220 48,218Z" fill="#1a1a1a" stroke="#252525" stroke-width="0.5"/>
+          <!-- Scandinavia -->
+          <path d="M105,168 Q118,160 128,166 Q134,174 128,185 Q120,190 110,186 Q104,180 104,173 Q104,170 105,168Z" fill="#1a1a1a"/>
+          <!-- N Africa -->
+          <path d="M60,262 Q100,252 148,258 Q180,264 195,278 Q198,295 185,308 Q165,320 130,318 Q95,315 70,300 Q50,286 52,272 Q54,264 60,262Z" fill="#1a1a1a" stroke="#222" stroke-width="0.5"/>
+          <!-- Middle East -->
+          <path d="M195,240 Q220,232 240,238 Q252,246 248,260 Q238,270 220,268 Q205,262 198,252 Q193,246 195,240Z" fill="#1a1a1a"/>
+
+          <!-- ── City lights (Europe cluster, warm golden) ── -->
+          <g filter="url(#glow)">
+            <!-- UK/Ireland -->
+            <circle cx="76" cy="188" r="2.5" fill="#f5d060" opacity="0.9"/>
+            <circle cx="82" cy="195" r="1.5" fill="#f5d060" opacity="0.7"/>
+            <circle cx="70" cy="194" r="1.2" fill="#f5d060" opacity="0.6"/>
+            <!-- Benelux/NW Europe dense cluster -->
+            <circle cx="102" cy="196" r="3" fill="#f5d878" opacity="0.95"/>
+            <circle cx="108" cy="200" r="2.2" fill="#f5e080" opacity="0.9"/>
+            <circle cx="96" cy="200" r="1.8" fill="#f5d878" opacity="0.8"/>
+            <circle cx="114" cy="196" r="2.5" fill="#f5d878" opacity="0.85"/>
+            <circle cx="106" cy="205" r="1.5" fill="#f5d060" opacity="0.7"/>
+            <!-- Germany / Poland -->
+            <circle cx="118" cy="194" r="2.8" fill="#f5d878" opacity="0.9"/>
+            <circle cx="126" cy="192" r="2.2" fill="#f5d060" opacity="0.85"/>
+            <circle cx="134" cy="190" r="1.8" fill="#f5cc50" opacity="0.75"/>
+            <circle cx="122" cy="200" r="1.5" fill="#f5d060" opacity="0.7"/>
+            <circle cx="130" cy="198" r="1.2" fill="#f5c840" opacity="0.6"/>
+            <!-- France -->
+            <circle cx="92" cy="208" r="2.5" fill="#f5d060" opacity="0.85"/>
+            <circle cx="86" cy="214" r="1.5" fill="#f5d060" opacity="0.65"/>
+            <circle cx="98" cy="214" r="1.8" fill="#f5c840" opacity="0.7"/>
+            <!-- Italy -->
+            <circle cx="110" cy="220" r="2" fill="#f5cc50" opacity="0.8"/>
+            <circle cx="114" cy="228" r="1.5" fill="#f5c840" opacity="0.7"/>
+            <circle cx="108" cy="236" r="1.2" fill="#f5c840" opacity="0.6"/>
+            <!-- Spain -->
+            <circle cx="74" cy="220" r="2" fill="#f5c840" opacity="0.75"/>
+            <circle cx="66" cy="226" r="1.5" fill="#f5c840" opacity="0.65"/>
+            <!-- Scandinavia -->
+            <circle cx="114" cy="172" r="1.8" fill="#f5d060" opacity="0.75"/>
+            <circle cx="122" cy="176" r="1.5" fill="#f5d060" opacity="0.65"/>
+            <circle cx="120" cy="168" r="1.2" fill="#f5d060" opacity="0.6"/>
+            <!-- E Europe -->
+            <circle cx="138" cy="196" r="1.8" fill="#f5c840" opacity="0.7"/>
+            <circle cx="144" cy="202" r="1.5" fill="#f5c840" opacity="0.6"/>
+            <circle cx="148" cy="195" r="1.2" fill="#f5c840" opacity="0.55"/>
+            <!-- Middle East city lights -->
+            <circle cx="218" cy="246" r="2" fill="#f5d060" opacity="0.7"/>
+            <circle cx="228" cy="252" r="1.5" fill="#f5d060" opacity="0.6"/>
+            <circle cx="210" cy="252" r="1.2" fill="#f5c840" opacity="0.55"/>
+            <!-- N Africa sparse -->
+            <circle cx="100" cy="270" r="1.5" fill="#f5c840" opacity="0.55"/>
+            <circle cx="136" cy="268" r="1.2" fill="#f5c840" opacity="0.45"/>
+            <circle cx="160" cy="272" r="1.2" fill="#f5c840" opacity="0.45"/>
+            <!-- Far east scattered -->
+            <circle cx="285" cy="215" r="1.8" fill="#f5d060" opacity="0.6"/>
+            <circle cx="295" cy="220" r="1.5" fill="#f5d060" opacity="0.55"/>
+            <circle cx="278" cy="222" r="1.2" fill="#f5c840" opacity="0.5"/>
+          </g>
+
+          <!-- Soft halo over Europe cluster -->
+          <ellipse cx="108" cy="200" rx="45" ry="30" fill="#f5d060" opacity="0.06" filter="url(#softglow)"/>
+
+          <!-- ── Loader UI overlay (centered) ── -->
+          <!-- "TRAVEL DIARY" label -->
+          <text x="320" y="175" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="13" font-weight="300" fill="rgba(255,255,255,0.88)" text-anchor="middle" letter-spacing="7">TRAVEL DIARY</text>
+
+          <!-- Progress bar track -->
+          <rect x="192" y="192" width="256" height="2" rx="1" fill="rgba(255,255,255,0.13)"/>
+          <!-- Progress bar fill (~60%) -->
+          <rect x="192" y="192" width="154" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+          <!-- Percentage -->
+          <text x="320" y="206" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" fill="rgba(255,255,255,0.30)" text-anchor="middle" letter-spacing="4">60%</text>
+
+          <!-- Subtle dark overlay to darken edges -->
+          <rect width="640" height="380" fill="rgba(0,0,0,0.18)"/>
+        </g>
+      </svg>
+    </div>
+  </a>
+
+  <!-- Add future project cards here -->
