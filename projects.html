@@ -419,160 +419,25 @@
 
   <a class="project-card" href="/projects/travel" target="_blank">
     <div class="project-info">
-      <p class="project-tag">World Map</p>
-      <h2 class="project-title">Travel Diary</h2>
+      <p class="project-tag">Travel Diary</p>
+      <h2 class="project-title">gowiththeflo</h2>
       <p class="project-desc">An interactive world map tracking every country I visited. Click any highlighted country to see trip notes, dates, and travel companions.</p>
       <span class="project-link">Open &rarr;</span>
     </div>
-    <div class="project-preview">
-      <svg viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <!-- Deep space background gradient -->
-          <radialGradient id="space" cx="80%" cy="20%" r="70%">
-            <stop offset="0%" stop-color="#1a2744"/>
-            <stop offset="40%" stop-color="#0d1520"/>
-            <stop offset="100%" stop-color="#050a10"/>
-          </radialGradient>
-          <!-- Earth surface (dark landmass) -->
-          <radialGradient id="earthglow" cx="30%" cy="75%" r="80%">
-            <stop offset="0%" stop-color="#1a1a1a"/>
-            <stop offset="60%" stop-color="#0d0d0d"/>
-            <stop offset="100%" stop-color="#050505"/>
-          </radialGradient>
-          <!-- Sunrise glow on right -->
-          <radialGradient id="sunrise" cx="100%" cy="38%" r="55%">
-            <stop offset="0%" stop-color="#c8a84b" stop-opacity="0.55"/>
-            <stop offset="30%" stop-color="#8a6020" stop-opacity="0.30"/>
-            <stop offset="70%" stop-color="#3a3010" stop-opacity="0.10"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-          </radialGradient>
-          <!-- Blue atmospheric rim right -->
-          <radialGradient id="atmo" cx="95%" cy="35%" r="35%">
-            <stop offset="0%" stop-color="#4a7aaa" stop-opacity="0.6"/>
-            <stop offset="50%" stop-color="#2a4a7a" stop-opacity="0.25"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-          </radialGradient>
-          <!-- City light glow -->
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="1.2" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id="softglow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <clipPath id="card"><rect width="640" height="380"/></clipPath>
-        </defs>
-
-        <g clip-path="url(#card)">
-          <!-- Space background -->
-          <rect width="640" height="380" fill="url(#space)"/>
-
-          <!-- Stars -->
-          <g fill="white" opacity="0.7">
-            <circle cx="420" cy="18" r="0.8"/><circle cx="460" cy="32" r="0.5"/>
-            <circle cx="498" cy="12" r="0.9"/><circle cx="530" cy="28" r="0.6"/>
-            <circle cx="555" cy="8"  r="0.7"/><circle cx="580" cy="22" r="0.5"/>
-            <circle cx="600" cy="40" r="0.8"/><circle cx="615" cy="15" r="0.6"/>
-            <circle cx="628" cy="55" r="0.5"/><circle cx="440" cy="50" r="0.4"/>
-            <circle cx="472" cy="65" r="0.6"/><circle cx="510" cy="48" r="0.5"/>
-            <circle cx="545" cy="60" r="0.7"/><circle cx="568" cy="42" r="0.4"/>
-            <circle cx="592" cy="70" r="0.6"/><circle cx="610" cy="80" r="0.5"/>
-            <circle cx="625" cy="98" r="0.8"/><circle cx="635" cy="118" r="0.4"/>
-            <circle cx="430" cy="80" r="0.5"/><circle cx="450" cy="96" r="0.7"/>
-          </g>
-
-          <!-- Earth curvature — dark landmass fills lower ~65% -->
-          <ellipse cx="200" cy="520" rx="580" ry="440" fill="url(#earthglow)"/>
-
-          <!-- Sunrise glow -->
-          <rect width="640" height="380" fill="url(#sunrise)"/>
-          <!-- Atmospheric blue rim -->
-          <rect width="640" height="380" fill="url(#atmo)"/>
-
-          <!-- Continent outlines in very dark grey (visible only faintly) -->
-          <!-- Europe outline -->
-          <path d="M60,200 Q80,185 105,182 Q125,178 138,188 Q148,196 144,210 Q138,222 124,228 Q108,232 92,225 Q74,218 65,208 Q58,204 60,200Z" fill="#1a1a1a" stroke="#252525" stroke-width="0.5"/>
-          <!-- Italy peninsula -->
-          <path d="M108,228 Q118,225 125,235 Q128,248 120,262 Q112,270 105,262 Q100,252 102,240 Q104,232 108,228Z" fill="#1a1a1a"/>
-          <!-- Iberian -->
-          <path d="M48,218 Q62,210 72,218 Q78,228 70,240 Q60,248 48,242 Q40,234 42,224 Q44,220 48,218Z" fill="#1a1a1a" stroke="#252525" stroke-width="0.5"/>
-          <!-- Scandinavia -->
-          <path d="M105,168 Q118,160 128,166 Q134,174 128,185 Q120,190 110,186 Q104,180 104,173 Q104,170 105,168Z" fill="#1a1a1a"/>
-          <!-- N Africa -->
-          <path d="M60,262 Q100,252 148,258 Q180,264 195,278 Q198,295 185,308 Q165,320 130,318 Q95,315 70,300 Q50,286 52,272 Q54,264 60,262Z" fill="#1a1a1a" stroke="#222" stroke-width="0.5"/>
-          <!-- Middle East -->
-          <path d="M195,240 Q220,232 240,238 Q252,246 248,260 Q238,270 220,268 Q205,262 198,252 Q193,246 195,240Z" fill="#1a1a1a"/>
-
-          <!-- ── City lights (Europe cluster, warm golden) ── -->
-          <g filter="url(#glow)">
-            <!-- UK/Ireland -->
-            <circle cx="76" cy="188" r="2.5" fill="#f5d060" opacity="0.9"/>
-            <circle cx="82" cy="195" r="1.5" fill="#f5d060" opacity="0.7"/>
-            <circle cx="70" cy="194" r="1.2" fill="#f5d060" opacity="0.6"/>
-            <!-- Benelux/NW Europe dense cluster -->
-            <circle cx="102" cy="196" r="3" fill="#f5d878" opacity="0.95"/>
-            <circle cx="108" cy="200" r="2.2" fill="#f5e080" opacity="0.9"/>
-            <circle cx="96" cy="200" r="1.8" fill="#f5d878" opacity="0.8"/>
-            <circle cx="114" cy="196" r="2.5" fill="#f5d878" opacity="0.85"/>
-            <circle cx="106" cy="205" r="1.5" fill="#f5d060" opacity="0.7"/>
-            <!-- Germany / Poland -->
-            <circle cx="118" cy="194" r="2.8" fill="#f5d878" opacity="0.9"/>
-            <circle cx="126" cy="192" r="2.2" fill="#f5d060" opacity="0.85"/>
-            <circle cx="134" cy="190" r="1.8" fill="#f5cc50" opacity="0.75"/>
-            <circle cx="122" cy="200" r="1.5" fill="#f5d060" opacity="0.7"/>
-            <circle cx="130" cy="198" r="1.2" fill="#f5c840" opacity="0.6"/>
-            <!-- France -->
-            <circle cx="92" cy="208" r="2.5" fill="#f5d060" opacity="0.85"/>
-            <circle cx="86" cy="214" r="1.5" fill="#f5d060" opacity="0.65"/>
-            <circle cx="98" cy="214" r="1.8" fill="#f5c840" opacity="0.7"/>
-            <!-- Italy -->
-            <circle cx="110" cy="220" r="2" fill="#f5cc50" opacity="0.8"/>
-            <circle cx="114" cy="228" r="1.5" fill="#f5c840" opacity="0.7"/>
-            <circle cx="108" cy="236" r="1.2" fill="#f5c840" opacity="0.6"/>
-            <!-- Spain -->
-            <circle cx="74" cy="220" r="2" fill="#f5c840" opacity="0.75"/>
-            <circle cx="66" cy="226" r="1.5" fill="#f5c840" opacity="0.65"/>
-            <!-- Scandinavia -->
-            <circle cx="114" cy="172" r="1.8" fill="#f5d060" opacity="0.75"/>
-            <circle cx="122" cy="176" r="1.5" fill="#f5d060" opacity="0.65"/>
-            <circle cx="120" cy="168" r="1.2" fill="#f5d060" opacity="0.6"/>
-            <!-- E Europe -->
-            <circle cx="138" cy="196" r="1.8" fill="#f5c840" opacity="0.7"/>
-            <circle cx="144" cy="202" r="1.5" fill="#f5c840" opacity="0.6"/>
-            <circle cx="148" cy="195" r="1.2" fill="#f5c840" opacity="0.55"/>
-            <!-- Middle East city lights -->
-            <circle cx="218" cy="246" r="2" fill="#f5d060" opacity="0.7"/>
-            <circle cx="228" cy="252" r="1.5" fill="#f5d060" opacity="0.6"/>
-            <circle cx="210" cy="252" r="1.2" fill="#f5c840" opacity="0.55"/>
-            <!-- N Africa sparse -->
-            <circle cx="100" cy="270" r="1.5" fill="#f5c840" opacity="0.55"/>
-            <circle cx="136" cy="268" r="1.2" fill="#f5c840" opacity="0.45"/>
-            <circle cx="160" cy="272" r="1.2" fill="#f5c840" opacity="0.45"/>
-            <!-- Far east scattered -->
-            <circle cx="285" cy="215" r="1.8" fill="#f5d060" opacity="0.6"/>
-            <circle cx="295" cy="220" r="1.5" fill="#f5d060" opacity="0.55"/>
-            <circle cx="278" cy="222" r="1.2" fill="#f5c840" opacity="0.5"/>
-          </g>
-
-          <!-- Soft halo over Europe cluster -->
-          <ellipse cx="108" cy="200" rx="45" ry="30" fill="#f5d060" opacity="0.06" filter="url(#softglow)"/>
-
-          <!-- ── Loader UI overlay (centered) ── -->
-          <!-- "TRAVEL DIARY" label -->
-          <text x="320" y="175" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="13" font-weight="300" fill="rgba(255,255,255,0.88)" text-anchor="middle" letter-spacing="7">TRAVEL DIARY</text>
-
-          <!-- Progress bar track -->
-          <rect x="192" y="192" width="256" height="2" rx="1" fill="rgba(255,255,255,0.13)"/>
-          <!-- Progress bar fill (~60%) -->
-          <rect x="192" y="192" width="154" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
-          <!-- Percentage -->
-          <text x="320" y="206" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" fill="rgba(255,255,255,0.30)" text-anchor="middle" letter-spacing="4">60%</text>
-
-          <!-- Subtle dark overlay to darken edges -->
-          <rect width="640" height="380" fill="rgba(0,0,0,0.18)"/>
-        </g>
-      </svg>
+    <div class="project-preview" style="position:relative;overflow:hidden;">
+      <img src="../assets/travel-cover.jpg"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;"/>
+      <!-- Subtle dark overlay so the UI text is legible -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.28);"></div>
+      <!-- Loader UI centred -->
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
+        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.82);letter-spacing:8px;text-transform:uppercase;">Travel Diary</span>
+        <div style="margin-top:12px;width:224px;height:1.5px;background:rgba(255,255,255,0.18);border-radius:1px;overflow:hidden;">
+          <div style="width:60%;height:100%;background:rgba(255,255,255,0.70);border-radius:1px;"></div>
+        </div>
+        <span style="margin-top:6px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:6.5px;color:rgba(255,255,255,0.28);letter-spacing:3px;">60%</span>
+      </div>
+    </div>
     </div>
   </a>
 
