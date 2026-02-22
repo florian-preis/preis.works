@@ -5,163 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Travel Diary — Florian Preis</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>✈</text></svg>">
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
     :root {
       --ocean:  #a8cce0;
       --unvis:  #e8e2d6;
       --vis:    #3a4a5c;
       --mapbdr: #c8c0b2;
-      --grat:   rgba(0,0,0,0.05);
-      --olabel: rgba(40,90,135,0.30);
       --bg:     #ffffff;
       --text:   #111111;
       --muted:  #888888;
       --border: #e5e5e5;
       --label:  #bbbbbb;
     }
-
-    html, body {
-      width: 100%; height: 100%; overflow: hidden;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background: var(--bg); color: var(--text); cursor: none;
-    }
+    html, body { width:100%; height:100%; overflow:hidden;
+      font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--text); cursor:none; }
 
     /* ── Cursor ── */
-    #cursor {
-      position: fixed; pointer-events: none; z-index: 9999;
-      width: 26px; height: 26px; transform: translate(-50%,-50%);
-    }
-    #cursor svg { width: 100%; height: 100%; fill: #111; }
+    #cursor { position:fixed; pointer-events:none; z-index:9999;
+      width:26px; height:26px; transform:translate(-50%,-50%); }
+    #cursor svg { width:100%; height:100%; fill:#111; }
 
     /* ── Loader ── */
-    #loader {
-      position: fixed; inset: 0; z-index: 8000;
-      background: #000;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
-    }
-    #lv {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%; object-fit: cover; opacity: 0.9;
-    }
-    /* Darkening overlay sits above video, below text */
-    #loader::after {
-      content: ''; position: absolute; inset: 0;
-      background: rgba(0,0,0,0.38); pointer-events: none; z-index: 1;
-    }
-    .lc {
-      position: relative; z-index: 2; text-align: center;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .lt {
-      font-size: clamp(13px,2.2vw,24px); font-weight: 300;
-      letter-spacing: 0.44em; text-transform: uppercase;
-      color: rgba(255,255,255,0.90); margin-bottom: 22px;
-    }
-    /* Track (2px — slightly heavier than before) */
-    .pt {
-      width: clamp(160px,26vw,280px); height: 2px;
-      background: rgba(255,255,255,0.14); margin: 0 auto 10px; overflow: hidden;
-    }
-    .pf { height: 100%; width: 0%; background: rgba(255,255,255,0.75); }
-    .pp { font-size: 8px; letter-spacing: .28em; color: rgba(255,255,255,0.32); text-transform: uppercase; }
-    #loader.fo { animation: fo .6s ease forwards; }
-    @keyframes fo { to { opacity: 0; pointer-events: none; } }
+    #loader { position:fixed; inset:0; z-index:8000; background:#000;
+      display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #lv { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.9; }
+    #loader::after { content:''; position:absolute; inset:0;
+      background:rgba(0,0,0,0.38); pointer-events:none; z-index:1; }
+    .lc { position:relative; z-index:2; text-align:center;
+      display:flex; flex-direction:column; align-items:center; }
+    .lt { font-size:clamp(13px,2.2vw,24px); font-weight:300; letter-spacing:0.44em;
+      text-transform:uppercase; color:rgba(255,255,255,0.90); margin-bottom:22px;
+      width:clamp(160px,26vw,280px); text-align:center; }
+    .pt { width:clamp(160px,26vw,280px); height:2px;
+      background:rgba(255,255,255,0.14); margin-bottom:10px; overflow:hidden; }
+    .pf { height:100%; width:0%; background:rgba(255,255,255,0.75); }
+    .pp { font-size:8px; letter-spacing:.28em; color:rgba(255,255,255,0.32);
+      text-transform:uppercase; text-align:center; width:clamp(160px,26vw,280px); }
+    #loader.fo { animation:fo .6s ease forwards; }
+    @keyframes fo { to { opacity:0; pointer-events:none; } }
 
     /* ── Map ── */
-    #mw { position: fixed; inset: 0; overflow: hidden; }
-    #mc { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-    /* Hit SVG: NO CSS fill override — each path gets fill set in JS */
-    #mhit { position: absolute; inset: 0; overflow: visible; }
+    #map { position:fixed; inset:0; }
+    /* Hide all default Google Maps UI chrome */
+    .gm-style .gm-style-cc, .gmnoprint, .gm-bundled-control,
+    a[href*="maps.google"] { display:none !important; }
 
     /* ── Tooltip ── */
-    #tip {
-      position: fixed; pointer-events: none; z-index: 600;
-      background: rgba(255,255,255,0.93); color: #111;
-      font-size: 9px; font-weight: 400; letter-spacing: .12em;
-      text-transform: uppercase; padding: 4px 9px;
-      white-space: nowrap; opacity: 0; transition: opacity .1s;
-      transform: translate(14px,-50%); border: 1px solid #e5e5e5;
-    }
+    #tip { position:fixed; pointer-events:none; z-index:600;
+      background:rgba(255,255,255,0.93); color:#111;
+      font-size:9px; font-weight:400; letter-spacing:.12em;
+      text-transform:uppercase; padding:4px 9px;
+      white-space:nowrap; opacity:0; transition:opacity .1s;
+      transform:translate(14px,-50%); border:1px solid #e5e5e5; }
 
     /* ── Title ── */
-    #title-wrap { position: fixed; top: 26px; left: 28px; z-index: 600; }
-    .ui-title {
-      font-size: 10px; font-weight: 400; letter-spacing: .30em;
-      text-transform: uppercase; color: var(--text); opacity: .45;
-    }
+    #title-wrap { position:fixed; top:26px; left:28px; z-index:600; }
+    .ui-title { font-size:10px; font-weight:400; letter-spacing:.30em;
+      text-transform:uppercase; color:var(--text); opacity:.45; }
 
     /* ── Panel ── */
-    #panel {
-      position: fixed; bottom: 28px; left: 28px; z-index: 600;
-      background: var(--bg); border: 1px solid var(--border);
-      padding: 16px 18px; display: flex; flex-direction: column; gap: 13px;
-      min-width: 168px;
-    }
-    .panel-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-    .panel-label { font-size: 10px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
-    .count-val { font-size: 13px; font-weight: 300; color: var(--text); }
-    .legend-row { display: flex; align-items: center; gap: 14px; }
-    .lrow { display: flex; align-items: center; gap: 6px; }
-    .lsw { width: 11px; height: 7px; flex-shrink: 0; }
-    .lsw.v { background: var(--vis); }
-    .lsw.u { background: var(--unvis); border: 1px solid var(--mapbdr); }
-    .llbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
-    .panel-divider { height: 1px; background: var(--border); }
-    .zoom-row { display: flex; gap: 4px; }
-    .zb {
-      width: 24px; height: 24px; border: 1px solid var(--border);
-      background: transparent; color: var(--text); font-size: 13px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: none; user-select: none; line-height: 1;
-    }
-    .zb:hover { background: #f5f5f5; }
+    #panel { position:fixed; bottom:28px; left:28px; z-index:600;
+      background:var(--bg); border:1px solid var(--border);
+      padding:16px 18px; display:flex; flex-direction:column; gap:13px;
+      min-width:168px; }
+    .panel-row { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .panel-label { font-size:10px; font-weight:400; letter-spacing:0.18em;
+      text-transform:uppercase; color:var(--muted); }
+    .count-val { font-size:13px; font-weight:300; color:var(--text); }
+    .legend-row { display:flex; align-items:center; gap:14px; }
+    .lrow { display:flex; align-items:center; gap:6px; }
+    .lsw { width:11px; height:7px; flex-shrink:0; }
+    .lsw.v { background:var(--vis); }
+    .lsw.u { background:var(--unvis); border:1px solid var(--mapbdr); }
+    .llbl { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+    .panel-divider { height:1px; background:var(--border); }
 
     /* ── Sidebar ── */
-    #sb {
-      position: fixed; top: 0; right: 0;
-      width: min(380px,100vw); height: 100%;
-      background: var(--bg); border-left: 1px solid var(--border);
-      z-index: 700; transform: translateX(100%);
-      transition: transform .38s cubic-bezier(.4,0,.2,1);
-      overflow-y: auto;
-    }
-    #sb.open { transform: translateX(0); }
-    .sbh {
-      padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 10px;
-      position: sticky; top: 0; background: var(--bg); z-index: 1;
-    }
-    .sbf { width: 30px; height: 20px; object-fit: cover; display: block; flex-shrink: 0; }
-    .sbn { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text); }
-    .sbbdg { font-size: 7px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); padding: 1px 5px; }
-    /* Plain × — no border, no box */
-    .sbc {
-      margin-left: auto; flex-shrink: 0; background: none; border: none;
-      cursor: none; color: var(--text); font-size: 20px; line-height: 1;
-      opacity: 0.4; transition: opacity 0.15s; padding: 2px 4px;
-    }
-    .sbc:hover { opacity: 1; }
-    .sbb { padding: 0 20px 36px; }
-    .nonote { padding: 22px 0; font-size: 13px; color: var(--muted); }
-    .trip { padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .trip:last-child { border-bottom: none; }
-    .trip-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; flex-wrap: wrap; }
-    .trip-date-row { display: flex; align-items: center; gap: 5px; }
-    .trip-date-row svg { width: 10px; height: 10px; opacity: 0.4; flex-shrink: 0; }
-    .td { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--label); }
-    .trip-with-row { display: flex; align-items: center; gap: 5px; }
-    .trip-with-row svg { width: 10px; height: 10px; opacity: 0.4; flex-shrink: 0; }
-    .twn { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
-    .tn { font-size: 13px; line-height: 1.75; color: var(--text); font-style: normal; font-weight: 400; }
+    #sb { position:fixed; top:0; right:0; width:min(380px,100vw); height:100%;
+      background:var(--bg); border-left:1px solid var(--border);
+      z-index:700; transform:translateX(100%);
+      transition:transform .38s cubic-bezier(.4,0,.2,1); overflow-y:auto; }
+    #sb.open { transform:translateX(0); }
+    .sbh { padding:20px 20px 16px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:10px;
+      position:sticky; top:0; background:var(--bg); z-index:1; }
+    .sbf { width:30px; height:20px; object-fit:cover; display:block; flex-shrink:0; }
+    .sbn { font-size:11px; font-weight:700; letter-spacing:0.18em;
+      text-transform:uppercase; color:var(--text); }
+    .sbbdg { font-size:7px; letter-spacing:0.18em; text-transform:uppercase;
+      color:var(--muted); border:1px solid var(--border); padding:1px 5px; }
+    .sbc { margin-left:auto; flex-shrink:0; background:none; border:none;
+      cursor:none; color:var(--text); font-size:20px; line-height:1;
+      opacity:0.4; transition:opacity 0.15s; padding:2px 4px; }
+    .sbc:hover { opacity:1; }
+    .sbb { padding:0 20px 36px; }
+    .nonote { padding:22px 0; font-size:13px; color:var(--muted); }
+    .trip { padding:16px 0; border-bottom:1px solid var(--border); }
+    .trip:last-child { border-bottom:none; }
+    .trip-meta { display:flex; align-items:center; gap:12px; margin-bottom:9px; flex-wrap:wrap; }
+    .trip-date-row { display:flex; align-items:center; gap:5px; }
+    .trip-date-row svg { width:10px; height:10px; opacity:0.4; flex-shrink:0; }
+    .td { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--label); }
+    .trip-with-row { display:flex; align-items:center; gap:5px; }
+    .trip-with-row svg { width:10px; height:10px; opacity:0.4; flex-shrink:0; }
+    .twn { font-size:10px; letter-spacing:0.1em; color:var(--muted); }
+    .tn { font-size:13px; line-height:1.75; color:var(--text); font-style:normal; font-weight:400; }
+    .stats-block { padding:16px 0; border-bottom:1px solid var(--border); }
+    .stat-row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:3px 0; }
+    .stat-key { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--label); flex-shrink:0; }
+    .stat-val { font-size:13px; font-weight:300; color:var(--text); text-align:right; }
 
-    @media (max-width: 600px) {
-      #sb { width: 100vw; }
-      #panel { bottom: 14px; left: 14px; }
-      #title-wrap { top: 14px; left: 14px; }
+    @media (max-width:600px) {
+      #sb { width:100vw; }
+      #panel { bottom:14px; left:14px; }
+      #title-wrap { top:14px; left:14px; }
     }
   </style>
 </head>
@@ -174,8 +133,7 @@
   </svg>
 </div>
 
-<!-- Loader
-     travel.html is in /projects/ — video is in /assets/ — so the relative path is ../assets/loading.mp4 -->
+<!-- Loader -->
 <div id="loader">
   <video id="lv" src="../assets/loading.mp4" autoplay muted playsinline preload="auto"></video>
   <div class="lc">
@@ -185,16 +143,12 @@
   </div>
 </div>
 
-<!-- Map -->
-<div id="mw">
-  <canvas id="mc"></canvas>
-  <svg id="mhit" xmlns="http://www.w3.org/2000/svg"></svg>
-</div>
+<!-- Map container -->
+<div id="map"></div>
 
 <div id="tip"></div>
 <div id="title-wrap"><div class="ui-title">Travel Diary</div></div>
 
-<!-- Panel (night mode removed) -->
 <div id="panel">
   <div class="panel-row">
     <span class="panel-label">Countries</span>
@@ -203,14 +157,6 @@
   <div class="legend-row">
     <div class="lrow"><div class="lsw v"></div><span class="llbl">Visited</span></div>
     <div class="lrow"><div class="lsw u"></div><span class="llbl">Not yet</span></div>
-  </div>
-  <div class="panel-divider"></div>
-  <div class="panel-row">
-    <span class="panel-label">Zoom</span>
-    <div class="zoom-row">
-      <button class="zb" id="zin">+</button>
-      <button class="zb" id="zout">−</button>
-    </div>
   </div>
 </div>
 
@@ -226,522 +172,584 @@
 </div>
 
 <script>
-/* ── Travel data ─────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════
+   TRAVEL DATA
+   ════════════════════════════════════════════════ */
 const T = {
   "EG":{ name:"Egypt",                     v:true,  trips:[] },
   "KE":{ name:"Kenya",                     v:true,  trips:[] },
   "MA":{ name:"Morocco",                   v:true,  trips:[] },
   "NA":{ name:"Namibia",                   v:true,  trips:[] },
   "CN":{ name:"China",                     v:true,  trips:[] },
-  "HK":{ name:"Hong Kong",                v:true,  ter:"SAR",       trips:[] },
+  "HK":{ name:"Hong Kong",                 v:true,  ter:"SAR",        trips:[] },
   "IN":{ name:"India",                     v:true,  trips:[] },
   "IL":{ name:"Israel",                    v:true,  trips:[] },
   "JO":{ name:"Jordan",                    v:true,  trips:[] },
   "MY":{ name:"Malaysia",                  v:true,  trips:[] },
-  "PS":{ name:"Palestine",                 v:true,  ter:"Observer",  trips:[] },
+  "PS":{ name:"Palestine",                 v:true,  ter:"Observer",   trips:[] },
   "PH":{ name:"Philippines",               v:true,  trips:[] },
-  "SG":{ name:"Singapore",                v:true,  trips:[] },
-  "KR":{ name:"South Korea",              v:true,  trips:[] },
+  "SG":{ name:"Singapore",                 v:true,  trips:[] },
+  "KR":{ name:"South Korea",               v:true,  trips:[] },
   "TR":{ name:"Turkey",                    v:true,  trips:[] },
-  "AE":{ name:"United Arab Emirates",     v:true,  trips:[] },
-  "VN":{ name:"Vietnam",                  v:true,  trips:[] },
-  "TW":{ name:"Taiwan",                    v:false, ter:"Territory", trips:[] },
+  "AE":{ name:"United Arab Emirates",      v:true,  trips:[] },
+  "VN":{ name:"Vietnam",                   v:true,  trips:[] },
+  "TW":{ name:"Taiwan",                    v:false, ter:"Territory",  trips:[] },
   "AL":{ name:"Albania",                   v:true,  trips:[] },
   "AT":{ name:"Austria",                   v:true,  trips:[] },
   "BE":{ name:"Belgium",                   v:true,  trips:[] },
   "BA":{ name:"Bosnia and Herzegovina",    v:true,  trips:[] },
-  "BG":{ name:"Bulgaria",                 v:true,  trips:[] },
-  "HR":{ name:"Croatia",                  v:true,  trips:[] },
-  "CZ":{ name:"Czechia",                  v:true,  trips:[] },
-  "DK":{ name:"Denmark",                  v:true,  trips:[] },
+  "BG":{ name:"Bulgaria",                  v:true,  trips:[] },
+  "HR":{ name:"Croatia",                   v:true,  trips:[] },
+  "CZ":{ name:"Czechia",                   v:true,  trips:[] },
+  "DK":{ name:"Denmark",                   v:true,  trips:[] },
   "FR":{ name:"France",                    v:true,  trips:[] },
-  "DE":{ name:"Germany",                  v:true,  trips:[
+  "DE":{ name:"Germany",                   v:true,  trips:[
     { date:"FEBRUARY 2026", with:"Ellen", note:"Went clubbing at Tresor." },
     { date:"JUNE 2023",     with:"Solo",  note:"Internship at Federal Ministry of Finance." }
   ]},
-  "GR":{ name:"Greece",                   v:true,  trips:[] },
-  "HU":{ name:"Hungary",                  v:true,  trips:[] },
-  "IS":{ name:"Iceland",                  v:true,  trips:[] },
-  "IE":{ name:"Ireland",                  v:true,  trips:[] },
-  "IT":{ name:"Italy",                    v:true,  trips:[] },
-  "LV":{ name:"Latvia",                   v:true,  trips:[] },
-  "ME":{ name:"Montenegro",               v:true,  trips:[] },
-  "NL":{ name:"Netherlands",              v:true,  trips:[] },
-  "MK":{ name:"North Macedonia",          v:true,  trips:[] },
-  "NO":{ name:"Norway",                   v:true,  trips:[] },
-  "PL":{ name:"Poland",                   v:true,  trips:[] },
-  "PT":{ name:"Portugal",                 v:true,  trips:[] },
-  "RO":{ name:"Romania",                  v:true,  trips:[] },
-  "RS":{ name:"Serbia",                   v:true,  trips:[] },
-  "SK":{ name:"Slovakia",                 v:true,  trips:[] },
-  "SI":{ name:"Slovenia",                 v:true,  trips:[] },
-  "ES":{ name:"Spain",                    v:true,  trips:[] },
-  "SE":{ name:"Sweden",                   v:true,  trips:[] },
-  "CH":{ name:"Switzerland",              v:true,  trips:[] },
-  "UA":{ name:"Ukraine",                  v:true,  trips:[] },
-  "GB":{ name:"United Kingdom",           v:true,  trips:[] },
-  "VA":{ name:"Vatican",                  v:true,  ter:"City State", trips:[] },
-  "CA":{ name:"Canada",                   v:true,  trips:[] },
-  "CR":{ name:"Costa Rica",               v:true,  trips:[] },
-  "CU":{ name:"Cuba",                     v:true,  trips:[] },
-  "MX":{ name:"Mexico",                   v:true,  trips:[] },
-  "PA":{ name:"Panama",                   v:true,  trips:[] },
-  "US":{ name:"United States of America", v:true,  trips:[] },
-  "AU":{ name:"Australia",                v:true,  trips:[] },
-  "NZ":{ name:"New Zealand",              v:true,  trips:[] },
-  "BO":{ name:"Bolivia",                  v:true,  trips:[] },
-  "BR":{ name:"Brazil",                   v:true,  trips:[] },
-  "CO":{ name:"Colombia",                 v:true,  trips:[] },
-  "PE":{ name:"Peru",                     v:true,  trips:[] },
+  "GR":{ name:"Greece",                    v:true,  trips:[] },
+  "HU":{ name:"Hungary",                   v:true,  trips:[] },
+  "IS":{ name:"Iceland",                   v:true,  trips:[] },
+  "IE":{ name:"Ireland",                   v:true,  trips:[] },
+  "IT":{ name:"Italy",                     v:true,  trips:[] },
+  "LV":{ name:"Latvia",                    v:true,  trips:[] },
+  "ME":{ name:"Montenegro",                v:true,  trips:[] },
+  "NL":{ name:"Netherlands",               v:true,  trips:[] },
+  "MK":{ name:"North Macedonia",           v:true,  trips:[] },
+  "NO":{ name:"Norway",                    v:true,  trips:[] },
+  "PL":{ name:"Poland",                    v:true,  trips:[] },
+  "PT":{ name:"Portugal",                  v:true,  trips:[] },
+  "RO":{ name:"Romania",                   v:true,  trips:[] },
+  "RS":{ name:"Serbia",                    v:true,  trips:[] },
+  "SK":{ name:"Slovakia",                  v:true,  trips:[] },
+  "SI":{ name:"Slovenia",                  v:true,  trips:[] },
+  "ES":{ name:"Spain",                     v:true,  trips:[] },
+  "SE":{ name:"Sweden",                    v:true,  trips:[] },
+  "CH":{ name:"Switzerland",               v:true,  trips:[] },
+  "UA":{ name:"Ukraine",                   v:true,  trips:[] },
+  "GB":{ name:"United Kingdom",            v:true,  trips:[] },
+  "VA":{ name:"Vatican",                   v:true,  ter:"City State", trips:[] },
+  "CA":{ name:"Canada",                    v:true,  trips:[] },
+  "CR":{ name:"Costa Rica",                v:true,  trips:[] },
+  "CU":{ name:"Cuba",                      v:true,  trips:[] },
+  "MX":{ name:"Mexico",                    v:true,  trips:[] },
+  "PA":{ name:"Panama",                    v:true,  trips:[] },
+  "US":{ name:"United States of America",  v:true,  trips:[] },
+  "AU":{ name:"Australia",                 v:true,  trips:[] },
+  "NZ":{ name:"New Zealand",               v:true,  trips:[] },
+  "BO":{ name:"Bolivia",                   v:true,  trips:[] },
+  "BR":{ name:"Brazil",                    v:true,  trips:[] },
+  "CO":{ name:"Colombia",                  v:true,  trips:[] },
+  "PE":{ name:"Peru",                      v:true,  trips:[] },
 };
 
-/* ── All country names (numeric topojson ID → display name) ─── */
-const ALL_NAMES = {
-  4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",
-  40:"Austria",50:"Bangladesh",56:"Belgium",64:"Bhutan",68:"Bolivia",76:"Brazil",
-  100:"Bulgaria",104:"Myanmar",108:"Burundi",116:"Cambodia",120:"Cameroon",124:"Canada",
-  140:"Central African Republic",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",
-  174:"Comoros",180:"DR Congo",188:"Costa Rica",191:"Croatia",192:"Cuba",196:"Cyprus",
-  203:"Czechia",208:"Denmark",214:"Dominican Republic",218:"Ecuador",222:"El Salvador",
-  231:"Ethiopia",233:"Estonia",246:"Finland",250:"France",266:"Gabon",276:"Germany",
-  288:"Ghana",300:"Greece",320:"Guatemala",328:"Guyana",332:"Haiti",340:"Honduras",
-  348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",368:"Iraq",
-  372:"Ireland",376:"Israel",380:"Italy",384:"Ivory Coast",388:"Jamaica",392:"Japan",
-  398:"Kazakhstan",400:"Jordan",404:"Kenya",408:"North Korea",410:"South Korea",
-  414:"Kuwait",417:"Kyrgyzstan",418:"Laos",422:"Lebanon",426:"Lesotho",428:"Latvia",
-  434:"Libya",440:"Lithuania",442:"Luxembourg",454:"Malawi",458:"Malaysia",462:"Maldives",
-  480:"Mauritius",484:"Mexico",496:"Mongolia",499:"Montenegro",504:"Morocco",
-  508:"Mozambique",512:"Oman",516:"Namibia",524:"Nepal",528:"Netherlands",
-  540:"New Caledonia",554:"New Zealand",558:"Nicaragua",566:"Nigeria",578:"Norway",
-  586:"Pakistan",591:"Panama",600:"Paraguay",604:"Peru",608:"Philippines",616:"Poland",
-  620:"Portugal",634:"Qatar",642:"Romania",643:"Russia",646:"Rwanda",682:"Saudi Arabia",
-  686:"Senegal",688:"Serbia",690:"Seychelles",703:"Slovakia",704:"Vietnam",705:"Slovenia",
-  706:"Somalia",710:"South Africa",716:"Zimbabwe",724:"Spain",729:"Sudan",740:"Suriname",
-  748:"Eswatini",752:"Sweden",756:"Switzerland",760:"Syria",762:"Tajikistan",764:"Thailand",
-  788:"Tunisia",792:"Turkey",795:"Turkmenistan",800:"Uganda",804:"Ukraine",
-  807:"North Macedonia",818:"Egypt",826:"United Kingdom",834:"Tanzania",840:"United States of America",
-  858:"Uruguay",860:"Uzbekistan",862:"Venezuela",887:"Yemen",894:"Zambia",
-  70:"Bosnia and Herzegovina",275:"Palestine",336:"Vatican",
+/* ════════════════════════════════════════════════
+   COUNTRY STATS
+   ════════════════════════════════════════════════ */
+const STATS = {
+  "AF":{ cap:"Kabul",               pop:43e6,    gdp:14.6,  gdppc:339    },
+  "AL":{ cap:"Tirana",              pop:2.8e6,   gdp:18.9,  gdppc:6750,  hdi:0.789, hdiR:67  },
+  "DZ":{ cap:"Algiers",             pop:46e6,    gdp:194,   gdppc:4217,  hdi:0.745, hdiR:91  },
+  "AO":{ cap:"Luanda",              pop:37e6,    gdp:86,    gdppc:2324,  hdi:0.586, hdiR:148 },
+  "AR":{ cap:"Buenos Aires",        pop:46e6,    gdp:558,   gdppc:12130, hdi:0.849, hdiR:48  },
+  "AU":{ cap:"Canberra",            pop:26.5e6,  gdp:1570,  gdppc:59245, hdi:0.946, hdiR:10  },
+  "AT":{ cap:"Vienna",              pop:9.1e6,   gdp:480,   gdppc:52747, hdi:0.926, hdiR:20  },
+  "BD":{ cap:"Dhaka",               pop:173e6,   gdp:437,   gdppc:2526,  hdi:0.670, hdiR:129 },
+  "BE":{ cap:"Brussels",            pop:11.6e6,  gdp:578,   gdppc:49828, hdi:0.937, hdiR:16  },
+  "BH":{ cap:"Manama",              pop:1.7e6,   gdp:40,    gdppc:23529, hdi:0.875, hdiR:35  },
+  "BJ":{ cap:"Porto-Novo",          pop:13e6,    gdp:17,    gdppc:1308,  hdi:0.525, hdiR:166 },
+  "BN":{ cap:"Bandar Seri Begawan", pop:0.45e6,  gdp:13,    gdppc:28889, hdi:0.823, hdiR:47  },
+  "BO":{ cap:"Sucre",               pop:12.3e6,  gdp:43,    gdppc:3496,  hdi:0.698, hdiR:118 },
+  "BR":{ cap:"Brasília",            pop:215e6,   gdp:2085,  gdppc:9698,  hdi:0.760, hdiR:87  },
+  "BS":{ cap:"Nassau",              pop:0.41e6,  gdp:12,    gdppc:29268, hdi:0.812, hdiR:58  },
+  "BT":{ cap:"Thimphu",             pop:0.78e6,  gdp:2.9,   gdppc:3718,  hdi:0.681, hdiR:127 },
+  "BG":{ cap:"Sofia",               pop:6.5e6,   gdp:94,    gdppc:14462, hdi:0.795, hdiR:66  },
+  "BI":{ cap:"Gitega",              pop:13e6,    gdp:2.8,   gdppc:215,   hdi:0.426, hdiR:187 },
+  "BZ":{ cap:"Belmopan",            pop:0.43e6,  gdp:2.4,   gdppc:5581,  hdi:0.683, hdiR:101 },
+  "BA":{ cap:"Sarajevo",            pop:3.2e6,   gdp:24,    gdppc:7500,  hdi:0.780, hdiR:74  },
+  "BB":{ cap:"Bridgetown",          pop:0.28e6,  gdp:5.7,   gdppc:20357, hdi:0.814, hdiR:57  },
+  "BY":{ cap:"Minsk",               pop:9.4e6,   gdp:73,    gdppc:7766,  hdi:0.801, hdiR:68  },
+  "CA":{ cap:"Ottawa",              pop:40e6,    gdp:2024,  gdppc:50600, hdi:0.935, hdiR:18  },
+  "CD":{ cap:"Kinshasa",            pop:102e6,   gdp:62,    gdppc:608,   hdi:0.481, hdiR:180 },
+  "CF":{ cap:"Bangui",              pop:5.6e6,   gdp:2.4,   gdppc:429,   hdi:0.387, hdiR:191 },
+  "CG":{ cap:"Brazzaville",         pop:5.8e6,   gdp:14,    gdppc:2414,  hdi:0.574, hdiR:153 },
+  "CI":{ cap:"Yamoussoukro",        pop:27e6,    gdp:70,    gdppc:2593,  hdi:0.550, hdiR:159 },
+  "CL":{ cap:"Santiago",            pop:19.5e6,  gdp:297,   gdppc:15231, hdi:0.860, hdiR:43  },
+  "CM":{ cap:"Yaoundé",             pop:28e6,    gdp:44,    gdppc:1571,  hdi:0.587, hdiR:147 },
+  "CN":{ cap:"Beijing",             pop:1412e6,  gdp:16180, gdppc:11461, hdi:0.788, hdiR:75  },
+  "CO":{ cap:"Bogotá",              pop:52e6,    gdp:315,   gdppc:6058,  hdi:0.758, hdiR:89  },
+  "CR":{ cap:"San José",            pop:5.2e6,   gdp:68,    gdppc:13077, hdi:0.806, hdiR:62  },
+  "CU":{ cap:"Havana",              pop:11.2e6,  gdp:107,   gdppc:9554,  hdi:0.778, hdiR:83  },
+  "CY":{ cap:"Nicosia",             pop:1.3e6,   gdp:29,    gdppc:22308, hdi:0.907, hdiR:28  },
+  "CZ":{ cap:"Prague",              pop:10.9e6,  gdp:295,   gdppc:27064, hdi:0.900, hdiR:32  },
+  "DE":{ cap:"Berlin",              pop:84e6,    gdp:3869,  gdppc:46060, hdi:0.942, hdiR:9   },
+  "DJ":{ cap:"Djibouti City",       pop:1.1e6,   gdp:3.9,   gdppc:3545,  hdi:0.524, hdiR:166 },
+  "DK":{ cap:"Copenhagen",          pop:5.9e6,   gdp:383,   gdppc:64915, hdi:0.952, hdiR:7   },
+  "DO":{ cap:"Santo Domingo",       pop:11.3e6,  gdp:115,   gdppc:10177, hdi:0.767, hdiR:79  },
+  "DZ":{ cap:"Algiers",             pop:46e6,    gdp:194,   gdppc:4217,  hdi:0.745, hdiR:91  },
+  "EC":{ cap:"Quito",               pop:18.1e6,  gdp:118,   gdppc:6519,  hdi:0.765, hdiR:82  },
+  "EE":{ cap:"Tallinn",             pop:1.4e6,   gdp:38,    gdppc:27143, hdi:0.899, hdiR:31  },
+  "EG":{ cap:"Cairo",               pop:106e6,   gdp:379,   gdppc:3575,  hdi:0.728, hdiR:108 },
+  "ER":{ cap:"Asmara",              pop:3.6e6,   gdp:2.0,   gdppc:556,   hdi:0.492, hdiR:175 },
+  "ES":{ cap:"Madrid",              pop:47e6,    gdp:1458,  gdppc:31021, hdi:0.911, hdiR:27  },
+  "ET":{ cap:"Addis Ababa",         pop:127e6,   gdp:156,   gdppc:1228,  hdi:0.492, hdiR:175 },
+  "FI":{ cap:"Helsinki",            pop:5.5e6,   gdp:281,   gdppc:51091, hdi:0.942, hdiR:12  },
+  "FJ":{ cap:"Suva",                pop:0.93e6,  gdp:4.9,   gdppc:5269,  hdi:0.730, hdiR:93  },
+  "FR":{ cap:"Paris",               pop:68e6,    gdp:2924,  gdppc:43000, hdi:0.910, hdiR:26  },
+  "GA":{ cap:"Libreville",          pop:2.3e6,   gdp:20,    gdppc:8696,  hdi:0.703, hdiR:115 },
+  "GD":{ cap:"St. George's",        pop:0.12e6,  gdp:1.3,   gdppc:10833, hdi:0.796, hdiR:74  },
+  "GH":{ cap:"Accra",               pop:33e6,    gdp:76,    gdppc:2303,  hdi:0.602, hdiR:143 },
+  "GN":{ cap:"Conakry",             pop:13e6,    gdp:17,    gdppc:1308,  hdi:0.465, hdiR:182 },
+  "GR":{ cap:"Athens",              pop:10.4e6,  gdp:222,   gdppc:21346, hdi:0.893, hdiR:33  },
+  "GT":{ cap:"Guatemala City",      pop:17.6e6,  gdp:90,    gdppc:5114,  hdi:0.627, hdiR:133 },
+  "GW":{ cap:"Bissau",              pop:2.1e6,   gdp:1.6,   gdppc:762,   hdi:0.466, hdiR:181 },
+  "HK":{ cap:"Hong Kong",           pop:7.5e6,   gdp:359,   gdppc:47867, hdi:0.952, hdiR:4   },
+  "HN":{ cap:"Tegucigalpa",         pop:10.4e6,  gdp:31,    gdppc:2981,  hdi:0.621, hdiR:135 },
+  "HR":{ cap:"Zagreb",              pop:3.9e6,   gdp:73,    gdppc:18718, hdi:0.878, hdiR:37  },
+  "HT":{ cap:"Port-au-Prince",      pop:11.7e6,  gdp:20,    gdppc:1709,  hdi:0.535, hdiR:163 },
+  "HU":{ cap:"Budapest",            pop:9.7e6,   gdp:188,   gdppc:19381, hdi:0.851, hdiR:47  },
+  "ID":{ cap:"Jakarta",             pop:277e6,   gdp:1319,  gdppc:4762,  hdi:0.713, hdiR:112 },
+  "IE":{ cap:"Dublin",              pop:5.2e6,   gdp:505,   gdppc:97115, hdi:0.945, hdiR:8   },
+  "IL":{ cap:"Jerusalem",           pop:9.7e6,   gdp:488,   gdppc:50309, hdi:0.919, hdiR:22  },
+  "IN":{ cap:"New Delhi",           pop:1440e6,  gdp:3385,  gdppc:2351,  hdi:0.644, hdiR:134 },
+  "IQ":{ cap:"Baghdad",             pop:43e6,    gdp:251,   gdppc:5837,  hdi:0.686, hdiR:121 },
+  "IR":{ cap:"Tehran",              pop:88e6,    gdp:380,   gdppc:4318,  hdi:0.774, hdiR:78  },
+  "IS":{ cap:"Reykjavík",           pop:0.37e6,  gdp:26,    gdppc:70270, hdi:0.959, hdiR:3   },
+  "IT":{ cap:"Rome",                pop:59e6,    gdp:2088,  gdppc:35390, hdi:0.906, hdiR:30  },
+  "JM":{ cap:"Kingston",            pop:2.8e6,   gdp:17,    gdppc:6071,  hdi:0.720, hdiR:110 },
+  "JO":{ cap:"Amman",               pop:10.3e6,  gdp:50,    gdppc:4854,  hdi:0.736, hdiR:102 },
+  "JP":{ cap:"Tokyo",               pop:124e6,   gdp:4055,  gdppc:32702, hdi:0.920, hdiR:24  },
+  "KE":{ cap:"Nairobi",             pop:55e6,    gdp:113,   gdppc:2055,  hdi:0.601, hdiR:145 },
+  "KG":{ cap:"Bishkek",             pop:7e6,     gdp:11,    gdppc:1571,  hdi:0.692, hdiR:117 },
+  "KH":{ cap:"Phnom Penh",          pop:17e6,    gdp:27,    gdppc:1588,  hdi:0.593, hdiR:146 },
+  "KP":{ cap:"Pyongyang",           pop:26e6,    gdp:17,    gdppc:654    },
+  "KR":{ cap:"Seoul",               pop:51e6,    gdp:1490,  gdppc:29216, hdi:0.929, hdiR:19  },
+  "KW":{ cap:"Kuwait City",         pop:4.5e6,   gdp:148,   gdppc:32889, hdi:0.847, hdiR:49  },
+  "KZ":{ cap:"Astana",              pop:20e6,    gdp:225,   gdppc:11250, hdi:0.802, hdiR:72  },
+  "LA":{ cap:"Vientiane",           pop:7.5e6,   gdp:14,    gdppc:1867,  hdi:0.620, hdiR:139 },
+  "LB":{ cap:"Beirut",              pop:5.5e6,   gdp:22,    gdppc:4000,  hdi:0.706, hdiR:113 },
+  "LK":{ cap:"Colombo",             pop:22e6,    gdp:73,    gdppc:3318,  hdi:0.780, hdiR:73  },
+  "LR":{ cap:"Monrovia",            pop:5.3e6,   gdp:3.9,   gdppc:736,   hdi:0.481, hdiR:177 },
+  "LS":{ cap:"Maseru",              pop:2.3e6,   gdp:2.7,   gdppc:1174,  hdi:0.494, hdiR:165 },
+  "LT":{ cap:"Vilnius",             pop:2.8e6,   gdp:68,    gdppc:24286, hdi:0.879, hdiR:36  },
+  "LU":{ cap:"Luxembourg",          pop:0.67e6,  gdp:79,    gdppc:117910,hdi:0.930, hdiR:21  },
+  "LV":{ cap:"Riga",                pop:1.8e6,   gdp:38,    gdppc:21111, hdi:0.879, hdiR:39  },
+  "LY":{ cap:"Tripoli",             pop:7.1e6,   gdp:47,    gdppc:6620,  hdi:0.718, hdiR:111 },
+  "MA":{ cap:"Rabat",               pop:37e6,    gdp:134,   gdppc:3622,  hdi:0.698, hdiR:123 },
+  "MD":{ cap:"Chișinău",            pop:2.6e6,   gdp:15,    gdppc:5769,  hdi:0.763, hdiR:80  },
+  "ME":{ cap:"Podgorica",           pop:0.63e6,  gdp:6.4,   gdppc:10159, hdi:0.844, hdiR:51  },
+  "MK":{ cap:"Skopje",              pop:2.1e6,   gdp:15,    gdppc:7143,  hdi:0.770, hdiR:82  },
+  "ML":{ cap:"Bamako",              pop:23e6,    gdp:19,    gdppc:826,   hdi:0.428, hdiR:186 },
+  "MM":{ cap:"Naypyidaw",           pop:54e6,    gdp:53,    gdppc:981,   hdi:0.585, hdiR:149 },
+  "MN":{ cap:"Ulaanbaatar",         pop:3.4e6,   gdp:17,    gdppc:5000,  hdi:0.741, hdiR:96  },
+  "MX":{ cap:"Mexico City",         pop:128e6,   gdp:1352,  gdppc:10563, hdi:0.781, hdiR:77  },
+  "MY":{ cap:"Kuala Lumpur",        pop:33e6,    gdp:399,   gdppc:12091, hdi:0.803, hdiR:63  },
+  "MZ":{ cap:"Maputo",              pop:33e6,    gdp:16,    gdppc:485,   hdi:0.456, hdiR:185 },
+  "NA":{ cap:"Windhoek",            pop:2.6e6,   gdp:12,    gdppc:4615,  hdi:0.615, hdiR:140 },
+  "NE":{ cap:"Niamey",              pop:26e6,    gdp:16,    gdppc:615,   hdi:0.394, hdiR:189 },
+  "NG":{ cap:"Abuja",               pop:222e6,   gdp:506,   gdppc:2279,  hdi:0.535, hdiR:163 },
+  "NI":{ cap:"Managua",             pop:6.9e6,   gdp:15,    gdppc:2174,  hdi:0.667, hdiR:128 },
+  "NL":{ cap:"Amsterdam",           pop:17.9e6,  gdp:1009,  gdppc:56369, hdi:0.946, hdiR:10  },
+  "NO":{ cap:"Oslo",                pop:5.5e6,   gdp:554,   gdppc:100727,hdi:0.966, hdiR:2   },
+  "NP":{ cap:"Kathmandu",           pop:30e6,    gdp:40,    gdppc:1333,  hdi:0.601, hdiR:143 },
+  "NZ":{ cap:"Wellington",          pop:5.1e6,   gdp:222,   gdppc:43529, hdi:0.939, hdiR:13  },
+  "OM":{ cap:"Muscat",              pop:4.5e6,   gdp:97,    gdppc:21556, hdi:0.816, hdiR:55  },
+  "PA":{ cap:"Panama City",         pop:4.4e6,   gdp:74,    gdppc:16818, hdi:0.805, hdiR:64  },
+  "PE":{ cap:"Lima",                pop:33e6,    gdp:247,   gdppc:7485,  hdi:0.762, hdiR:86  },
+  "PG":{ cap:"Port Moresby",        pop:10e6,    gdp:24,    gdppc:2400,  hdi:0.558, hdiR:157 },
+  "PH":{ cap:"Manila",              pop:115e6,   gdp:404,   gdppc:3513,  hdi:0.710, hdiR:116 },
+  "PK":{ cap:"Islamabad",           pop:231e6,   gdp:341,   gdppc:1476,  hdi:0.540, hdiR:164 },
+  "PL":{ cap:"Warsaw",              pop:37.6e6,  gdp:680,   gdppc:18085, hdi:0.876, hdiR:39  },
+  "PS":{ cap:"Ramallah",            pop:5.4e6,   gdp:18,    gdppc:3333,  hdi:0.715, hdiR:106 },
+  "PT":{ cap:"Lisbon",              pop:10.3e6,  gdp:255,   gdppc:24757, hdi:0.874, hdiR:40  },
+  "PY":{ cap:"Asunción",            pop:7.4e6,   gdp:39,    gdppc:5270,  hdi:0.717, hdiR:111 },
+  "QA":{ cap:"Doha",                pop:2.9e6,   gdp:179,   gdppc:61724, hdi:0.875, hdiR:42  },
+  "RO":{ cap:"Bucharest",           pop:19e6,    gdp:301,   gdppc:15842, hdi:0.821, hdiR:56  },
+  "RS":{ cap:"Belgrade",            pop:6.8e6,   gdp:62,    gdppc:9118,  hdi:0.805, hdiR:65  },
+  "RU":{ cap:"Moscow",              pop:144e6,   gdp:1863,  gdppc:12938, hdi:0.821, hdiR:56  },
+  "RW":{ cap:"Kigali",              pop:14e6,    gdp:13,    gdppc:929,   hdi:0.534, hdiR:165 },
+  "SA":{ cap:"Riyadh",              pop:36e6,    gdp:923,   gdppc:25639, hdi:0.875, hdiR:40  },
+  "SB":{ cap:"Honiara",             pop:0.74e6,  gdp:1.6,   gdppc:2162,  hdi:0.547, hdiR:152 },
+  "SD":{ cap:"Khartoum",            pop:46e6,    gdp:52,    gdppc:1130,  hdi:0.510, hdiR:172 },
+  "SE":{ cap:"Stockholm",           pop:10.5e6,  gdp:572,   gdppc:54476, hdi:0.952, hdiR:7   },
+  "SG":{ cap:"Singapore",           pop:5.9e6,   gdp:393,   gdppc:66610, hdi:0.949, hdiR:9   },
+  "SI":{ cap:"Ljubljana",           pop:2.1e6,   gdp:61,    gdppc:29048, hdi:0.926, hdiR:20  },
+  "SK":{ cap:"Bratislava",          pop:5.5e6,   gdp:115,   gdppc:20909, hdi:0.855, hdiR:45  },
+  "SL":{ cap:"Freetown",            pop:8.1e6,   gdp:4.2,   gdppc:519,   hdi:0.477, hdiR:181 },
+  "SN":{ cap:"Dakar",               pop:17.7e6,  gdp:28,    gdppc:1582,  hdi:0.511, hdiR:168 },
+  "SO":{ cap:"Mogadishu",           pop:17e6,    gdp:8.0,   gdppc:471,   hdi:0.380, hdiR:193 },
+  "SS":{ cap:"Juba",                pop:11e6,    gdp:4.6,   gdppc:418,   hdi:0.385, hdiR:191 },
+  "SV":{ cap:"San Salvador",        pop:6.3e6,   gdp:32,    gdppc:5079,  hdi:0.675, hdiR:124 },
+  "SY":{ cap:"Damascus",            pop:22e6,    gdp:11,    gdppc:500,   hdi:0.577, hdiR:150 },
+  "SZ":{ cap:"Mbabane",             pop:1.2e6,   gdp:4.9,   gdppc:4083,  hdi:0.597, hdiR:144 },
+  "TD":{ cap:"N'Djamena",           pop:18e6,    gdp:12,    gdppc:667,   hdi:0.394, hdiR:190 },
+  "TG":{ cap:"Lomé",                pop:8.5e6,   gdp:8.1,   gdppc:953,   hdi:0.539, hdiR:162 },
+  "TH":{ cap:"Bangkok",             pop:71e6,    gdp:507,   gdppc:7141,  hdi:0.803, hdiR:66  },
+  "TJ":{ cap:"Dushanbe",            pop:10e6,    gdp:11,    gdppc:1100,  hdi:0.685, hdiR:122 },
+  "TL":{ cap:"Dili",                pop:1.3e6,   gdp:1.9,   gdppc:1462,  hdi:0.607, hdiR:141 },
+  "TM":{ cap:"Ashgabat",            pop:6.2e6,   gdp:53,    gdppc:8548,  hdi:0.745, hdiR:97  },
+  "TN":{ cap:"Tunis",               pop:12e6,    gdp:47,    gdppc:3917,  hdi:0.732, hdiR:101 },
+  "TO":{ cap:"Nuku'alofa",          pop:0.10e6,  gdp:0.52,  gdppc:5200,  hdi:0.740, hdiR:97  },
+  "TR":{ cap:"Ankara",              pop:85e6,    gdp:1025,  gdppc:12059, hdi:0.838, hdiR:53  },
+  "TT":{ cap:"Port of Spain",       pop:1.4e6,   gdp:28,    gdppc:20000, hdi:0.810, hdiR:57  },
+  "TW":{ cap:"Taipei",              pop:23.6e6,  gdp:726,   gdppc:30763, hdi:0.926            },
+  "TZ":{ cap:"Dodoma",              pop:65e6,    gdp:75,    gdppc:1154,  hdi:0.532, hdiR:163 },
+  "UA":{ cap:"Kyiv",                pop:37e6,    gdp:160,   gdppc:4324,  hdi:0.773, hdiR:100 },
+  "UG":{ cap:"Kampala",             pop:48e6,    gdp:49,    gdppc:1021,  hdi:0.544, hdiR:159 },
+  "US":{ cap:"Washington D.C.",     pop:335e6,   gdp:24350, gdppc:72700, hdi:0.927, hdiR:20  },
+  "UY":{ cap:"Montevideo",          pop:3.5e6,   gdp:72,    gdppc:20571, hdi:0.830, hdiR:52  },
+  "UZ":{ cap:"Tashkent",            pop:36e6,    gdp:91,    gdppc:2528,  hdi:0.727, hdiR:106 },
+  "VA":{ cap:"Vatican City",        pop:800,     gdp:0.03,  gdppc:37500  },
+  "VE":{ cap:"Caracas",             pop:28e6,    gdp:101,   gdppc:3607,  hdi:0.699, hdiR:120 },
+  "VN":{ cap:"Hanoi",               pop:98e6,    gdp:430,   gdppc:4388,  hdi:0.726, hdiR:107 },
+  "VU":{ cap:"Port Vila",           pop:0.33e6,  gdp:0.97,  gdppc:2939,  hdi:0.607, hdiR:141 },
+  "WS":{ cap:"Apia",                pop:0.22e6,  gdp:0.87,  gdppc:3955,  hdi:0.707, hdiR:111 },
+  "XK":{ cap:"Pristina",            pop:1.8e6,   gdp:9.4,   gdppc:5222                        },
+  "YE":{ cap:"Sana'a",              pop:34e6,    gdp:17,    gdppc:500,   hdi:0.455, hdiR:183 },
+  "ZA":{ cap:"Pretoria",            pop:60e6,    gdp:378,   gdppc:6300,  hdi:0.713, hdiR:109 },
+  "ZM":{ cap:"Lusaka",              pop:20e6,    gdp:29,    gdppc:1450,  hdi:0.565, hdiR:154 },
+  "ZW":{ cap:"Harare",              pop:16e6,    gdp:26,    gdppc:1625,  hdi:0.550, hdiR:160 },
+  "AE":{ cap:"Abu Dhabi",           pop:9.8e6,   gdp:453,   gdppc:46224, hdi:0.937, hdiR:17  },
+  "GB":{ cap:"London",              pop:67e6,    gdp:2868,  gdppc:42806, hdi:0.940, hdiR:15  },
+  "CH":{ cap:"Bern",                pop:8.8e6,   gdp:779,   gdppc:88523, hdi:0.962, hdiR:3   },
+  "IE":{ cap:"Dublin",              pop:5.2e6,   gdp:505,   gdppc:97115, hdi:0.945, hdiR:8   },
 };
 
-/* ── Numeric ID → ISO-2 alpha ── */
+/* ════════════════════════════════════════════════
+   NUMERIC TOPOJSON ID → ISO-2 ALPHA
+   ════════════════════════════════════════════════ */
 const N2A = {
   4:"AF",8:"AL",12:"DZ",24:"AO",32:"AR",36:"AU",40:"AT",50:"BD",56:"BE",64:"BT",
-  68:"BO",76:"BR",100:"BG",104:"MM",116:"KH",120:"CM",124:"CA",140:"CF",152:"CL",
-  156:"CN",170:"CO",180:"CD",188:"CR",191:"HR",192:"CU",196:"CY",203:"CZ",208:"DK",
-  214:"DO",218:"EC",818:"EG",222:"SV",231:"ET",246:"FI",250:"FR",266:"GA",276:"DE",
-  288:"GH",300:"GR",320:"GT",332:"HT",340:"HN",348:"HU",356:"IN",360:"ID",364:"IR",
-  368:"IQ",372:"IE",376:"IL",380:"IT",388:"JM",392:"JP",400:"JO",398:"KZ",404:"KE",
-  408:"KP",410:"KR",414:"KW",418:"LA",422:"LB",434:"LY",440:"LT",442:"LU",504:"MA",
-  484:"MX",496:"MN",508:"MZ",516:"NA",524:"NP",528:"NL",554:"NZ",558:"NI",566:"NG",
-  578:"NO",586:"PK",591:"PA",600:"PY",604:"PE",608:"PH",616:"PL",620:"PT",634:"QA",
-  642:"RO",643:"RU",646:"RW",682:"SA",686:"SN",706:"SO",710:"ZA",724:"ES",144:"LK",
-  729:"SD",752:"SE",756:"CH",760:"SY",158:"TW",764:"TH",792:"TR",800:"UG",804:"UA",
-  784:"AE",840:"US",858:"UY",862:"VE",704:"VN",887:"YE",894:"ZM",716:"ZW",807:"MK",
-  688:"RS",703:"SK",705:"SI",70:"BA",499:"ME",428:"LV",352:"IS",826:"GB",336:"VA",275:"PS",
+  68:"BO",76:"BR",100:"BG",104:"MM",108:"BI",116:"KH",120:"CM",124:"CA",140:"CF",
+  144:"LK",152:"CL",156:"CN",170:"CO",174:"KM",180:"CD",188:"CR",191:"HR",192:"CU",
+  196:"CY",203:"CZ",208:"DK",214:"DO",218:"EC",222:"SV",231:"ET",233:"EE",246:"FI",
+  250:"FR",266:"GA",276:"DE",288:"GH",300:"GR",320:"GT",324:"GN",328:"GY",332:"HT",
+  340:"HN",348:"HU",352:"IS",356:"IN",360:"ID",364:"IR",368:"IQ",372:"IE",376:"IL",
+  380:"IT",384:"CI",388:"JM",392:"JP",398:"KZ",400:"JO",404:"KE",408:"KP",410:"KR",
+  414:"KW",417:"KG",418:"LA",422:"LB",426:"LS",428:"LV",430:"LR",434:"LY",440:"LT",
+  442:"LU",454:"MW",458:"MY",466:"ML",480:"MU",484:"MX",496:"MN",499:"ME",504:"MA",
+  508:"MZ",512:"OM",516:"NA",524:"NP",528:"NL",540:"NC",548:"VU",554:"NZ",558:"NI",
+  562:"NE",566:"NG",578:"NO",586:"PK",591:"PA",598:"PG",600:"PY",604:"PE",608:"PH",
+  616:"PL",620:"PT",624:"GW",626:"TL",634:"QA",642:"RO",643:"RU",646:"RW",682:"SA",
+  686:"SN",688:"RS",690:"SC",694:"SL",703:"SK",704:"VN",705:"SI",706:"SO",710:"ZA",
+  716:"ZW",724:"ES",728:"SS",729:"SD",740:"SR",748:"SZ",752:"SE",756:"CH",760:"SY",
+  762:"TJ",764:"TH",768:"TG",776:"TO",780:"TT",784:"AE",788:"TN",792:"TR",795:"TM",
+  798:"TV",800:"UG",804:"UA",807:"MK",818:"EG",826:"GB",834:"TZ",840:"US",854:"BF",
+  858:"UY",860:"UZ",862:"VE",882:"WS",887:"YE",894:"ZM",70:"BA",90:"SB",
+  158:"TW",232:"ER",242:"FJ",262:"DJ",275:"PS",336:"VA",520:"NR",584:"MH",583:"FM",
+  585:"PW",659:"KN",662:"LC",670:"VC",776:"TO",28:"AG",44:"BS",52:"BB",84:"BZ",
+  96:"BN",308:"GD",412:"XK",498:"MD",
 };
 
-const OCEAN_LABELS = [
-  { t:"Pacific Ocean",  lon:-145, lat:8  },
-  { t:"Atlantic Ocean", lon:-38,  lat:25 },
-  { t:"Indian Ocean",   lon:76,   lat:-22},
-  { t:"Southern Ocean", lon:20,   lat:-56},
-];
-
-/* ── Map engine ──────────────────────────────────────────────── */
-const MW = 1200, MH = 620;
-const DPR = () => window.devicePixelRatio || 1;
-let tx = 0, ty = 0, scale = 1;
-let geoFeatures = null;
-let paths2D = [];
-
-/* Mercator — normalise lon to [-180,180) first.
-   world-atlas topojson stores Russia's Chukotka with lon > 180°.
-   Without normalisation those coords project past x = MW, creating
-   the diagonal streak across the Pacific. */
-function merc(lon, lat) {
-  lon = ((lon + 180) % 360 + 360) % 360 - 180;
-  const x  = ((lon + 180) / 360) * MW;
-  const lr = Math.max(-85, Math.min(85, lat)) * Math.PI / 180;
-  const y  = MH / 2 - (MW / (2 * Math.PI)) * Math.log(Math.tan(Math.PI / 4 + lr / 2));
-  return [x, y];
+/* ════════════════════════════════════════════════
+   STAT FORMATTING
+   ════════════════════════════════════════════════ */
+function fmtPop(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'') + ' B';
+  if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'') + ' M';
+  if (n >= 1e3) return Math.round(n/1e3) + ' K';
+  return String(n);
+}
+function fmtGDP(n) {
+  if (n == null) return 'N/A';
+  if (n >= 1000) return 'EUR ' + (n/1000).toFixed(2).replace(/\.?0+$/,'') + ' T';
+  return 'EUR ' + n.toFixed(1) + ' B';
+}
+function fmtGDPpc(n) {
+  if (n == null) return 'N/A';
+  return 'EUR ' + Math.round(n).toLocaleString('en-DE');
 }
 
-/* Build one canvas Path2D tile.
-   FIX: compare rawMx values (not cx = rawMx+offsetX) for antimeridian detection. */
-function buildPath2D(geo, offsetX) {
-  const p = new Path2D();
-  try {
-    const polys = geo.type === 'Polygon' ? [geo.coordinates] : geo.coordinates;
-    for (const poly of polys) {
-      for (const ring of poly) {
-        let prevRaw = null, penDown = false;
-        for (const [lon, lat] of ring) {
-          const [rawMx, my] = merc(lon, lat);
-          if (prevRaw !== null && Math.abs(rawMx - prevRaw) > MW * 0.5) {
-            p.closePath(); penDown = false;
-          }
-          const cx = rawMx + offsetX;
-          if (!penDown) { p.moveTo(cx, my); penDown = true; }
-          else p.lineTo(cx, my);
-          prevRaw = rawMx;
-        }
-        p.closePath();
-      }
-    }
-  } catch(e) {}
-  return p;
+function renderStats(a2) {
+  const s = STATS[a2];
+  if (!s) return '';
+  const rows = [
+    ['Capital',                  s.cap],
+    ['Population',               fmtPop(s.pop)],
+    ['GDP per Capita (Nominal)', s.gdppc != null
+      ? `${fmtGDPpc(s.gdppc)} (${fmtGDP(s.gdp)})` : 'N/A'],
+    ['HDI', s.hdi ? `${s.hdi} (${s.hdiR}/193)` : 'N/A'],
+  ];
+  return `<div class="stats-block">${rows.map(([k,v]) =>
+    `<div class="stat-row">
+       <span class="stat-key">${k}</span>
+       <span class="stat-val">${v}</span>
+     </div>`).join('')}</div>`;
 }
 
-function buildPaths(features) {
-  paths2D = [];
-  for (const feat of features) {
-    const numId = parseInt(feat.id);
-    const a2   = N2A[numId];
-    const data = a2 ? T[a2] : null;
-    const vis  = !!data?.v;
-    const name = data?.name || ALL_NAMES[numId] || '';
-    paths2D.push({
-      p0: buildPath2D(feat.geometry,   0),
-      pL: buildPath2D(feat.geometry, -MW),
-      pR: buildPath2D(feat.geometry,  MW),
-      vis, name, a2, numId,
-    });
-  }
-}
-
-function getColors() {
-  const s = getComputedStyle(document.documentElement);
-  const g = v => s.getPropertyValue(v).trim();
-  return { ocean:g('--ocean'), unvis:g('--unvis'), vis:g('--vis'),
-           border:g('--mapbdr'), grat:g('--grat'), olabel:g('--olabel') };
-}
-
-function draw() {
-  const cv = document.getElementById('mc');
-  const dpr = DPR();
-  const ctx = cv.getContext('2d');
-  const C   = getColors();
-
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.save();
-  ctx.scale(dpr, dpr);
-
-  ctx.fillStyle = C.ocean;
-  ctx.fillRect(0, 0, cv.width / dpr, cv.height / dpr);
-
-  ctx.translate(tx, ty);
-  ctx.scale(scale, scale);
-
-  const sw = 0.4 / scale;
-
-  /* Graticule */
-  ctx.strokeStyle = C.grat; ctx.lineWidth = sw;
-  for (let lat = -80; lat <= 80; lat += 20) {
-    const [,y] = merc(0, lat);
-    ctx.beginPath(); ctx.moveTo(-MW, y); ctx.lineTo(2*MW, y); ctx.stroke();
-  }
-  for (let lon = -180; lon <= 180; lon += 30) {
-    for (const tile of [0, -MW, MW]) {
-      ctx.beginPath(); let first = true;
-      for (let lt = -85; lt <= 85; lt += 2) {
-        const [x,y] = merc(lon, lt);
-        if (first) { ctx.moveTo(x+tile, y); first=false; } else ctx.lineTo(x+tile, y);
-      }
-      ctx.stroke();
-    }
-  }
-
-  /* Countries: unvisited then visited */
-  ctx.lineWidth = sw;
-  for (const pass of [false, true]) {
-    ctx.fillStyle   = pass ? C.vis : C.unvis;
-    ctx.strokeStyle = C.border;
-    for (const f of paths2D) {
-      if (f.vis !== pass) continue;
-      ctx.fill(f.p0); ctx.stroke(f.p0);
-      ctx.fill(f.pL); ctx.stroke(f.pL);
-      ctx.fill(f.pR); ctx.stroke(f.pR);
-    }
-  }
-
-  /* Ocean labels */
-  const lblPx = Math.max(6, Math.min(10, 7.5 / scale));
-  ctx.font = `300 italic ${lblPx}px 'Helvetica Neue',Helvetica,Arial,sans-serif`;
-  ctx.fillStyle = C.olabel; ctx.textAlign = 'center';
-  for (const ol of OCEAN_LABELS) {
-    const [ox, oy] = merc(ol.lon, ol.lat);
-    ctx.fillText(ol.t.toUpperCase(), ox, oy);
-  }
-
-  ctx.restore();
-}
-
-function resizeCanvas() {
-  const cv = document.getElementById('mc'), dpr = DPR();
-  cv.width  = window.innerWidth  * dpr; cv.style.width  = window.innerWidth  + 'px';
-  cv.height = window.innerHeight * dpr; cv.style.height = window.innerHeight + 'px';
-}
-
-function initTransform() {
-  scale = Math.max(window.innerWidth / MW, window.innerHeight / MH) * 1.02;
-  tx = (window.innerWidth  - MW * scale) / 2;
-  ty = (window.innerHeight - MH * scale) / 2;
-}
-
-function wrapTx() {
-  const tw = MW * scale;
-  while (tx > window.innerWidth / 2)      tx -= tw;
-  while (tx + tw < window.innerWidth / 2) tx += tw;
-}
-function clampTy() {
-  const mh = MH * scale;
-  ty = Math.max(window.innerHeight - mh - window.innerHeight * 0.15,
-        Math.min(window.innerHeight * 0.15, ty));
-}
-
-/* ── Hit layer ───────────────────────────────────────────────────
-   KEY FIXES:
-   1. fill="rgba(0,0,0,0.001)" — nearly invisible but browsers treat
-      filled areas as pointer-event targets. "transparent" / "none" cause
-      events to fire only on strokes (which are invisible here) → hover
-      fails for most countries.
-   2. No CSS rule overrides the fill (removed #mhit path { fill:transparent }).
-   3. Hit layer is fully rebuilt (not appended) on resize.
-   4. prevRaw tracks raw merc x, not offset-adjusted cx.                   */
-function buildSVGd(geo, offsetX) {
-  try {
-    const polys = geo.type === 'Polygon' ? [geo.coordinates] : geo.coordinates;
-    let d = '';
-    for (const poly of polys) {
-      for (const ring of poly) {
-        let prevRaw = null, seg = '';
-        for (const [lon, lat] of ring) {
-          const [rawMx, my] = merc(lon, lat);
-          if (prevRaw !== null && Math.abs(rawMx - prevRaw) > MW * 0.5) {
-            if (seg) d += seg + 'Z'; seg = '';
-          }
-          const cx = (rawMx + offsetX).toFixed(1), cy = my.toFixed(1);
-          seg += (seg === '' ? 'M' : 'L') + cx + ',' + cy;
-          prevRaw = rawMx;
-        }
-        if (seg) d += seg + 'Z';
-      }
-    }
-    return d;
-  } catch(e) { return ''; }
-}
-
-function buildHitLayer(features) {
-  const hit = document.getElementById('mhit');
-  const ns  = 'http://www.w3.org/2000/svg';
-  /* Clear previous */
-  while (hit.firstChild) hit.removeChild(hit.firstChild);
-  hit.setAttribute('width',  window.innerWidth);
-  hit.setAttribute('height', window.innerHeight);
-
-  const g = document.createElementNS(ns, 'g');
-  g.setAttribute('class', 'hit-g');
-  g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
-
-  for (const feat of features) {
-    const numId = parseInt(feat.id);
-    const a2   = N2A[numId];
-    const data = a2 ? T[a2] : null;
-    const vis  = !!data?.v;
-    const name = data?.name || ALL_NAMES[numId] || '';
-
-    for (const offset of [0, -MW, MW]) {
-      const d = buildSVGd(feat.geometry, offset);
-      if (!d) continue;
-      const path = document.createElementNS(ns, 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('fill', 'rgba(0,0,0,0.001)');
-      path.setAttribute('stroke', 'none');
-      path.setAttribute('pointer-events', 'all');
-      path.addEventListener('mouseenter', e => showTip(e, name));
-      path.addEventListener('mousemove',  moveTip);
-      path.addEventListener('mouseleave', hideTip);
-      if (vis && a2) path.addEventListener('click', e => { e.stopPropagation(); openSb(a2); });
-      g.appendChild(path);
-    }
-  }
-  hit.appendChild(g);
-}
-
-function updateHitTransform() {
-  const g = document.querySelector('#mhit g.hit-g');
-  if (g) g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
-}
-
-function applyTransform() { wrapTx(); clampTy(); draw(); updateHitTransform(); }
-
-/* ── Pan & zoom ─────────────────────────────────────────────── */
-function initPanZoom() {
-  const wrap = document.getElementById('mw');
-  let drag = false, lx = 0, ly = 0;
-
-  wrap.addEventListener('mousedown', e => { drag=true; lx=e.clientX; ly=e.clientY; e.preventDefault(); });
-  window.addEventListener('mousemove', e => {
-    if (!drag) return;
-    tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY;
-    applyTransform();
-  });
-  window.addEventListener('mouseup', () => drag = false);
-
-  wrap.addEventListener('wheel', e => {
-    e.preventDefault();
-    const raw = e.deltaMode===1 ? e.deltaY*20 : e.deltaMode===2 ? e.deltaY*400 : e.deltaY;
-    const ns  = Math.max(0.5, Math.min(16, scale * (1 - Math.sign(raw)*Math.min(Math.abs(raw)*0.0005, 0.06))));
-    tx = e.clientX - (e.clientX - tx) * (ns/scale);
-    ty = e.clientY - (e.clientY - ty) * (ns/scale);
-    scale = ns; applyTransform();
-  }, { passive: false });
-
-  let ltd = null;
-  wrap.addEventListener('touchstart', e => {
-    if (e.touches.length===1) { drag=true; lx=e.touches[0].clientX; ly=e.touches[0].clientY; }
-    else if (e.touches.length===2) { ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); drag=false; }
-  });
-  wrap.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (e.touches.length===1 && drag) {
-      tx+=e.touches[0].clientX-lx; ty+=e.touches[0].clientY-ly;
-      lx=e.touches[0].clientX; ly=e.touches[0].clientY; applyTransform();
-    } else if (e.touches.length===2 && ltd) {
-      const nd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2, my=(e.touches[0].clientY+e.touches[1].clientY)/2;
-      const ns=Math.max(0.5,Math.min(16,scale*nd/ltd));
-      tx=mx-(mx-tx)*(ns/scale); ty=my-(my-ty)*(ns/scale); scale=ns; ltd=nd; applyTransform();
-    }
-  }, { passive: false });
-  wrap.addEventListener('touchend', () => { drag=false; ltd=null; });
-
-  const doZoom = f => {
-    const cx=window.innerWidth/2, cy=window.innerHeight/2;
-    const ns=Math.max(0.5,Math.min(16,scale*f));
-    tx=cx-(cx-tx)*(ns/scale); ty=cy-(cy-ty)*(ns/scale); scale=ns; applyTransform();
-  };
-  document.getElementById('zin').addEventListener('click',  () => doZoom(1.3));
-  document.getElementById('zout').addEventListener('click', () => doZoom(0.77));
-
-  window.addEventListener('resize', () => { resizeCanvas(); initTransform(); buildHitLayer(geoFeatures); draw(); });
-
-  /* Click anywhere on map → close sidebar */
-  wrap.addEventListener('click', () => closeSb());
-}
-
-/* ── Tooltip ─────────────────────────────────────────────────── */
-function showTip(e, n) {
-  if (!n) return;
-  const t = document.getElementById('tip');
-  t.textContent = n; t.style.left=e.clientX+'px'; t.style.top=e.clientY+'px'; t.style.opacity='1';
-}
-function moveTip(e) { const t=document.getElementById('tip'); t.style.left=e.clientX+'px'; t.style.top=e.clientY+'px'; }
-function hideTip() { document.getElementById('tip').style.opacity='0'; }
-
-/* ── Sidebar ─────────────────────────────────────────────────── */
-function openSb(a2) {
-  const d = T[a2]; if (!d) return;
+/* ════════════════════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════════════════════ */
+function openSb(a2, fallbackName) {
+  const d = T[a2];
+  const displayName = d?.name || fallbackName || a2;
   document.getElementById('sbf').src = `https://flagcdn.com/w40/${a2.toLowerCase()}.png`;
-  document.getElementById('sbf').alt = d.name;
-  document.getElementById('sbn').textContent = d.name;
+  document.getElementById('sbf').alt = displayName;
+  document.getElementById('sbn').textContent = displayName;
   const bdg = document.getElementById('sbbdg');
-  if (d.ter) { bdg.textContent=d.ter; bdg.style.display=''; } else bdg.style.display='none';
+  if (d?.ter) { bdg.textContent = d.ter; bdg.style.display = ''; }
+  else bdg.style.display = 'none';
+
   const body = document.getElementById('sbb');
-  body.innerHTML = '';
-  if (!d.trips || !d.trips.length) {
-    body.innerHTML = '<p class="nonote">No trip notes yet.</p>';
+  body.innerHTML = renderStats(a2);
+
+  if (!d || !d.trips || !d.trips.length) {
+    body.innerHTML += `<p class="nonote">${(!d || !d.v) ? 'Not visited yet.' : 'No trip notes yet.'}</p>`;
   } else {
-    const MO={JANUARY:0,FEBRUARY:1,MARCH:2,APRIL:3,MAY:4,JUNE:5,JULY:6,AUGUST:7,SEPTEMBER:8,OCTOBER:9,NOVEMBER:10,DECEMBER:11};
-    const pd = s => { const p=s.trim().split(' '); return parseInt(p[p.length-1])*100+(MO[p[0]]??0); };
+    const MO = {JANUARY:0,FEBRUARY:1,MARCH:2,APRIL:3,MAY:4,JUNE:5,
+                JULY:6,AUGUST:7,SEPTEMBER:8,OCTOBER:9,NOVEMBER:10,DECEMBER:11};
+    const pd = s => { const p = s.trim().split(' ');
+      return parseInt(p[p.length-1])*100 + (MO[p[0]] ?? 0); };
     const calIcon    = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="12" rx="1.5"/><path d="M1 7h14"/><path d="M5 1v4M11 1v4"/></svg>`;
     const personIcon = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6"/></svg>`;
-    [...d.trips].sort((a,b)=>pd(b.date)-pd(a.date)).forEach(tr => {
-      const el = document.createElement('div'); el.className='trip';
+    [...d.trips].sort((a,b) => pd(b.date) - pd(a.date)).forEach(tr => {
+      const el = document.createElement('div');
+      el.className = 'trip';
       el.innerHTML = `
         <div class="trip-meta">
           <div class="trip-date-row">${calIcon}<span class="td">${tr.date}</span></div>
-          ${tr.with?`<div class="trip-with-row">${personIcon}<span class="twn">${tr.with}</span></div>`:''}
+          ${tr.with ? `<div class="trip-with-row">${personIcon}<span class="twn">${tr.with}</span></div>` : ''}
         </div>
-        ${tr.note?`<p class="tn">${tr.note}</p>`:''}`;
+        ${tr.note ? `<p class="tn">${tr.note}</p>` : ''}`;
       body.appendChild(el);
     });
   }
   document.getElementById('sb').classList.add('open');
 }
+
 const closeSb = () => document.getElementById('sb').classList.remove('open');
 document.getElementById('sbc').addEventListener('click', e => { e.stopPropagation(); closeSb(); });
-document.addEventListener('keydown', e => { if (e.key==='Escape') closeSb(); });
-/* Clicks inside sidebar must NOT bubble to the map (which would immediately close it) */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSb(); });
 document.getElementById('sb').addEventListener('click', e => e.stopPropagation());
 
-/* ── Loader: video-synced progress bar ──────────────────────────
-   Progress bar duration = video duration.
-   Falls back to 4 s if video fails or metadata is delayed.           */
+/* ════════════════════════════════════════════════
+   TOOLTIP
+   ════════════════════════════════════════════════ */
+const tip = document.getElementById('tip');
+document.addEventListener('mousemove', e => {
+  tip.style.left = e.clientX + 'px';
+  tip.style.top  = e.clientY + 'px';
+});
+function showTip(name) { tip.textContent = name; tip.style.opacity = '1'; }
+function hideTip()     { tip.style.opacity = '0'; }
+
+/* ════════════════════════════════════════════════
+   LOADER
+   ════════════════════════════════════════════════ */
 (function initLoader() {
   const video  = document.getElementById('lv');
   const pfEl   = document.getElementById('pf');
   const ppEl   = document.getElementById('pp');
   const loader = document.getElementById('loader');
   let rafId = null, startTime = null, duration = 0;
-
   function dismiss() {
     cancelAnimationFrame(rafId);
     pfEl.style.width = '100%'; ppEl.textContent = '100%';
-    setTimeout(() => { loader.classList.add('fo'); setTimeout(()=>loader.style.display='none', 650); }, 300);
+    setTimeout(() => {
+      loader.classList.add('fo');
+      setTimeout(() => loader.style.display = 'none', 650);
+    }, 300);
   }
-
   function tick() {
     if (!startTime) startTime = performance.now();
     const pct = Math.min((performance.now()-startTime)/1000/duration, 1);
-    pfEl.style.width = (pct*100).toFixed(1)+'%';
-    ppEl.textContent = Math.floor(pct*100)+'%';
+    pfEl.style.width = (pct*100).toFixed(1) + '%';
+    ppEl.textContent = Math.floor(pct*100) + '%';
     if (pct < 1) rafId = requestAnimationFrame(tick); else dismiss();
   }
-
   function start(dur) {
-    if (duration) return; /* already started */
-    duration = dur;
-    video.play().catch(()=>{});
+    if (duration) return;
+    duration = dur; video.play().catch(() => {});
     rafId = requestAnimationFrame(tick);
   }
-
   video.addEventListener('loadedmetadata', () => start(video.duration || 4));
   video.addEventListener('ended', dismiss);
   video.addEventListener('error', () => { video.style.display='none'; start(4); });
   setTimeout(() => { if (!duration) { video.style.display='none'; start(4); } }, 2000);
 })();
 
-/* ── Map init ────────────────────────────────────────────────── */
-async function initMap() {
-  let topo;
-  try {
-    const r = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-    topo = await r.json();
-  } catch(e) { console.error('Map fetch failed', e); return; }
-  if (typeof topojson === 'undefined') { console.error('topojson missing'); return; }
-  geoFeatures = topojson.feature(topo, topo.objects.countries).features;
-  resizeCanvas(); initTransform();
-  buildPaths(geoFeatures);
-  buildHitLayer(geoFeatures);
-  draw();
-  document.getElementById('cnt').textContent = `${Object.values(T).filter(d=>d.v).length} / 197`;
-  initPanZoom();
-}
-
-/* ── Cursor ──────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════
+   CURSOR
+   ════════════════════════════════════════════════ */
 const cur = document.getElementById('cursor');
 const csv = document.getElementById('cursor-svg');
-let clx=0, cly=0;
+let clx = 0, cly = 0;
 document.addEventListener('mousemove', e => {
-  cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px';
-  const dx=e.clientX-clx, dy=e.clientY-cly;
-  if (Math.hypot(dx,dy)>1.5) csv.style.transform=`rotate(${Math.atan2(dy,dx)*180/Math.PI+90}deg)`;
-  clx=e.clientX; cly=e.clientY;
+  cur.style.left = e.clientX + 'px';
+  cur.style.top  = e.clientY + 'px';
+  const dx = e.clientX-clx, dy = e.clientY-cly;
+  if (Math.hypot(dx,dy) > 1.5)
+    csv.style.transform = `rotate(${Math.atan2(dy,dx)*180/Math.PI+90}deg)`;
+  clx = e.clientX; cly = e.clientY;
 });
 
-initMap();
+/* ════════════════════════════════════════════════
+   GOOGLE MAPS + DATA LAYER
+   ════════════════════════════════════════════════ */
+window.initMap = async function() {
+  document.getElementById('cnt').textContent =
+    `${Object.values(T).filter(d => d.v).length} / 197`;
+
+  /* Styled map — stripped back to match app palette */
+  const mapStyles = [
+    { elementType:'geometry',              stylers:[{color:'#a8cce0'}] },
+    { featureType:'water', elementType:'geometry', stylers:[{color:'#a8cce0'}] },
+    { featureType:'landscape', elementType:'geometry', stylers:[{color:'#e8e2d6'}] },
+    { featureType:'administrative', elementType:'geometry.stroke', stylers:[{visibility:'off'}] },
+    { featureType:'administrative', elementType:'labels', stylers:[{visibility:'off'}] },
+    { featureType:'road',      stylers:[{visibility:'off'}] },
+    { featureType:'transit',   stylers:[{visibility:'off'}] },
+    { featureType:'poi',       stylers:[{visibility:'off'}] },
+    { featureType:'landscape', elementType:'labels', stylers:[{visibility:'off'}] },
+    { featureType:'water',     elementType:'labels', stylers:[{visibility:'off'}] },
+  ];
+
+  const map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 3,
+    center: { lat: 20, lng: 15 },
+    minZoom: 2,
+    maxZoom: 10,
+    styles: mapStyles,
+    disableDefaultUI: true,
+    gestureHandling: 'greedy',
+    backgroundColor: '#a8cce0',
+  });
+
+  /* Drag detection — suppress sidebar open on pan */
+  let didDrag = false;
+  map.addListener('mousedown', () => { didDrag = false; });
+  map.addListener('drag',      () => { didDrag = true;  });
+  /* Click on ocean → close sidebar */
+  map.addListener('click', () => { if (!didDrag) closeSb(); });
+
+  /* ── Load topojson and add GeoJSON features ── */
+  const [topoRes, topoLib] = await Promise.all([
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r => r.json()),
+    new Promise(resolve => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
+      s.onload = resolve;
+      document.head.appendChild(s);
+    }),
+  ]);
+
+  const geojson = topojson.feature(topoRes, topoRes.objects.countries);
+
+  /* Add each country as a separate GeoJSON feature so we can store
+     custom properties (a2 code, name, visited status)               */
+  geojson.features.forEach(feat => {
+    const numId   = parseInt(feat.id);
+    const a2      = N2A[numId] || null;
+    const tData   = a2 ? T[a2] : null;
+    const visited = !!tData?.v;
+    const name    = tData?.name
+      || (a2 ? (STATS[a2] ? null : null) : null)   /* fallback handled below */
+      || null;
+
+    map.data.addGeoJson({
+      type: 'Feature',
+      id:   feat.id,
+      geometry:   feat.geometry,
+      properties: { a2, visited, name: name || '' },
+    });
+  });
+
+  /* Style all features */
+  const VIS_FILL   = '#3a4a5c';
+  const VIS_STROKE = '#2a3a4c';
+  const UNV_FILL   = '#e8e2d6';
+  const UNV_STROKE = '#c8c0b2';
+
+  map.data.setStyle(feat => {
+    const v = feat.getProperty('visited');
+    return {
+      fillColor:   v ? VIS_FILL   : UNV_FILL,
+      fillOpacity: 0.92,
+      strokeColor: v ? VIS_STROKE : UNV_STROKE,
+      strokeWeight: 0.6,
+      clickable: true,
+    };
+  });
+
+  /* ── Hover ── */
+  let hoveredFeat = null;
+  map.data.addListener('mouseover', e => {
+    if (hoveredFeat) map.data.revertStyle(hoveredFeat);
+    hoveredFeat = e.feature;
+    map.data.overrideStyle(e.feature, { fillOpacity: 0.65 });
+    /* Tooltip: prefer T name, then reverse-lookup numeric ID → ALL_NAMES */
+    const a2   = e.feature.getProperty('a2');
+    const tData = a2 ? T[a2] : null;
+    const numId = parseInt(e.feature.getId());
+    const ALL_NAMES = {
+      4:"Afghanistan",8:"Albania",12:"Algeria",24:"Angola",32:"Argentina",36:"Australia",
+      40:"Austria",50:"Bangladesh",56:"Belgium",64:"Bhutan",68:"Bolivia",76:"Brazil",
+      100:"Bulgaria",104:"Myanmar",108:"Burundi",116:"Cambodia",120:"Cameroon",124:"Canada",
+      140:"Central African Republic",144:"Sri Lanka",152:"Chile",156:"China",170:"Colombia",
+      174:"Comoros",180:"DR Congo",188:"Costa Rica",191:"Croatia",192:"Cuba",196:"Cyprus",
+      203:"Czechia",208:"Denmark",214:"Dominican Republic",218:"Ecuador",222:"El Salvador",
+      231:"Ethiopia",233:"Estonia",246:"Finland",250:"France",266:"Gabon",276:"Germany",
+      288:"Ghana",300:"Greece",320:"Guatemala",324:"Guinea",328:"Guyana",332:"Haiti",
+      340:"Honduras",348:"Hungary",352:"Iceland",356:"India",360:"Indonesia",364:"Iran",
+      368:"Iraq",372:"Ireland",376:"Israel",380:"Italy",384:"Ivory Coast",388:"Jamaica",
+      392:"Japan",398:"Kazakhstan",400:"Jordan",404:"Kenya",408:"North Korea",410:"South Korea",
+      414:"Kuwait",417:"Kyrgyzstan",418:"Laos",422:"Lebanon",426:"Lesotho",428:"Latvia",
+      430:"Liberia",434:"Libya",440:"Lithuania",442:"Luxembourg",454:"Malawi",458:"Malaysia",
+      466:"Mali",480:"Mauritius",484:"Mexico",496:"Mongolia",499:"Montenegro",504:"Morocco",
+      508:"Mozambique",512:"Oman",516:"Namibia",524:"Nepal",528:"Netherlands",540:"New Caledonia",
+      548:"Vanuatu",554:"New Zealand",558:"Nicaragua",562:"Niger",566:"Nigeria",578:"Norway",
+      586:"Pakistan",591:"Panama",598:"Papua New Guinea",600:"Paraguay",604:"Peru",608:"Philippines",
+      616:"Poland",620:"Portugal",624:"Guinea-Bissau",626:"Timor-Leste",634:"Qatar",642:"Romania",
+      643:"Russia",646:"Rwanda",682:"Saudi Arabia",686:"Senegal",688:"Serbia",690:"Seychelles",
+      694:"Sierra Leone",703:"Slovakia",704:"Vietnam",705:"Slovenia",706:"Somalia",710:"South Africa",
+      716:"Zimbabwe",724:"Spain",728:"South Sudan",729:"Sudan",740:"Suriname",748:"Eswatini",
+      752:"Sweden",756:"Switzerland",760:"Syria",762:"Tajikistan",764:"Thailand",768:"Togo",
+      776:"Tonga",780:"Trinidad and Tobago",784:"United Arab Emirates",788:"Tunisia",792:"Turkey",
+      795:"Turkmenistan",798:"Tuvalu",800:"Uganda",804:"Ukraine",807:"North Macedonia",
+      818:"Egypt",826:"United Kingdom",834:"Tanzania",840:"United States of America",858:"Uruguay",
+      860:"Uzbekistan",862:"Venezuela",882:"Samoa",887:"Yemen",894:"Zambia",
+      70:"Bosnia and Herzegovina",84:"Belize",90:"Solomon Islands",96:"Brunei",108:"Burundi",
+      158:"Taiwan",232:"Eritrea",242:"Fiji",262:"Djibouti",275:"Palestine",336:"Vatican",
+      412:"Kosovo",498:"Moldova",520:"Nauru",584:"Marshall Islands",583:"Micronesia",
+      585:"Palau",44:"Bahamas",52:"Barbados",28:"Antigua and Barbuda",308:"Grenada",
+      659:"Saint Kitts and Nevis",662:"Saint Lucia",670:"Saint Vincent and the Grenadines",
+    };
+    const tipName = tData?.name || ALL_NAMES[numId] || '';
+    if (tipName) showTip(tipName);
+  });
+  map.data.addListener('mouseout', e => {
+    hideTip();
+    if (hoveredFeat) { map.data.revertStyle(hoveredFeat); hoveredFeat = null; }
+  });
+
+  /* ── Click ── */
+  map.data.addListener('click', e => {
+    if (didDrag) return;
+    const a2 = e.feature.getProperty('a2');
+    if (a2) {
+      openSb(a2);
+    } else {
+      /* Country not in N2A — show minimal sidebar with name only */
+      const numId = parseInt(e.feature.getId());
+      const name  = e.feature.getProperty('name') || String(numId);
+      document.getElementById('sbf').src = '';
+      document.getElementById('sbn').textContent = name;
+      document.getElementById('sbbdg').style.display = 'none';
+      document.getElementById('sbb').innerHTML = '<p class="nonote">Not visited yet.</p>';
+      document.getElementById('sb').classList.add('open');
+    }
+    e.stop(); /* prevent bubbling to map click → closeSb */
+  });
+};
+</script>
+
+<!-- Google Maps JS API
+     Replace AIzaSyA1no-ytnrOwN-XNaGoJbgp5RHk7-5lc4Y with a valid key from https://console.cloud.google.com
+     Enable: Maps JavaScript API
+     Restrict to your domain for production.                                     -->
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1no-ytnrOwN-XNaGoJbgp5RHk7-5lc4Y&callback=initMap&loading=async"
+  async defer>
 </script>
 </body>
 </html>
