@@ -588,7 +588,7 @@ document.addEventListener('mousemove', e => {
 /* ════════════════════════════════════════════════
    GOOGLE MAPS + DATA LAYER
    ════════════════════════════════════════════════ */
-window.initMap = async function() {
+window.initMap = function() { (async function() {
   document.getElementById('cnt').textContent =
     `${Object.values(T).filter(d => d.v).length} / 197`;
 
@@ -742,6 +742,7 @@ window.initMap = async function() {
     }
     e.stop(); /* prevent bubbling to map click → closeSb */
   });
+  })(); /* end async IIFE */
 };
 </script>
 
