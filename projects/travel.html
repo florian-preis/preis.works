@@ -49,7 +49,7 @@
     @keyframes fo { to { opacity:0; pointer-events:none; } }
 
     /* ── Map ── */
-    #map { position:fixed; inset:0; }
+    #map { position:fixed; inset:0; width:100%; height:100%; }
     /* Hide all default Google Maps UI chrome */
     .gm-style .gm-style-cc, .gmnoprint, .gm-bundled-control,
     a[href*="maps.google"] { display:none !important; }
@@ -589,6 +589,7 @@ document.addEventListener('mousemove', e => {
    GOOGLE MAPS + DATA LAYER
    ════════════════════════════════════════════════ */
 window.initMap = function() { (async function() {
+  try {
   document.getElementById('cnt').textContent =
     `${Object.values(T).filter(d => d.v).length} / 197`;
 
@@ -742,6 +743,9 @@ window.initMap = function() { (async function() {
     }
     e.stop(); /* prevent bubbling to map click → closeSb */
   });
+  } catch(err) {
+    console.error('initMap error:', err);
+  }
   })(); /* end async IIFE */
 };
 </script>
@@ -752,7 +756,7 @@ window.initMap = function() { (async function() {
      Restrict to your domain for production.                                     -->
 <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1no-ytnrOwN-XNaGoJbgp5RHk7-5lc4Y&callback=initMap&loading=async"
-  async defer>
+  async>
 </script>
 </body>
 </html>
