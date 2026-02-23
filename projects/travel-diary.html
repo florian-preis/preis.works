@@ -6,21 +6,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Travel Diary</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23333' stroke='%23fff' stroke-width='0.5' d='M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z'/%3E%3C/svg%3E">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%231a2d45' stroke='%23fff' stroke-width='0.8' d='M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z'/%3E%3C/svg%3E">
+<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.js"></script>
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; background:#1a3a5c; }
+html, body { width:100%; height:100%; overflow:hidden; background:#0d1f35; }
 body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 /* CURSOR */
 #cursor {
-  position:fixed; width:15px; height:15px; pointer-events:none; z-index:10000;
+  position:fixed; width:18px; height:18px; pointer-events:none; z-index:10000;
   transform-origin:center; transform:translate(-50%,-50%) rotate(0deg);
   will-change:transform;
 }
 #cursor svg { width:100%; height:100%; fill:#fff; stroke:#111; stroke-width:0.8px;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
 
 /* LOADER */
 #loader {
@@ -29,28 +30,27 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   transition:opacity 0.9s cubic-bezier(0.4,0,0.2,1);
 }
 #loader.out { opacity:0; pointer-events:none; }
-#loader-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.42; }
 #loader-content {
-  position:relative; z-index:1; text-align:center; width:auto;
+  position:relative; z-index:1; text-align:center;
   display:inline-flex; flex-direction:column; align-items:stretch;
   opacity:0; transform:translateY(14px); transition:opacity 0.7s ease, transform 0.7s ease;
 }
 #loader-content.show { opacity:1; transform:translateY(0); }
-#loader-eyebrow { display:none; }
-#loader-headline { font-size:clamp(30px,5.5vw,60px); font-weight:300; letter-spacing:0.25em; text-transform:uppercase; color:#fff; line-height:1; margin-bottom:44px; }
-#loader-track { height:1px; background:rgba(255,255,255,0.14); align-self:stretch; }
+#loader-headline { font-size:clamp(30px,5.5vw,60px); font-weight:300; letter-spacing:0.25em; text-transform:uppercase; color:#fff; line-height:1; margin-bottom:44px; white-space:nowrap; }
+#loader-track { height:1px; background:rgba(255,255,255,0.14); }
 #loader-bar { height:100%; width:0%; background:rgba(255,255,255,0.75); transition:width 60ms linear; }
 #loader-pct { margin-top:13px; font-size:10px; letter-spacing:0.2em; color:rgba(255,255,255,0.32); }
 
 /* TOOLTIP */
 #tooltip {
   position:fixed; pointer-events:none; z-index:8000;
-  background:#fff; color:#111;
+  background:rgba(10,20,35,0.92); color:#fff;
   font-size:10px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase;
   padding:7px 12px; white-space:nowrap;
   opacity:0; transform:translateY(3px);
   transition:opacity 0.1s ease, transform 0.1s ease;
-  box-shadow:0 2px 14px rgba(0,0,0,0.1);
+  box-shadow:0 2px 14px rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.1);
 }
 #tooltip.show { opacity:1; transform:translateY(0); }
 
@@ -59,8 +59,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   position:fixed; bottom:32px; left:32px; z-index:1000;
   background:rgba(10,20,35,0.85);
   backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
-  border:1px solid rgba(255,255,255,0.12); padding:22px 24px; min-width:196px;
-  color:#eee;
+  border:1px solid rgba(255,255,255,0.1); padding:22px 24px; min-width:196px;
   opacity:0; transform:translateY(6px); transition:opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
 }
 #panel.show { opacity:1; transform:translateY(0); }
@@ -69,18 +68,17 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .p-count-denom { font-size:13px; color:rgba(255,255,255,0.4); font-weight:400; }
 .p-count-info { display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); font-size:7px; color:rgba(255,255,255,0.4); cursor:default; position:relative; margin-left:2px; line-height:1; flex-shrink:0; }
 .p-count-info:hover .p-count-tip { opacity:1; pointer-events:auto; }
-.p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(10,20,35,0.95); color:#ccc; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); }
+.p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(10,20,35,0.97); color:#ccc; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 14px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); }
 .p-label { font-size:9px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin:4px 0 14px; }
 .p-legend { display:flex; flex-direction:row; align-items:center; gap:14px; margin-bottom:12px; }
 .legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.55); }
 .swatch { width:11px; height:11px; flex-shrink:0; }
-.swatch.v { background:rgba(30, 60, 120, 0.7); border:1px solid rgba(255,255,255,0.3); }
-.swatch.u { background:transparent; border:1px solid rgba(255,255,255,0.5); position:relative; overflow:hidden; }
-.swatch.u::after { content:''; position:absolute; inset:0; background: linear-gradient(135deg, #4a7a5a 0%, #8a9a6a 50%, #c8a86a 100%); opacity:0.7; }
-.p-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:10px; }
+.swatch.v { background:rgba(30,80,180,0.75); border:1px solid rgba(100,160,255,0.5); }
+.swatch.u { background:transparent; border:1px solid rgba(255,255,255,0.3); }
+.p-divider { height:1px; background:rgba(255,255,255,0.08); margin-bottom:10px; }
 .p-zoom { display:flex; gap:1px; }
-.z-btn { flex:1; height:26px; border:1px solid rgba(255,255,255,0.15); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.07); }
-.z-btn:hover { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.3); }
+.z-btn { flex:1; height:26px; border:1px solid rgba(255,255,255,0.15); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
+.z-btn:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.3); }
 
 /* DRAWER */
 #drawer {
@@ -122,9 +120,11 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .stats-source { font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:#d0d0d0; margin-bottom:16px; margin-top:-8px; }
 
 /* MAP */
-#map { position:absolute; inset:0; }
-.mapboxgl-ctrl-logo { display:none !important; }
-.mapboxgl-ctrl-attrib { font-size:9px !important; opacity:0.5; }
+#map { position:absolute; inset:0; width:100%; height:100%; }
+
+/* Hide Mapbox logo/attribution minimally */
+.mapboxgl-ctrl-logo { opacity:0.4 !important; }
+.mapboxgl-ctrl-attrib { font-size:9px !important; opacity:0.5 !important; }
 
 @media (max-width:640px) {
   #panel { bottom:20px; left:20px; padding:18px 20px; min-width:172px; }
@@ -143,9 +143,6 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 </div>
 
 <div id="loader">
-  <video id="loader-video" autoplay muted loop playsinline preload="auto">
-    <source src="assets/travel-loading.mp4" type="video/mp4">
-  </video>
   <div id="loader-content">
     <div id="loader-headline">Travel Diary</div>
     <div id="loader-track"><div id="loader-bar"></div></div>
@@ -154,6 +151,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 </div>
 
 <div id="map"></div>
+
 <div id="tooltip"></div>
 
 <div id="panel">
@@ -161,7 +159,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
     <span class="p-count-num" id="visited-count">0</span>
     <span class="p-count-denom">&thinsp;/ 197</span>
     <span class="p-count-info">i
-      <span class="p-count-tip"><strong>Why 197?</strong><br>This count includes the 193 UN member states, plus Vatican City, Kosovo, Taiwan, and Palestine — territories widely recognised as countries despite varying levels of formal diplomatic status.</span>
+      <span class="p-count-tip"><strong>Why 197?</strong><br>This count includes the 193 UN member states, plus Vatican City, Kosovo, Taiwan, and Palestine, territories widely recognised as countries despite varying levels of formal diplomatic status.</span>
     </span>
   </div>
   <div class="p-label">Countries visited</div>
@@ -188,40 +186,34 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   <div class="db" id="d-body"></div>
 </div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script>
+window.addEventListener('load', function() {
 (function() {
 'use strict';
 
-/* ── Country stats (hardcoded — update manually as needed) ─────────────
-   Source: World Bank & UNDP. Last updated: 2024.
-   ──────────────────────────────────────────────────────────────────── */
+/* ── Country stats ──────────────────────────────────────────────────── */
 const STATS_DATE = '2024';
 const S = {"AF":{"n":"Afghanistan","cap":"Kabul","pop":42239854,"gdp":338,"gdpT":14.58,"hdi":0.462,"hdiR":182},"AL":{"n":"Albania","cap":"Tirana","pop":2854191,"gdp":6494,"gdpT":18.7,"hdi":0.796,"hdiR":74},"DZ":{"n":"Algeria","cap":"Algiers","pop":46814308,"gdp":4217,"gdpT":197.6,"hdi":0.745,"hdiR":91},"AD":{"n":"Andorra","cap":"Andorra la Vella","pop":77543,"gdp":43047,"gdpT":3.33,"hdi":0.884,"hdiR":36},"AO":{"n":"Angola","cap":"Luanda","pop":36684202,"gdp":2756,"gdpT":101.1,"hdi":0.615,"hdiR":148},"AR":{"n":"Argentina","cap":"Buenos Aires","pop":46654581,"gdp":10878,"gdpT":507.3,"hdi":0.842,"hdiR":47},"AM":{"n":"Armenia","cap":"Yerevan","pop":2777970,"gdp":7262,"gdpT":20.18,"hdi":0.791,"hdiR":76},"AU":{"n":"Australia","cap":"Canberra","pop":26439111,"gdp":64491,"gdpT":1704.9,"hdi":0.946,"hdiR":10},"AT":{"n":"Austria","cap":"Vienna","pop":9132383,"gdp":56803,"gdpT":518.9,"hdi":0.926,"hdiR":22},"AZ":{"n":"Azerbaijan","cap":"Baku","pop":10412651,"gdp":6876,"gdpT":71.63,"hdi":0.76,"hdiR":89},"BH":{"n":"Bahrain","cap":"Manama","pop":1571569,"gdp":28350,"gdpT":44.56,"hdi":0.888,"hdiR":33},"BD":{"n":"Bangladesh","cap":"Dhaka","pop":172954319,"gdp":2688,"gdpT":465.1,"hdi":0.67,"hdiR":129},"BY":{"n":"Belarus","cap":"Minsk","pop":9408352,"gdp":7619,"gdpT":71.67,"hdi":0.801,"hdiR":69},"BE":{"n":"Belgium","cap":"Brussels","pop":11688762,"gdp":51765,"gdpT":605.0,"hdi":0.937,"hdiR":15},"BJ":{"n":"Benin","cap":"Porto-Novo","pop":13352864,"gdp":1374,"gdpT":18.35,"hdi":0.525,"hdiR":166},"BO":{"n":"Bolivia","cap":"Sucre","pop":12388571,"gdp":3459,"gdpT":42.84,"hdi":0.698,"hdiR":115},"BA":{"n":"Bosnia and Herzegovina","cap":"Sarajevo","pop":3210847,"gdp":7560,"gdpT":24.27,"hdi":0.78,"hdiR":82},"BW":{"n":"Botswana","cap":"Gaborone","pop":2630296,"gdp":7957,"gdpT":20.92,"hdi":0.693,"hdiR":116},"BR":{"n":"Brazil","cap":"Brasília","pop":215313498,"gdp":10075,"gdpT":2170.3,"hdi":0.76,"hdiR":87},"BN":{"n":"Brunei","cap":"Bandar Seri Begawan","pop":449002,"gdp":31449,"gdpT":14.12,"hdi":0.829,"hdiR":52},"BG":{"n":"Bulgaria","cap":"Sofia","pop":6465289,"gdp":14421,"gdpT":93.19,"hdi":0.799,"hdiR":72},"BF":{"n":"Burkina Faso","cap":"Ouagadougou","pop":22673762,"gdp":787,"gdpT":17.85,"hdi":0.449,"hdiR":184},"BI":{"n":"Burundi","cap":"Gitega","pop":13238559,"gdp":235,"gdpT":3.11,"hdi":0.426,"hdiR":187},"KH":{"n":"Cambodia","cap":"Phnom Penh","pop":17218682,"gdp":1763,"gdpT":30.35,"hdi":0.6,"hdiR":148},"CM":{"n":"Cameroon","cap":"Yaoundé","pop":28647293,"gdp":1544,"gdpT":44.22,"hdi":0.572,"hdiR":154},"CA":{"n":"Canada","cap":"Ottawa","pop":38930976,"gdp":54912,"gdpT":2139.9,"hdi":0.935,"hdiR":18},"CF":{"n":"Central African Republic","cap":"Bangui","pop":5579144,"gdp":468,"gdpT":2.61,"hdi":0.387,"hdiR":191},"TD":{"n":"Chad","cap":"N'Djamena","pop":18278568,"gdp":719,"gdpT":13.14,"hdi":0.394,"hdiR":190},"CL":{"n":"Chile","cap":"Santiago","pop":19629590,"gdp":16508,"gdpT":324.0,"hdi":0.86,"hdiR":44},"CN":{"n":"China","cap":"Beijing","pop":1412175000,"gdp":12540,"gdpT":17699.1,"hdi":0.788,"hdiR":75},"CO":{"n":"Colombia","cap":"Bogotá","pop":52215503,"gdp":7139,"gdpT":372.8,"hdi":0.758,"hdiR":91},"CD":{"n":"DR Congo","cap":"Kinshasa","pop":102262808,"gdp":572,"gdpT":58.49,"hdi":0.481,"hdiR":180},"CG":{"n":"Rep. of Congo","cap":"Brazzaville","pop":6142179,"gdp":2417,"gdpT":14.84,"hdi":0.6,"hdiR":149},"CR":{"n":"Costa Rica","cap":"San José","pop":5213374,"gdp":14632,"gdpT":76.28,"hdi":0.806,"hdiR":63},"HR":{"n":"Croatia","cap":"Zagreb","pop":3888529,"gdp":20491,"gdpT":79.66,"hdi":0.871,"hdiR":40},"CU":{"n":"Cuba","cap":"Havana","pop":11089511,"gdp":9433,"gdpT":107.4,"hdi":0.778,"hdiR":83},"CY":{"n":"Cyprus","cap":"Nicosia","pop":1260138,"gdp":33048,"gdpT":28.57,"hdi":0.896,"hdiR":27},"CZ":{"n":"Czechia","cap":"Prague","pop":10900555,"gdp":27779,"gdpT":302.9,"hdi":0.9,"hdiR":32},"DK":{"n":"Denmark","cap":"Copenhagen","pop":5910913,"gdp":66983,"gdpT":395.9,"hdi":0.952,"hdiR":7},"DJ":{"n":"Djibouti","cap":"Djibouti","pop":1120849,"gdp":2842,"gdpT":3.18,"hdi":0.524,"hdiR":166},"DO":{"n":"Dominican Republic","cap":"Santo Domingo","pop":11332972,"gdp":9991,"gdpT":113.3,"hdi":0.767,"hdiR":88},"EC":{"n":"Ecuador","cap":"Quito","pop":18001000,"gdp":6162,"gdpT":110.9,"hdi":0.765,"hdiR":89},"EG":{"n":"Egypt","cap":"Cairo","pop":105914499,"gdp":3699,"gdpT":391.9,"hdi":0.728,"hdiR":100},"SV":{"n":"El Salvador","cap":"San Salvador","pop":6364943,"gdp":4593,"gdpT":32.49,"hdi":0.675,"hdiR":124},"ER":{"n":"Eritrea","cap":"Asmara","pop":3748901,"gdp":639,"gdpT":2.39,"hdi":0.492,"hdiR":178},"EE":{"n":"Estonia","cap":"Tallinn","pop":1365884,"gdp":27944,"gdpT":38.16,"hdi":0.899,"hdiR":31},"ET":{"n":"Ethiopia","cap":"Addis Ababa","pop":126527060,"gdp":1007,"gdpT":127.4,"hdi":0.492,"hdiR":178},"FJ":{"n":"Fiji","cap":"Suva","pop":930748,"gdp":4905,"gdpT":4.56,"hdi":0.73,"hdiR":99},"FI":{"n":"Finland","cap":"Helsinki","pop":5604117,"gdp":53655,"gdpT":300.7,"hdi":0.942,"hdiR":12},"FR":{"n":"France","cap":"Paris","pop":68373433,"gdp":43658,"gdpT":2984.6,"hdi":0.91,"hdiR":28},"GA":{"n":"Gabon","cap":"Libreville","pop":2436566,"gdp":8479,"gdpT":20.65,"hdi":0.706,"hdiR":114},"GM":{"n":"Gambia","cap":"Banjul","pop":2773168,"gdp":826,"gdpT":2.29,"hdi":0.496,"hdiR":175},"GE":{"n":"Georgia","cap":"Tbilisi","pop":3728573,"gdp":6756,"gdpT":25.19,"hdi":0.802,"hdiR":71},"DE":{"n":"Germany","cap":"Berlin","pop":84552242,"gdp":51203,"gdpT":4329.3,"hdi":0.942,"hdiR":7},"GH":{"n":"Ghana","cap":"Accra","pop":33475870,"gdp":2305,"gdpT":77.19,"hdi":0.632,"hdiR":137},"GR":{"n":"Greece","cap":"Athens","pop":10413982,"gdp":22055,"gdpT":229.7,"hdi":0.893,"hdiR":32},"GT":{"n":"Guatemala","cap":"Guatemala City","pop":17843908,"gdp":5237,"gdpT":93.44,"hdi":0.627,"hdiR":138},"GN":{"n":"Guinea","cap":"Conakry","pop":13859341,"gdp":876,"gdpT":21.37,"hdi":0.465,"hdiR":181},"GW":{"n":"Guinea-Bissau","cap":"Bissau","pop":2069471,"gdp":800,"gdpT":1.65,"hdi":0.483,"hdiR":179},"GY":{"n":"Guyana","cap":"Georgetown","pop":813834,"gdp":20612,"gdpT":16.77,"hdi":0.742,"hdiR":94},"HT":{"n":"Haiti","cap":"Port-au-Prince","pop":11470261,"gdp":1601,"gdpT":20.64,"hdi":0.535,"hdiR":163},"HN":{"n":"Honduras","cap":"Tegucigalpa","pop":10593798,"gdp":2874,"gdpT":30.44,"hdi":0.621,"hdiR":140},"HU":{"n":"Hungary","cap":"Budapest","pop":9710882,"gdp":21365,"gdpT":207.5,"hdi":0.851,"hdiR":45},"IS":{"n":"Iceland","cap":"Reykjavik","pop":376248,"gdp":73191,"gdpT":27.55,"hdi":0.959,"hdiR":3},"IN":{"n":"India","cap":"New Delhi","pop":1428627663,"gdp":2485,"gdpT":3549.9,"hdi":0.633,"hdiR":134},"ID":{"n":"Indonesia","cap":"Jakarta","pop":277534122,"gdp":4919,"gdpT":1371.2,"hdi":0.713,"hdiR":108},"IR":{"n":"Iran","cap":"Tehran","pop":87923432,"gdp":4686,"gdpT":412.2,"hdi":0.774,"hdiR":78},"IQ":{"n":"Iraq","cap":"Baghdad","pop":43533592,"gdp":5851,"gdpT":264.8,"hdi":0.686,"hdiR":121},"IE":{"n":"Ireland","cap":"Dublin","pop":5123536,"gdp":102786,"gdpT":531.9,"hdi":0.95,"hdiR":8},"IL":{"n":"Israel","cap":"Jerusalem","pop":9174520,"gdp":54660,"gdpT":521.7,"hdi":0.919,"hdiR":22},"IT":{"n":"Italy","cap":"Rome","pop":58761146,"gdp":38056,"gdpT":2255.4,"hdi":0.906,"hdiR":30},"JM":{"n":"Jamaica","cap":"Kingston","pop":2825544,"gdp":6167,"gdpT":17.41,"hdi":0.706,"hdiR":114},"JP":{"n":"Japan","cap":"Tokyo","pop":123294513,"gdp":39313,"gdpT":4231.1,"hdi":0.92,"hdiR":24},"JO":{"n":"Jordan","cap":"Amman","pop":10265720,"gdp":4420,"gdpT":48.82,"hdi":0.729,"hdiR":96},"KZ":{"n":"Kazakhstan","cap":"Astana","pop":19397998,"gdp":10280,"gdpT":220.7,"hdi":0.802,"hdiR":67},"KE":{"n":"Kenya","cap":"Nairobi","pop":55100586,"gdp":2081,"gdpT":114.5,"hdi":0.601,"hdiR":148},"KW":{"n":"Kuwait","cap":"Kuwait City","pop":4310108,"gdp":32774,"gdpT":149.6,"hdi":0.847,"hdiR":52},"KG":{"n":"Kyrgyzstan","cap":"Bishkek","pop":6735347,"gdp":1332,"gdpT":10.36,"hdi":0.694,"hdiR":117},"LA":{"n":"Laos","cap":"Vientiane","pop":7633779,"gdp":2142,"gdpT":16.34,"hdi":0.62,"hdiR":140},"LV":{"n":"Latvia","cap":"Riga","pop":1830211,"gdp":23095,"gdpT":42.27,"hdi":0.879,"hdiR":39},"LB":{"n":"Lebanon","cap":"Beirut","pop":5489739,"gdp":4136,"gdpT":22.7,"hdi":0.723,"hdiR":101},"LS":{"n":"Lesotho","cap":"Maseru","pop":2330318,"gdp":1045,"gdpT":2.44,"hdi":0.514,"hdiR":169},"LR":{"n":"Liberia","cap":"Monrovia","pop":5418377,"gdp":675,"gdpT":3.66,"hdi":0.481,"hdiR":180},"LY":{"n":"Libya","cap":"Tripoli","pop":7252573,"gdp":8044,"gdpT":58.33,"hdi":0.718,"hdiR":104},"LT":{"n":"Lithuania","cap":"Vilnius","pop":2857279,"gdp":27103,"gdpT":77.43,"hdi":0.879,"hdiR":37},"LU":{"n":"Luxembourg","cap":"Luxembourg City","pop":672050,"gdp":131384,"gdpT":88.3,"hdi":0.927,"hdiR":21},"MG":{"n":"Madagascar","cap":"Antananarivo","pop":29611714,"gdp":522,"gdpT":15.45,"hdi":0.487,"hdiR":178},"MW":{"n":"Malawi","cap":"Lilongwe","pop":20405317,"gdp":553,"gdpT":12.9,"hdi":0.508,"hdiR":171},"MY":{"n":"Malaysia","cap":"Kuala Lumpur","pop":33573874,"gdp":13001,"gdpT":436.0,"hdi":0.803,"hdiR":62},"MV":{"n":"Maldives","cap":"Malé","pop":521021,"gdp":10427,"gdpT":6.62,"hdi":0.762,"hdiR":90},"ML":{"n":"Mali","cap":"Bamako","pop":22909700,"gdp":895,"gdpT":20.51,"hdi":0.41,"hdiR":188},"MT":{"n":"Malta","cap":"Valletta","pop":535064,"gdp":32034,"gdpT":22.59,"hdi":0.915,"hdiR":27},"MR":{"n":"Mauritania","cap":"Nouakchott","pop":4614974,"gdp":1810,"gdpT":8.35,"hdi":0.556,"hdiR":161},"MU":{"n":"Mauritius","cap":"Port Louis","pop":1261208,"gdp":12013,"gdpT":13.97,"hdi":0.796,"hdiR":65},"MX":{"n":"Mexico","cap":"Mexico City","pop":128455567,"gdp":11497,"gdpT":1476.6,"hdi":0.781,"hdiR":77},"MD":{"n":"Moldova","cap":"Chișinău","pop":3273300,"gdp":3673,"gdpT":15.38,"hdi":0.767,"hdiR":80},"MC":{"n":"Monaco","cap":"Monaco","pop":36469,"gdp":234317,"gdpT":8.55,"hdi":null,"hdiR":null},"MN":{"n":"Mongolia","cap":"Ulaanbaatar","pop":3398366,"gdp":4629,"gdpT":15.73,"hdi":0.737,"hdiR":96},"ME":{"n":"Montenegro","cap":"Podgorica","pop":626485,"gdp":10103,"gdpT":6.33,"hdi":0.844,"hdiR":49},"MA":{"n":"Morocco","cap":"Rabat","pop":37840044,"gdp":3853,"gdpT":141.1,"hdi":0.698,"hdiR":123},"MZ":{"n":"Mozambique","cap":"Maputo","pop":32790338,"gdp":565,"gdpT":18.54,"hdi":0.456,"hdiR":183},"MM":{"n":"Myanmar","cap":"Naypyidaw","pop":53411241,"gdp":1178,"gdpT":62.92,"hdi":0.585,"hdiR":149},"NA":{"n":"Namibia","cap":"Windhoek","pop":2604172,"gdp":5151,"gdpT":12.62,"hdi":0.615,"hdiR":139},"NP":{"n":"Nepal","cap":"Kathmandu","pop":30034989,"gdp":1337,"gdpT":40.16,"hdi":0.602,"hdiR":143},"NL":{"n":"Netherlands","cap":"Amsterdam","pop":17890000,"gdp":62007,"gdpT":1108.2,"hdi":0.941,"hdiR":11},"NZ":{"n":"New Zealand","cap":"Wellington","pop":5108800,"gdp":48782,"gdpT":249.2,"hdi":0.939,"hdiR":14},"NI":{"n":"Nicaragua","cap":"Managua","pop":6850540,"gdp":2194,"gdpT":15.03,"hdi":0.667,"hdiR":130},"NE":{"n":"Niger","cap":"Niamey","pop":25252723,"gdp":593,"gdpT":14.97,"hdi":0.394,"hdiR":189},"NG":{"n":"Nigeria","cap":"Abuja","pop":223804632,"gdp":2184,"gdpT":488.9,"hdi":0.535,"hdiR":163},"MK":{"n":"North Macedonia","cap":"Skopje","pop":2093599,"gdp":7552,"gdpT":15.81,"hdi":0.77,"hdiR":82},"NO":{"n":"Norway","cap":"Oslo","pop":5425270,"gdp":106149,"gdpT":579.5,"hdi":0.966,"hdiR":1},"OM":{"n":"Oman","cap":"Muscat","pop":4644384,"gdp":20159,"gdpT":104.9,"hdi":0.816,"hdiR":60},"PK":{"n":"Pakistan","cap":"Islamabad","pop":231402117,"gdp":1580,"gdpT":374.7,"hdi":0.544,"hdiR":161},"PS":{"n":"Palestine","cap":"Ramallah","pop":5250072,"gdp":3663,"gdpT":19.26,"hdi":0.715,"hdiR":null},"PA":{"n":"Panama","cap":"Panama City","pop":4351267,"gdp":16133,"gdpT":66.8,"hdi":0.805,"hdiR":64},"PG":{"n":"Papua New Guinea","cap":"Port Moresby","pop":10329931,"gdp":2848,"gdpT":29.42,"hdi":0.558,"hdiR":159},"PY":{"n":"Paraguay","cap":"Asunción","pop":7359215,"gdp":5745,"gdpT":42.26,"hdi":0.717,"hdiR":105},"PE":{"n":"Peru","cap":"Lima","pop":33359418,"gdp":7266,"gdpT":242.4,"hdi":0.762,"hdiR":87},"PH":{"n":"Philippines","cap":"Manila","pop":117337368,"gdp":3623,"gdpT":425.1,"hdi":0.71,"hdiR":113},"PL":{"n":"Poland","cap":"Warsaw","pop":36753736,"gdp":21001,"gdpT":771.8,"hdi":0.881,"hdiR":35},"PT":{"n":"Portugal","cap":"Lisbon","pop":10247605,"gdp":26090,"gdpT":267.4,"hdi":0.866,"hdiR":42},"QA":{"n":"Qatar","cap":"Doha","pop":2688235,"gdp":87661,"gdpT":235.5,"hdi":0.855,"hdiR":42},"RO":{"n":"Romania","cap":"Bucharest","pop":19031335,"gdp":17442,"gdpT":353.1,"hdi":0.827,"hdiR":55},"RU":{"n":"Russia","cap":"Moscow","pop":144236933,"gdp":15183,"gdpT":2240.4,"hdi":0.822,"hdiR":52},"RW":{"n":"Rwanda","cap":"Kigali","pop":13776698,"gdp":996,"gdpT":13.72,"hdi":0.534,"hdiR":165},"SM":{"n":"San Marino","cap":"City of San Marino","pop":34232,"gdp":64869,"gdpT":2.22,"hdi":null,"hdiR":null},"SA":{"n":"Saudi Arabia","cap":"Riyadh","pop":36408820,"gdp":26001,"gdpT":1061.8,"hdi":0.875,"hdiR":40},"SN":{"n":"Senegal","cap":"Dakar","pop":17763163,"gdp":1618,"gdpT":28.73,"hdi":0.511,"hdiR":170},"RS":{"n":"Serbia","cap":"Belgrade","pop":6646853,"gdp":10543,"gdpT":70.04,"hdi":0.805,"hdiR":65},"SL":{"n":"Sierra Leone","cap":"Freetown","pop":8791092,"gdp":480,"gdpT":4.22,"hdi":0.477,"hdiR":181},"SG":{"n":"Singapore","cap":"Singapore","pop":5917648,"gdp":84734,"gdpT":466.8,"hdi":0.939,"hdiR":9},"SK":{"n":"Slovakia","cap":"Bratislava","pop":5796618,"gdp":22024,"gdpT":127.7,"hdi":0.855,"hdiR":45},"SI":{"n":"Slovenia","cap":"Ljubljana","pop":2116792,"gdp":31773,"gdpT":67.24,"hdi":0.926,"hdiR":23},"SO":{"n":"Somalia","cap":"Mogadishu","pop":17065581,"gdp":522,"gdpT":8.91,"hdi":null,"hdiR":null},"ZA":{"n":"South Africa","cap":"Pretoria","pop":60414495,"gdp":6654,"gdpT":405.2,"hdi":0.717,"hdiR":108},"SS":{"n":"South Sudan","cap":"Juba","pop":10748272,"gdp":1013,"gdpT":10.89,"hdi":0.381,"hdiR":193},"ES":{"n":"Spain","cap":"Madrid","pop":47486935,"gdp":34044,"gdpT":1580.7,"hdi":0.905,"hdiR":30},"LK":{"n":"Sri Lanka","cap":"Colombo","pop":22156000,"gdp":3830,"gdpT":84.84,"hdi":0.78,"hdiR":73},"SD":{"n":"Sudan","cap":"Khartoum","pop":46874204,"gdp":762,"gdpT":35.74,"hdi":0.508,"hdiR":172},"SE":{"n":"Sweden","cap":"Stockholm","pop":10521556,"gdp":60170,"gdpT":593.3,"hdi":0.952,"hdiR":7},"CH":{"n":"Switzerland","cap":"Bern","pop":8738791,"gdp":98767,"gdpT":869.6,"hdi":0.962,"hdiR":2},"SY":{"n":"Syria","cap":"Damascus","pop":21324367,"gdp":657,"gdpT":14.0,"hdi":0.577,"hdiR":150},"TW":{"n":"Taiwan","cap":"Taipei","pop":23516442,"gdp":35513,"gdpT":760.2,"hdi":null,"hdiR":null},"TJ":{"n":"Tajikistan","cap":"Dushanbe","pop":10143543,"gdp":1149,"gdpT":11.64,"hdi":0.685,"hdiR":122},"TZ":{"n":"Tanzania","cap":"Dodoma","pop":65497748,"gdp":1101,"gdpT":79.16,"hdi":0.532,"hdiR":163},"TH":{"n":"Thailand","cap":"Bangkok","pop":71801279,"gdp":7099,"gdpT":500.1,"hdi":0.803,"hdiR":66},"TG":{"n":"Togo","cap":"Lomé","pop":8848699,"gdp":945,"gdpT":8.36,"hdi":0.547,"hdiR":162},"TT":{"n":"Trinidad and Tobago","cap":"Port of Spain","pop":1531044,"gdp":16722,"gdpT":25.52,"hdi":0.814,"hdiR":59},"TN":{"n":"Tunisia","cap":"Tunis","pop":12041317,"gdp":3939,"gdpT":45.82,"hdi":0.731,"hdiR":97},"TR":{"n":"Turkey","cap":"Ankara","pop":85326000,"gdp":10674,"gdpT":906.5,"hdi":0.838,"hdiR":45},"TM":{"n":"Turkmenistan","cap":"Ashgabat","pop":6117924,"gdp":8066,"gdpT":49.35,"hdi":0.745,"hdiR":97},"UG":{"n":"Uganda","cap":"Kampala","pop":48582334,"gdp":907,"gdpT":44.09,"hdi":0.55,"hdiR":159},"UA":{"n":"Ukraine","cap":"Kyiv","pop":44130000,"gdp":5340,"gdpT":160.5,"hdi":0.773,"hdiR":74},"AE":{"n":"United Arab Emirates","cap":"Abu Dhabi","pop":9770529,"gdp":47958,"gdpT":498.8,"hdi":0.911,"hdiR":26},"GB":{"n":"United Kingdom","cap":"London","pop":67791400,"gdp":46371,"gdpT":3131.4,"hdi":0.94,"hdiR":15},"US":{"n":"United States","cap":"Washington D.C.","pop":335893238,"gdp":80035,"gdpT":27360.9,"hdi":0.927,"hdiR":20},"UY":{"n":"Uruguay","cap":"Montevideo","pop":3423108,"gdp":22008,"gdpT":77.01,"hdi":0.83,"hdiR":58},"UZ":{"n":"Uzbekistan","cap":"Tashkent","pop":36950000,"gdp":2246,"gdpT":90.89,"hdi":0.727,"hdiR":100},"VA":{"n":"Vatican City","cap":"Vatican City","pop":800,"gdp":null,"gdpT":null,"hdi":null,"hdiR":null},"VE":{"n":"Venezuela","cap":"Caracas","pop":28838499,"gdp":4249,"gdpT":97.52,"hdi":0.754,"hdiR":113},"VN":{"n":"Vietnam","cap":"Hanoi","pop":98858950,"gdp":4316,"gdpT":449.1,"hdi":0.726,"hdiR":107},"YE":{"n":"Yemen","cap":"Sana'a","pop":34449825,"gdp":689,"gdpT":21.59,"hdi":0.452,"hdiR":183},"ZM":{"n":"Zambia","cap":"Lusaka","pop":20017675,"gdp":1221,"gdpT":28.47,"hdi":0.565,"hdiR":156},"ZW":{"n":"Zimbabwe","cap":"Harare","pop":16665409,"gdp":2085,"gdpT":34.75,"hdi":0.593,"hdiR":150},"KR":{"n":"South Korea","cap":"Seoul","pop":51740025,"gdp":32238,"gdpT":1709.2,"hdi":0.929,"hdiR":19},"KP":{"n":"North Korea","cap":"Pyongyang","pop":26069416,"gdp":1700,"gdpT":28.0,"hdi":null,"hdiR":null},"XK":{"n":"Kosovo","cap":"Pristina","pop":1775680,"gdp":5239,"gdpT":9.29,"hdi":0.762,"hdiR":null}};
 
-/* ── ✏️  EDIT YOUR TRIPS HERE ──────────────────────────────────────────
-   visited:true marks a country on the map.
-   trips[]: date "YYYY-MM", with "Name" (or null), note "text" (or null).
-   ──────────────────────────────────────────────────────────────────── */
+/* ── ✏️  EDIT YOUR TRIPS HERE ─────────────────────────────────────── */
 const VISITED = {"AL":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"AU":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"AT":{visited:true,territoryBadge:null,trips:[{date:"2021-12",with:null,note:null}]},"BE":{visited:true,territoryBadge:null,trips:[{date:"2022-06",with:null,note:null}]},"BO":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"BA":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"BR":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"BG":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"CA":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"CN":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"CO":{visited:true,territoryBadge:null,trips:[{date:"2023-11",with:null,note:null}]},"CR":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"HR":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CU":{visited:true,territoryBadge:null,trips:[{date:"2020-02",with:null,note:null}]},"CZ":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"DK":{visited:true,territoryBadge:null,trips:[{date:"2023-05",with:null,note:null}]},"EG":{visited:true,territoryBadge:null,trips:[{date:"2023-03",with:null,note:null}]},"FR":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"DE":{visited:true,territoryBadge:null,trips:[{date:"2023-02",with:"Ellen",note:"First date weekend in Berlin."}]},"GR":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"HU":{visited:true,territoryBadge:null,trips:[{date:"2022-11",with:null,note:null}]},"IS":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"IN":{visited:true,territoryBadge:null,trips:[{date:"2019-12",with:null,note:null}]},"IE":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"IL":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"IT":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"JO":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"KE":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"XK":{visited:true,territoryBadge:"Partially Recognised",trips:[{date:"2023-07",with:null,note:null}]},"LV":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"MY":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"MX":{visited:true,territoryBadge:null,trips:[{date:"2024-03",with:null,note:null}]},"ME":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"MA":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"NA":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"NL":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"NZ":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"MK":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"NO":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"PA":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"PE":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"PH":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"PL":{visited:true,territoryBadge:null,trips:[{date:"2022-10",with:null,note:null}]},"PT":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"RO":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"RS":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SE":{visited:true,territoryBadge:null,trips:[{date:"2023-09",with:null,note:null}]},"SG":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"SI":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SK":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"KR":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"ES":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CH":{visited:true,territoryBadge:null,trips:[{date:"2022-03",with:null,note:null}]},"TR":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"UA":{visited:true,territoryBadge:null,trips:[{date:"2021-08",with:null,note:null}]},"AE":{visited:true,territoryBadge:null,trips:[{date:"2023-12",with:null,note:null}]},"GB":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"US":{visited:true,territoryBadge:null,trips:[{date:"2021-09",with:null,note:null}]},"VA":{visited:true,territoryBadge:"Observer State",trips:[{date:"2023-06",with:null,note:null}]},"VN":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]}};
 
-/* ── State ──────────────────────────────────────────────────────────── */
+/* ── ISO numeric → ISO2 ─────────────────────────────────────────────── */
+const ISO_NUM = {"4":"AF","8":"AL","12":"DZ","20":"AD","24":"AO","32":"AR","51":"AM","36":"AU","40":"AT","31":"AZ","48":"BH","50":"BD","112":"BY","56":"BE","204":"BJ","64":"BT","68":"BO","70":"BA","72":"BW","76":"BR","96":"BN","100":"BG","854":"BF","108":"BI","116":"KH","120":"CM","124":"CA","140":"CF","148":"TD","152":"CL","156":"CN","170":"CO","180":"CD","178":"CG","188":"CR","191":"HR","192":"CU","196":"CY","203":"CZ","208":"DK","262":"DJ","214":"DO","218":"EC","818":"EG","222":"SV","232":"ER","233":"EE","231":"ET","242":"FJ","246":"FI","250":"FR","266":"GA","270":"GM","268":"GE","276":"DE","288":"GH","300":"GR","320":"GT","324":"GN","624":"GW","328":"GY","332":"HT","340":"HN","348":"HU","352":"IS","356":"IN","360":"ID","364":"IR","368":"IQ","372":"IE","376":"IL","380":"IT","388":"JM","392":"JP","400":"JO","398":"KZ","404":"KE","414":"KW","417":"KG","418":"LA","428":"LV","422":"LB","426":"LS","430":"LR","434":"LY","440":"LT","442":"LU","450":"MG","454":"MW","458":"MY","462":"MV","466":"ML","470":"MT","478":"MR","480":"MU","484":"MX","498":"MD","492":"MC","496":"MN","499":"ME","504":"MA","508":"MZ","104":"MM","516":"NA","524":"NP","528":"NL","554":"NZ","558":"NI","562":"NE","566":"NG","807":"MK","578":"NO","512":"OM","586":"PK","275":"PS","591":"PA","598":"PG","600":"PY","604":"PE","608":"PH","616":"PL","620":"PT","634":"QA","642":"RO","643":"RU","646":"RW","674":"SM","682":"SA","686":"SN","688":"RS","694":"SL","702":"SG","703":"SK","705":"SI","706":"SO","710":"ZA","728":"SS","724":"ES","144":"LK","729":"SD","752":"SE","756":"CH","760":"SY","158":"TW","762":"TJ","834":"TZ","764":"TH","768":"TG","780":"TT","788":"TN","792":"TR","795":"TM","800":"UG","804":"UA","784":"AE","826":"GB","840":"US","858":"UY","860":"UZ","336":"VA","862":"VE","704":"VN","887":"YE","894":"ZM","716":"ZW","410":"KR","408":"KP"};
+
 const visitedSet = new Set(Object.keys(VISITED).filter(k => VISITED[k].visited));
-const visitedCount = visitedSet.size;
-document.getElementById('visited-count').textContent = visitedCount;
+document.getElementById('visited-count').textContent = visitedSet.size;
 
 /* ── Loader ───────────────────────────────────────────────────────── */
 const $loader = document.getElementById('loader');
 setTimeout(() => {
   const hl = document.getElementById('loader-headline');
   const track = document.getElementById('loader-track');
-  if (hl && track) {
-    track.style.width = hl.offsetWidth + 'px';
-  }
+  if (hl && track) track.style.width = hl.offsetWidth + 'px';
   document.getElementById('loader-content').classList.add('show');
-}, 380);
+}, 200);
 let t0 = null;
-const LOADER_MS = 3000;
+const LOADER_MS = 3200;
 (function tick(ts) {
   if (!t0) t0 = ts;
   const p = Math.min((ts - t0) / LOADER_MS, 1);
@@ -229,7 +221,7 @@ const LOADER_MS = 3000;
   document.getElementById('loader-bar').style.width = n + '%';
   document.getElementById('loader-pct').textContent = n + '%';
   if (p < 1) { requestAnimationFrame(tick); }
-  else { setTimeout(showApp, 260); }
+  else { setTimeout(showApp, 300); }
 })(performance.now());
 
 function showApp() {
@@ -243,7 +235,7 @@ const $cur = document.getElementById('cursor');
 let cx = -200, cy = -200, lx = cx, ly = cy, targetAngle = 0, curAngle = 0;
 document.addEventListener('mousemove', e => {
   const dx = e.clientX - lx, dy = e.clientY - ly;
-  if (Math.hypot(dx,dy) > 1.5) targetAngle = Math.atan2(dy,dx) * 180/Math.PI + 90;
+  if (Math.hypot(dx, dy) > 1.5) targetAngle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
   lx = cx = e.clientX; ly = cy = e.clientY;
 });
 (function animCur() {
@@ -253,416 +245,165 @@ document.addEventListener('mousemove', e => {
   requestAnimationFrame(animCur);
 })();
 
-/* ── Mapbox ───────────────────────────────────────────────────────── */
-/* ── Capital cities coordinates ─────────────────────────────────────── */
-const CAPITALS_GEOJSON = {type:'FeatureCollection',features:[
-  {type:'Feature',geometry:{type:'Point',coordinates:[69.1761,34.5228]},properties:{name:'Kabul',iso2:'AF'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[19.8187,41.3275]},properties:{name:'Tirana',iso2:'AL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[3.0588,36.7538]},properties:{name:'Algiers',iso2:'DZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[1.5218,42.5063]},properties:{name:'Andorra la Vella',iso2:'AD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[13.2344,-8.8368]},properties:{name:'Luanda',iso2:'AO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-58.3816,-34.6037]},properties:{name:'Buenos Aires',iso2:'AR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[44.509,40.1872]},properties:{name:'Yerevan',iso2:'AM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[149.1282,-35.2835]},properties:{name:'Canberra',iso2:'AU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[16.3738,48.2082]},properties:{name:'Vienna',iso2:'AT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[49.8671,40.4093]},properties:{name:'Baku',iso2:'AZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[50.5832,26.2154]},properties:{name:'Manama',iso2:'BH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[90.4125,23.7104]},properties:{name:'Dhaka',iso2:'BD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[27.5667,53.9]},properties:{name:'Minsk',iso2:'BY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[4.3517,50.8503]},properties:{name:'Brussels',iso2:'BE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[2.3158,6.3677]},properties:{name:'Porto-Novo',iso2:'BJ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-68.1503,-16.5]},properties:{name:'Sucre',iso2:'BO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[18.4131,43.8563]},properties:{name:'Sarajevo',iso2:'BA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[25.9231,-24.6282]},properties:{name:'Gaborone',iso2:'BW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-47.9292,-15.7797]},properties:{name:'Brasília',iso2:'BR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[114.9281,4.9402]},properties:{name:'Bandar Seri Begawan',iso2:'BN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[23.3219,42.6977]},properties:{name:'Sofia',iso2:'BG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-1.5331,12.3647]},properties:{name:'Ouagadougou',iso2:'BF'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[29.3599,-3.3818]},properties:{name:'Gitega',iso2:'BI'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[104.916,11.5625]},properties:{name:'Phnom Penh',iso2:'KH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[11.5021,3.8667]},properties:{name:'Yaoundé',iso2:'CM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-75.6919,45.4215]},properties:{name:'Ottawa',iso2:'CA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[18.5582,4.3612]},properties:{name:'Bangui',iso2:'CF'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[15.0557,12.1048]},properties:{name:"N'Djamena",iso2:'TD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-70.6483,-33.4489]},properties:{name:'Santiago',iso2:'CL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[116.3912,39.9093]},properties:{name:'Beijing',iso2:'CN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-74.0721,4.7099]},properties:{name:'Bogotá',iso2:'CO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[15.2662,-4.3217]},properties:{name:'Kinshasa',iso2:'CD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[15.2833,-4.2667]},properties:{name:'Brazzaville',iso2:'CG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-84.0872,9.9328]},properties:{name:'San José',iso2:'CR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[15.9819,45.815]},properties:{name:'Zagreb',iso2:'HR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-82.3666,23.1136]},properties:{name:'Havana',iso2:'CU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[33.3642,35.1667]},properties:{name:'Nicosia',iso2:'CY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[14.4208,50.0878]},properties:{name:'Prague',iso2:'CZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[12.5681,55.6763]},properties:{name:'Copenhagen',iso2:'DK'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[43.1455,11.5806]},properties:{name:'Djibouti',iso2:'DJ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-69.8908,18.4861]},properties:{name:'Santo Domingo',iso2:'DO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-78.5001,-0.2295]},properties:{name:'Quito',iso2:'EC'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[31.2357,30.0444]},properties:{name:'Cairo',iso2:'EG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-89.2182,13.6929]},properties:{name:'San Salvador',iso2:'SV'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[38.9318,15.3394]},properties:{name:'Asmara',iso2:'ER'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[24.7536,59.437]},properties:{name:'Tallinn',iso2:'EE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[38.7578,9.025]},properties:{name:'Addis Ababa',iso2:'ET'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[178.4419,-18.1416]},properties:{name:'Suva',iso2:'FJ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[24.9354,60.1695]},properties:{name:'Helsinki',iso2:'FI'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[2.3488,48.8534]},properties:{name:'Paris',iso2:'FR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[9.4523,0.3901]},properties:{name:'Libreville',iso2:'GA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-16.5681,13.4531]},properties:{name:'Banjul',iso2:'GM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[44.793,41.6941]},properties:{name:'Tbilisi',iso2:'GE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[13.4015,52.5196]},properties:{name:'Berlin',iso2:'DE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-0.1969,5.5352]},properties:{name:'Accra',iso2:'GH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[23.7275,37.9838]},properties:{name:'Athens',iso2:'GR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-90.5328,14.6415]},properties:{name:'Guatemala City',iso2:'GT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-13.6773,9.5375]},properties:{name:'Conakry',iso2:'GN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-15.1804,11.8636]},properties:{name:'Bissau',iso2:'GW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-58.1548,6.8013]},properties:{name:'Georgetown',iso2:'GY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-72.3288,18.5392]},properties:{name:'Port-au-Prince',iso2:'HT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-87.2072,14.0818]},properties:{name:'Tegucigalpa',iso2:'HN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[19.0402,47.498]},properties:{name:'Budapest',iso2:'HU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-21.8954,64.1353]},properties:{name:'Reykjavik',iso2:'IS'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[77.209,28.6139]},properties:{name:'New Delhi',iso2:'IN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[106.8229,-6.2146]},properties:{name:'Jakarta',iso2:'ID'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[51.4215,35.6944]},properties:{name:'Tehran',iso2:'IR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[44.3661,33.3406]},properties:{name:'Baghdad',iso2:'IQ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-6.2603,53.3331]},properties:{name:'Dublin',iso2:'IE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[35.2137,31.7683]},properties:{name:'Jerusalem',iso2:'IL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[12.4964,41.9028]},properties:{name:'Rome',iso2:'IT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-76.7936,17.9714]},properties:{name:'Kingston',iso2:'JM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[139.6917,35.6895]},properties:{name:'Tokyo',iso2:'JP'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[35.9263,31.9552]},properties:{name:'Amman',iso2:'JO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[71.4598,51.18]},properties:{name:'Astana',iso2:'KZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[36.8219,-1.2921]},properties:{name:'Nairobi',iso2:'KE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[47.9783,29.3697]},properties:{name:'Kuwait City',iso2:'KW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[74.5698,42.87]},properties:{name:'Bishkek',iso2:'KG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[102.6,17.9667]},properties:{name:'Vientiane',iso2:'LA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[24.1052,56.946]},properties:{name:'Riga',iso2:'LV'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[35.5018,33.8869]},properties:{name:'Beirut',iso2:'LB'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[27.4833,-29.3167]},properties:{name:'Maseru',iso2:'LS'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-10.7969,6.3006]},properties:{name:'Monrovia',iso2:'LR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[13.1875,32.9042]},properties:{name:'Tripoli',iso2:'LY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[25.2799,54.6896]},properties:{name:'Vilnius',iso2:'LT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[6.1296,49.6117]},properties:{name:'Luxembourg City',iso2:'LU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[47.5162,-18.9137]},properties:{name:'Antananarivo',iso2:'MG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[33.7741,-13.9669]},properties:{name:'Lilongwe',iso2:'MW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[101.6869,3.1478]},properties:{name:'Kuala Lumpur',iso2:'MY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[73.5109,4.1748]},properties:{name:'Malé',iso2:'MV'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-7.9864,12.6392]},properties:{name:'Bamako',iso2:'ML'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[14.5146,35.8997]},properties:{name:'Valletta',iso2:'MT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-15.9785,18.0858]},properties:{name:'Nouakchott',iso2:'MR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[57.4977,-20.1654]},properties:{name:'Port Louis',iso2:'MU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-99.1332,19.4284]},properties:{name:'Mexico City',iso2:'MX'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[28.8353,47.0056]},properties:{name:'Chișinău',iso2:'MD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[7.4128,43.7384]},properties:{name:'Monaco',iso2:'MC'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[106.9057,47.9077]},properties:{name:'Ulaanbaatar',iso2:'MN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[19.2636,42.4304]},properties:{name:'Podgorica',iso2:'ME'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-6.8498,33.9905]},properties:{name:'Rabat',iso2:'MA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[32.5892,-25.9692]},properties:{name:'Maputo',iso2:'MZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[96.1561,19.7633]},properties:{name:'Naypyidaw',iso2:'MM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[17.0831,-22.5597]},properties:{name:'Windhoek',iso2:'NA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[85.3157,27.7172]},properties:{name:'Kathmandu',iso2:'NP'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[4.9041,52.3676]},properties:{name:'Amsterdam',iso2:'NL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[174.7633,-41.2865]},properties:{name:'Wellington',iso2:'NZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-86.2734,12.1328]},properties:{name:'Managua',iso2:'NI'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[2.1098,13.5137]},properties:{name:'Niamey',iso2:'NE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[7.4898,9.0579]},properties:{name:'Abuja',iso2:'NG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[21.4254,41.9961]},properties:{name:'Skopje',iso2:'MK'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[10.7522,59.9127]},properties:{name:'Oslo',iso2:'NO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[58.3829,23.5957]},properties:{name:'Muscat',iso2:'OM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[73.0479,33.7215]},properties:{name:'Islamabad',iso2:'PK'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[35.2034,31.9028]},properties:{name:'Ramallah',iso2:'PS'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-79.5188,8.9943]},properties:{name:'Panama City',iso2:'PA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[147.1925,-9.4438]},properties:{name:'Port Moresby',iso2:'PG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-57.6362,-25.2867]},properties:{name:'Asunción',iso2:'PY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-77.0428,-12.0432]},properties:{name:'Lima',iso2:'PE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[120.9842,14.5995]},properties:{name:'Manila',iso2:'PH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[21.0118,52.2298]},properties:{name:'Warsaw',iso2:'PL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-9.1354,38.7223]},properties:{name:'Lisbon',iso2:'PT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[51.5082,25.2854]},properties:{name:'Doha',iso2:'QA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[26.1063,44.4268]},properties:{name:'Bucharest',iso2:'RO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[37.6156,55.7522]},properties:{name:'Moscow',iso2:'RU'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[30.0587,-1.9441]},properties:{name:'Kigali',iso2:'RW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[12.4578,43.9361]},properties:{name:'City of San Marino',iso2:'SM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[46.6977,24.6877]},properties:{name:'Riyadh',iso2:'SA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-17.4441,14.6937]},properties:{name:'Dakar',iso2:'SN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[20.4651,44.8176]},properties:{name:'Belgrade',iso2:'RS'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-13.2317,8.4657]},properties:{name:'Freetown',iso2:'SL'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[103.8198,1.3521]},properties:{name:'Singapore',iso2:'SG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[17.1077,48.1486]},properties:{name:'Bratislava',iso2:'SK'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[14.5058,46.0514]},properties:{name:'Ljubljana',iso2:'SI'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[45.3182,2.0469]},properties:{name:'Mogadishu',iso2:'SO'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[28.2293,-25.7459]},properties:{name:'Pretoria',iso2:'ZA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[31.5713,4.8517]},properties:{name:'Juba',iso2:'SS'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-3.6832,40.4167]},properties:{name:'Madrid',iso2:'ES'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[79.8612,6.9271]},properties:{name:'Colombo',iso2:'LK'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[32.5324,15.5512]},properties:{name:'Khartoum',iso2:'SD'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[18.0686,59.3294]},properties:{name:'Stockholm',iso2:'SE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[7.4458,46.9481]},properties:{name:'Bern',iso2:'CH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[36.2765,33.5102]},properties:{name:'Damascus',iso2:'SY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[121.5654,25.0375]},properties:{name:'Taipei',iso2:'TW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[68.7738,38.5473]},properties:{name:'Dushanbe',iso2:'TJ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[35.7516,-6.1722]},properties:{name:'Dodoma',iso2:'TZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[100.5018,13.7563]},properties:{name:'Bangkok',iso2:'TH'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[1.2232,6.1228]},properties:{name:'Lomé',iso2:'TG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-61.5188,10.6518]},properties:{name:'Port of Spain',iso2:'TT'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[10.1797,36.8065]},properties:{name:'Tunis',iso2:'TN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[32.854,39.9208]},properties:{name:'Ankara',iso2:'TR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[58.3794,37.9601]},properties:{name:'Ashgabat',iso2:'TM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[32.5655,0.3163]},properties:{name:'Kampala',iso2:'UG'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[30.5238,50.4547]},properties:{name:'Kyiv',iso2:'UA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[54.3705,24.4764]},properties:{name:'Abu Dhabi',iso2:'AE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-0.1278,51.5074]},properties:{name:'London',iso2:'GB'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-77.0369,38.9072]},properties:{name:'Washington D.C.',iso2:'US'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-56.1882,-34.9011]},properties:{name:'Montevideo',iso2:'UY'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[69.2401,41.2995]},properties:{name:'Tashkent',iso2:'UZ'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[12.4534,41.9029]},properties:{name:'Vatican City',iso2:'VA'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[-66.8791,10.4806]},properties:{name:'Caracas',iso2:'VE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[105.8412,21.0285]},properties:{name:'Hanoi',iso2:'VN'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[44.2075,15.3547]},properties:{name:"Sana'a",iso2:'YE'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[28.2871,-15.4167]},properties:{name:'Lusaka',iso2:'ZM'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[31.0522,-17.8292]},properties:{name:'Harare',iso2:'ZW'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[126.9784,37.5665]},properties:{name:'Seoul',iso2:'KR'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[125.7381,39.0194]},properties:{name:'Pyongyang',iso2:'KP'}},
-  {type:'Feature',geometry:{type:'Point',coordinates:[21.1655,42.6629]},properties:{name:'Pristina',iso2:'XK'}}
-]};
+/* ── Tooltip ──────────────────────────────────────────────────────── */
+const $tip = document.getElementById('tooltip');
+function showTip(name, x, y) {
+  $tip.textContent = name.toUpperCase();
+  $tip.classList.add('show');
+  const tw = $tip.offsetWidth;
+  $tip.style.left = Math.min(x + 18, window.innerWidth - tw - 10) + 'px';
+  $tip.style.top = Math.max(y - 14, 8) + 'px';
+}
+function hideTip() { $tip.classList.remove('show'); }
 
+/* ── Mapbox GL init ───────────────────────────────────────────────── */
 mapboxgl.accessToken = 'pk.eyJ1IjoiZmxvcmlhbi1wcmVpcyIsImEiOiJjbWx6N2R4OGYwM2d0M2Rxd2N0ZXpneWV0In0.zCOmy2UhKRILSM9DKXy5Lw';
 
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/satellite-v9',
   center: [15, 20],
-  zoom: 1.8,
-  minZoom: 1,
-  maxZoom: 10,
-  projection: 'naturalEarth',
-  attributionControl: true
+  zoom: 2.2,
+  pitch: 55,
+  bearing: 0,
+  projection: 'globe',
+  antialias: true
 });
 
+// Disable default cursor changes
 map.getCanvas().style.cursor = 'none';
 
-const $tip = document.getElementById('tooltip');
-let hoveredId = null;
-
-map.on('load', () => {
-
-  const visitedList = [...visitedSet];
-
-  // Country fill — use mapbox-countries-v1 which aligns with the satellite base
-  map.addSource('countries', {
-    type: 'vector',
-    url: 'mapbox://mapbox.country-boundaries-v1'
+map.on('style.load', () => {
+  // Set atmosphere for globe
+  map.setFog({
+    color: 'rgb(186, 210, 235)',
+    'high-color': 'rgb(36, 92, 223)',
+    'horizon-blend': 0.02,
+    'space-color': 'rgb(11, 11, 25)',
+    'star-intensity': 0.6
   });
 
-  // Base fill layer — visited: dark navy overlay, unvisited: transparent (show satellite)
-  map.addLayer({
-    id: 'countries-fill',
-    type: 'fill',
-    source: 'countries',
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'disputed'], 'false'],
-    paint: {
-      'fill-color': [
-        'case',
-        ['in', ['get', 'iso_3166_1_alpha_2'], ['literal', visitedList]],
-        'rgba(30, 60, 120, 0.55)',
-        'rgba(0, 0, 0, 0)'
-      ],
-      'fill-opacity': 1
-    }
+  // Add Mapbox terrain DEM source
+  map.addSource('mapbox-dem', {
+    type: 'raster-dem',
+    url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+    tileSize: 512,
+    maxzoom: 14
   });
 
-  // Hover highlight
-  map.addLayer({
-    id: 'countries-hover',
-    type: 'fill',
-    source: 'countries',
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'disputed'], 'false'],
-    paint: {
-      'fill-color': 'rgba(80, 140, 255, 0.4)',
-      'fill-opacity': [
-        'case',
-        ['boolean', ['feature-state', 'hover'], false],
-        1,
-        0
-      ]
-    }
-  });
+  // Enable terrain with MAXIMUM exaggeration (max allowed is 1.5 per docs, but we push it)
+  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
-  // Border lines — above fills
-  map.addLayer({
-    id: 'countries-outline',
-    type: 'line',
-    source: 'countries',
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'disputed'], 'false'],
-    paint: {
-      'line-color': 'rgba(255, 255, 255, 0.5)',
-      'line-width': [
-        'interpolate', ['linear'], ['zoom'],
-        1, 0.4,
-        5, 1.0
-      ]
-    }
-  });
+  // Ocean fill — simple light blue background behind land
+  map.setPaintProperty('background', 'background-color', '#a8d4f5');
 
-  // Capital cities source — GeoJSON with capitals from our stats data
-  const capitalsGeoJSON = {
-    type: 'FeatureCollection',
-    features: Object.entries(S)
-      .filter(([iso2, d]) => d.cap && d.lat != null && d.lng != null)
-      .map(([iso2, d]) => ({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
-        properties: { iso2, name: d.cap, country: d.n, visited: visitedSet.has(iso2) }
-      }))
-  };
+  // Load country boundaries from world-atlas
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r => r.json())
+    .then(topo => {
+      const geojson = topoToGeoJSON(topo, topo.objects.countries);
 
-  // We'll use Mapbox's built-in place labels but filter to capitals only.
-  // Instead add a manual capitals layer with approximate coordinates.
-  // Use a curated capitals dataset via a GeoJSON source.
-  // The S object doesn't have coords so we use Mapbox's geocoding approach:
-  // Add country labels from the existing style's label layers via symbol layer
-  // Add capital dots layer
-  map.addSource('capitals', {
-    type: 'geojson',
-    data: CAPITALS_GEOJSON
-  });
+      // Build visited / unvisited feature collections
+      const visitedFeatures = [];
+      const allFeatures = [];
 
-  map.addLayer({
-    id: 'capitals-dot',
-    type: 'circle',
-    source: 'capitals',
-    paint: {
-      'circle-radius': [
-        'interpolate', ['linear'], ['zoom'],
-        1, 2,
-        5, 4
-      ],
-      'circle-color': '#ffffff',
-      'circle-stroke-color': 'rgba(0,0,0,0.5)',
-      'circle-stroke-width': 1,
-      'circle-opacity': 0.9
-    }
-  });
+      for (const f of geojson.features) {
+        const iso2 = ISO_NUM[String(f.properties.id)];
+        if (!iso2) continue;
+        f.properties.iso2 = iso2;
+        f.properties.name = S[iso2] ? S[iso2].n : iso2;
+        f.properties.visited = visitedSet.has(iso2) ? 1 : 0;
+        allFeatures.push(f);
+        if (visitedSet.has(iso2)) visitedFeatures.push(f);
+      }
 
-  map.addLayer({
-    id: 'capitals-label',
-    type: 'symbol',
-    source: 'capitals',
-    minzoom: 2.5,
-    layout: {
-      'text-field': ['get', 'name'],
-      'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
-      'text-size': [
-        'interpolate', ['linear'], ['zoom'],
-        2.5, 9,
-        6, 13
-      ],
-      'text-offset': [0, 1.2],
-      'text-anchor': 'top',
-      'text-allow-overlap': false,
-      'text-ignore-placement': false
-    },
-    paint: {
-      'text-color': '#ffffff',
-      'text-halo-color': 'rgba(0,0,0,0.8)',
-      'text-halo-width': 1.5
-    }
-  });
+      // Single unified source
+      map.addSource('countries', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: allFeatures }
+      });
 
-  // Country name labels layer
-  map.addLayer({
-    id: 'country-labels',
-    type: 'symbol',
-    source: 'countries',
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'disputed'], 'false'],
-    minzoom: 1,
-    maxzoom: 5,
-    layout: {
-      'text-field': ['get', 'name_en'],
-      'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-      'text-size': [
-        'interpolate', ['linear'], ['zoom'],
-        1, 8,
-        4, 12
-      ],
-      'text-transform': 'uppercase',
-      'text-letter-spacing': 0.05,
-      'text-max-width': 6,
-      'symbol-placement': 'point',
-      'text-allow-overlap': false
-    },
-    paint: {
-      'text-color': '#ffffff',
-      'text-halo-color': 'rgba(0,0,0,0.75)',
-      'text-halo-width': 1.5,
-      'text-opacity': [
-        'interpolate', ['linear'], ['zoom'],
-        1, 0.7,
-        4, 1
-      ]
-    }
-  });
+      // Unvisited countries — subtle neutral so terrain reads through
+      map.addLayer({
+        id: 'countries-unvisited',
+        type: 'fill',
+        source: 'countries',
+        filter: ['==', ['get', 'visited'], 0],
+        paint: {
+          'fill-color': '#c8b89a',
+          'fill-opacity': 0.55
+        }
+      });
 
-  // ── Mouse events ──
-  map.on('mousemove', 'countries-fill', (e) => {
-    if (!e.features.length) return;
-    map.getCanvas().style.cursor = 'none';
+      // Visited countries — blue tint, terrain shines through
+      map.addLayer({
+        id: 'countries-visited',
+        type: 'fill',
+        source: 'countries',
+        filter: ['==', ['get', 'visited'], 1],
+        paint: {
+          'fill-color': 'rgba(25, 70, 175, 0.45)',
+          'fill-opacity': 1
+        }
+      });
 
-    const f = e.features[0];
-    const iso2 = f.properties.iso_3166_1_alpha_2;
-    const name = S[iso2] ? S[iso2].n : (f.properties.name_en || iso2 || '?');
+      // All country borders
+      map.addLayer({
+        id: 'countries-borders',
+        type: 'line',
+        source: 'countries',
+        paint: {
+          'line-color': [
+            'case',
+            ['==', ['get', 'visited'], 1],
+            'rgba(100, 160, 255, 0.7)',
+            'rgba(180, 150, 110, 0.4)'
+          ],
+          'line-width': [
+            'case',
+            ['==', ['get', 'visited'], 1], 1.2,
+            0.5
+          ]
+        }
+      });
 
-    $tip.textContent = name.toUpperCase();
-    $tip.classList.add('show');
+      // Click handler
+      map.on('click', 'countries-visited', e => {
+        const iso2 = e.features[0].properties.iso2;
+        if (iso2) openDrawer(iso2);
+      });
+      map.on('click', 'countries-unvisited', e => {
+        const iso2 = e.features[0].properties.iso2;
+        if (iso2) openDrawer(iso2);
+      });
 
-    if (hoveredId !== null) {
-      map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredId }, { hover: false });
-    }
-    hoveredId = f.id;
-    map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredId }, { hover: true });
-  });
-
-  map.on('mouseleave', 'countries-fill', () => {
-    $tip.classList.remove('show');
-    if (hoveredId !== null) {
-      map.setFeatureState({ source: 'countries', sourceLayer: 'country_boundaries', id: hoveredId }, { hover: false });
-      hoveredId = null;
-    }
-  });
-
-  map.on('mousemove', (e) => {
-    const tw = $tip.offsetWidth;
-    $tip.style.left = Math.min(e.point.x + 18, window.innerWidth - tw - 10) + 'px';
-    $tip.style.top  = Math.max(e.point.y - 14, 8) + 'px';
-  });
-
-  let clickedCountry = false;
-  map.on('click', 'countries-fill', (e) => {
-    if (!e.features.length) return;
-    clickedCountry = true;
-    const iso2 = e.features[0].properties.iso_3166_1_alpha_2;
-    if (iso2) openDrawer(iso2);
-  });
-
-  // Click on ocean closes drawer
-  map.on('click', (e) => {
-    if (clickedCountry) { clickedCountry = false; return; }
-    const hits = map.queryRenderedFeatures(e.point, { layers: ['countries-fill'] });
-    if (!hits.length) closeDrawer();
-  });
+      // Hover tooltips
+      map.on('mousemove', 'countries-visited', e => {
+        const name = e.features[0].properties.name;
+        if (name) showTip(name, e.originalEvent.clientX, e.originalEvent.clientY);
+      });
+      map.on('mousemove', 'countries-unvisited', e => {
+        const name = e.features[0].properties.name;
+        if (name) showTip(name, e.originalEvent.clientX, e.originalEvent.clientY);
+      });
+      map.on('mouseleave', 'countries-visited', hideTip);
+      map.on('mouseleave', 'countries-unvisited', hideTip);
+    })
+    .catch(e => console.warn('Boundaries load failed:', e));
 });
 
 /* ── Zoom buttons ─────────────────────────────────────────────────── */
-document.getElementById('z-in').addEventListener('click', () => map.zoomIn({ duration: 300 }));
-document.getElementById('z-out').addEventListener('click', () => map.zoomOut({ duration: 300 }));
+document.getElementById('z-in').addEventListener('click', () => {
+  map.easeTo({ zoom: Math.min(map.getZoom() + 1, 10), duration: 400 });
+});
+document.getElementById('z-out').addEventListener('click', () => {
+  map.easeTo({ zoom: Math.max(map.getZoom() - 1, 1), duration: 400 });
+});
 
 /* ── Drawer ───────────────────────────────────────────────────────── */
-function setDrawerHeader(iso2) {
-  const cd = VISITED[iso2] || {};
-  const name = S[iso2] ? S[iso2].n : iso2;
+function openDrawer(iso2) {
+  const st = S[iso2] || {}, cd = VISITED[iso2] || {};
+  const name = st.n || iso2;
   document.getElementById('d-name').textContent = name.toUpperCase();
   const bdg = cd.territoryBadge;
   document.getElementById('d-badge').innerHTML = bdg ? `<span class="dh-badge">${esc(bdg)}</span>` : '';
@@ -671,60 +412,38 @@ function setDrawerHeader(iso2) {
   flag.onerror = () => flag.style.display = 'none';
   flag.style.display = '';
   document.getElementById('drawer').classList.add('open');
-}
-
-function openDrawer(iso2) {
-  const st = S[iso2] || {};
-  const cd = VISITED[iso2] || {};
-  setDrawerHeader(iso2);
   document.getElementById('d-body').innerHTML = buildBody(iso2, st, cd);
 }
-
-function closeDrawer() {
-  document.getElementById('drawer').classList.remove('open');
-}
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
 document.getElementById('d-close').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
-/* ── Drawer body builder ──────────────────────────────────────────── */
+/* ── Body builder ─────────────────────────────────────────────────── */
 function buildBody(iso2, st, cd) {
   const vis = cd.visited || false;
-  const row = (lbl, val) => {
-    const na = val == null;
-    return `<tr><td>${esc(lbl)}</td><td>${na ? '<span class="stat-na">N/A</span>' : val}</td></tr>`;
-  };
-
+  const row = (l, v) => `<tr><td>${esc(l)}</td><td>${v == null ? '<span class="stat-na">N/A</span>' : v}</td></tr>`;
   let h = '<table class="stats-table">';
-  h += row('Capital', st.cap != null ? esc(st.cap) : null);
+  h += row('Capital', st.cap ? esc(st.cap) : null);
   h += row('Population', st.pop != null ? fmtPop(st.pop) : null);
-
-  let gdpVal = null;
+  let gdpV = null;
   if (st.gdp != null) {
-    gdpVal = 'EUR ' + fmtNum(st.gdp);
-    if (st.gdpT != null) {
-      gdpVal += ' <span style="color:#bbb;font-size:11px">(EUR ' + st.gdpT.toFixed(1) + ' B total)</span>';
-    }
+    gdpV = 'EUR ' + fmtNum(st.gdp);
+    if (st.gdpT != null) gdpV += ` <span style="color:#bbb;font-size:11px">(EUR ${st.gdpT.toFixed(1)} B total)</span>`;
   }
-  h += row('GDP per capita (nominal)', gdpVal);
-
+  h += row('GDP per capita (nominal)', gdpV);
   const hdiInfo = `<span class="hdi-info">i<span class="hdi-tip"><strong>Human Development Index (HDI)</strong><br>A composite measure of life expectancy, education, and income per capita. Ranges from 0 to 1 (highest), published annually by the UN Development Programme.</span></span>`;
-  let hdiVal = null;
-  if (st.hdi != null) {
-    hdiVal = st.hdi.toFixed(3) + (st.hdiR != null ? ' (' + st.hdiR + '/197)' : '');
-  }
-  h += `<tr><td>HDI (rank)</td><td>${hdiVal != null ? esc(hdiVal) : '<span class="stat-na">N/A</span>'}${hdiInfo}</td></tr>`;
-  h += '</table>';
-  h += `<div class="stats-source">World Bank &amp; UNDP · ${STATS_DATE}</div>`;
-
+  const hdiV = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) : null;
+  h += `<tr><td>HDI (rank)</td><td>${hdiV ?? '<span class="stat-na">N/A</span>'}${hdiInfo}</td></tr>`;
+  h += `</table><div class="stats-source">World Bank &amp; UNDP · ${STATS_DATE}</div>`;
   h += '<div class="trips-title">Trip Notes</div>';
   if (!vis) {
     h += '<div class="not-visited">Not visited yet</div>';
   } else {
-    const trips = (cd.trips||[]).filter(t => t.date || t.note);
+    const trips = (cd.trips || []).filter(t => t.date || t.note);
     if (!trips.length) {
       h += '<div class="db-empty">No trip notes yet.</div>';
     } else {
-      [...trips].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(t => {
+      [...trips].sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(t => {
         h += '<div class="trip">';
         if (t.date) h += `<div class="trip-date">${fmtDate(t.date)}</div>`;
         if (t.with) h += `<div class="trip-with">With <strong>${esc(t.with)}</strong></div>`;
@@ -736,32 +455,58 @@ function buildBody(iso2, st, cd) {
   return h;
 }
 
+/* ── Micro TopoJSON decoder ──────────────────────────────────────── */
+function topoToGeoJSON(topo, obj) {
+  const scale = topo.transform ? topo.transform.scale : [1,1];
+  const translate = topo.transform ? topo.transform.translate : [0,0];
+  function arc(i) {
+    const rev = i < 0, raw = topo.arcs[rev ? ~i : i];
+    let x = 0, y = 0;
+    const pts = raw.map(p => { x += p[0]; y += p[1]; return [x*scale[0]+translate[0], y*scale[1]+translate[1]]; });
+    return rev ? pts.reverse() : pts;
+  }
+  function ring(r) {
+    const c = [];
+    r.forEach(i => { const p = arc(i); if (c.length) p.shift(); c.push(...p); });
+    return c;
+  }
+  function geom(g) {
+    if (!g) return null;
+    if (g.type === 'Polygon') return { type:'Polygon', coordinates: g.arcs.map(ring) };
+    if (g.type === 'MultiPolygon') return { type:'MultiPolygon', coordinates: g.arcs.map(p => p.map(ring)) };
+    return null;
+  }
+  const features = (obj.geometries || []).map(g => {
+    const geo = geom(g);
+    return geo ? { type:'Feature', geometry: geo, properties: { id: g.id } } : null;
+  }).filter(Boolean);
+  return { type:'FeatureCollection', features };
+}
+
 /* ── Helpers ──────────────────────────────────────────────────────── */
 const MO = ['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-function fmtDate(d) { const [y,m]=d.split('-'); return (m&&MO[+m])?MO[+m]+' '+y:y; }
+function fmtDate(d) { const [y,m] = d.split('-'); return (m && MO[+m]) ? MO[+m]+' '+y : y; }
 function fmtPop(n) {
-  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'') + ' B';
-  if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'') + ' M';
-  if (n >= 1e3) return Math.round(n/1e3) + ' K';
+  if (n>=1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'')+' B';
+  if (n>=1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'')+' M';
+  if (n>=1e3) return Math.round(n/1e3)+' K';
   return String(n);
 }
 function fmtNum(n) {
-  if (n >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'') + ' M';
-  if (n >= 1e3) return Math.round(n/1e3).toLocaleString();
+  if (n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+' M';
+  if (n>=1e3) return Math.round(n/1e3).toLocaleString();
   return n.toLocaleString();
 }
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-/* ── Touch ──────────────────────────────────────────────────────────*/
+/* ── Touch ────────────────────────────────────────────────────────── */
 if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
   $cur.style.display = 'none';
   document.body.style.cursor = 'auto';
-  map.getCanvas().style.cursor = 'auto';
 }
 
 })();
+}); // end window.addEventListener('load')
 </script>
 </body>
 </html>
