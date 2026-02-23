@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.js"></script>
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; background:#0d1f35; }
+html, body { width:100%; height:100%; overflow:hidden; background:#b8d9f0; }
 body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 /* CURSOR */
@@ -44,87 +44,117 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 /* TOOLTIP */
 #tooltip {
   position:fixed; pointer-events:none; z-index:8000;
-  background:rgba(10,20,35,0.92); color:#fff;
-  font-size:10px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase;
-  padding:7px 12px; white-space:nowrap;
+  background:rgba(10,20,35,0.88); color:#fff;
+  font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase;
+  padding:6px 11px; white-space:nowrap;
   opacity:0; transform:translateY(3px);
   transition:opacity 0.1s ease, transform 0.1s ease;
-  box-shadow:0 2px 14px rgba(0,0,0,0.3);
-  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  border-radius:2px;
 }
 #tooltip.show { opacity:1; transform:translateY(0); }
 
 /* PANEL */
 #panel {
   position:fixed; bottom:32px; left:32px; z-index:1000;
-  background:rgba(10,20,35,0.85);
+  background:rgba(255,255,255,0.92);
   backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
-  border:1px solid rgba(255,255,255,0.1); padding:22px 24px; min-width:196px;
+  border:1px solid rgba(0,0,0,0.08); padding:22px 24px; min-width:196px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.10);
   opacity:0; transform:translateY(6px); transition:opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
 }
 #panel.show { opacity:1; transform:translateY(0); }
-.p-count { font-size:30px; font-weight:300; letter-spacing:-0.03em; color:#fff; line-height:1; display:flex; align-items:baseline; gap:4px; }
+.p-count { font-size:30px; font-weight:300; letter-spacing:-0.03em; color:#1a2d45; line-height:1; display:flex; align-items:baseline; gap:4px; }
 .p-count-num { font-size:30px; }
-.p-count-denom { font-size:13px; color:rgba(255,255,255,0.4); font-weight:400; }
-.p-count-info { display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); font-size:7px; color:rgba(255,255,255,0.4); cursor:default; position:relative; margin-left:2px; line-height:1; flex-shrink:0; }
+.p-count-denom { font-size:13px; color:rgba(26,45,69,0.4); font-weight:400; }
+.p-count-info { display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border-radius:50%; border:1px solid rgba(26,45,69,0.25); font-size:7px; color:rgba(26,45,69,0.4); cursor:default; position:relative; margin-left:2px; line-height:1; flex-shrink:0; }
 .p-count-info:hover .p-count-tip { opacity:1; pointer-events:auto; }
-.p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(10,20,35,0.97); color:#ccc; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 14px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); }
-.p-label { font-size:9px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin:4px 0 14px; }
+.p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(20,30,50,0.96); color:#ccc; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 14px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); }
+.p-label { font-size:9px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(26,45,69,0.35); margin:4px 0 14px; }
 .p-legend { display:flex; flex-direction:row; align-items:center; gap:14px; margin-bottom:12px; }
-.legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.55); }
-.swatch { width:11px; height:11px; flex-shrink:0; }
-.swatch.v { background:rgba(30,80,180,0.75); border:1px solid rgba(100,160,255,0.5); }
-.swatch.u { background:transparent; border:1px solid rgba(255,255,255,0.3); }
-.p-divider { height:1px; background:rgba(255,255,255,0.08); margin-bottom:10px; }
+.legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(26,45,69,0.55); }
+.pin-swatch { width:10px; height:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.p-divider { height:1px; background:rgba(0,0,0,0.07); margin-bottom:10px; }
 .p-zoom { display:flex; gap:1px; }
-.z-btn { flex:1; height:26px; border:1px solid rgba(255,255,255,0.15); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
-.z-btn:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.3); }
+.z-btn { flex:1; height:26px; border:1px solid rgba(0,0,0,0.12); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(26,45,69,0.7); background:rgba(255,255,255,0.6); }
+.z-btn:hover { background:rgba(255,255,255,0.9); border-color:rgba(0,0,0,0.22); }
 
 /* DRAWER */
 #drawer {
-  position:fixed; top:0; right:0; width:min(380px,100vw); height:100%; z-index:2000;
-  background:rgba(255,255,255,0.97);
-  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+  position:fixed; top:0; right:0; width:min(440px,100vw); height:100%; z-index:2000;
+  background:#fff;
   border-left:1px solid rgba(0,0,0,0.06);
+  box-shadow:-4px 0 32px rgba(0,0,0,0.08);
   transform:translateX(100%); transition:transform 0.42s cubic-bezier(0.4,0,0.2,1);
   display:flex; flex-direction:column; overflow:hidden;
 }
 #drawer.open { transform:translateX(0); }
-.dh { padding:18px 18px 12px; border-bottom:1px solid #f0f0f0; display:flex; align-items:flex-start; gap:11px; }
-.dh-flag { width:36px; height:27px; object-fit:cover; border:1px solid rgba(0,0,0,0.07); flex-shrink:0; margin-top:2px; }
-.dh-text { flex:1; min-width:0; }
-.dh-name { font-size:14px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#111; line-height:1.2; margin-bottom:4px; }
+
+/* Drawer header — flag + centered name */
+.dh {
+  padding:20px 20px 14px;
+  border-bottom:1px solid #f0f0f0;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  position:relative;
+}
+.dh-flag { width:48px; height:36px; object-fit:cover; border:1px solid rgba(0,0,0,0.07); flex-shrink:0; }
+.dh-text { text-align:center; }
+.dh-name { font-size:15px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#111; line-height:1.2; margin-bottom:5px; }
 .dh-badge { display:inline-block; font-size:8px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#999; background:#f5f5f5; border:1px solid #eaeaea; padding:3px 7px; }
-.dh-close { width:26px; height:26px; background:none; border:none; cursor:none; font-size:19px; line-height:1; color:#ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; font-family:inherit; }
-.dh-close:hover { color:#111; }
-.db { flex:1; overflow-y:auto; padding:14px 18px 40px; }
+.dh-close { position:absolute; top:14px; right:14px; width:28px; height:28px; background:none; border:none; cursor:none; font-size:20px; line-height:1; color:#ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; font-family:inherit; }
+.dh-close:hover { color:#333; }
+
+/* Drawer body */
+.db { flex:1; overflow-y:auto; padding:20px 24px 40px; }
 .db::-webkit-scrollbar { width:2px; }
 .db::-webkit-scrollbar-thumb { background:#e0e0e0; }
-.stats-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
-.stats-table tr td { padding:3px 0; vertical-align:top; line-height:1.4; }
-.stats-table tr td:first-child { font-size:8.5px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#bbb; padding-right:12px; white-space:nowrap; width:1%; padding-top:5px; }
-.stats-table tr td:last-child { font-size:12.5px; color:#111; font-weight:400; }
-.stat-na { color:#d0d0d0; font-size:12px; }
-.hdi-info { display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:50%; border:1px solid #ccc; font-size:7.5px; color:#aaa; cursor:default; position:relative; line-height:1; flex-shrink:0; margin-left:5px; vertical-align:middle; }
+
+/* Stats grid — label left, value right, clean spacing */
+.stats-grid { display:grid; grid-template-columns:auto 1fr; gap:0; margin-bottom:20px; }
+.stat-row { display:contents; }
+.stat-label {
+  font-size:8px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase;
+  color:#c0c0c0; padding:7px 16px 7px 0; white-space:nowrap;
+  border-bottom:1px solid #f6f6f6; display:flex; align-items:center;
+}
+.stat-value {
+  font-size:13px; color:#222; font-weight:400; padding:7px 0;
+  border-bottom:1px solid #f6f6f6; line-height:1.4;
+}
+.stat-row:last-child .stat-label,
+.stat-row:last-child .stat-value { border-bottom:none; }
+.stat-na { color:#ddd; font-size:12px; }
+.stat-sub { color:#bbb; font-size:11px; }
+
+.hdi-info { display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:50%; border:1px solid #ddd; font-size:7.5px; color:#bbb; cursor:default; position:relative; line-height:1; flex-shrink:0; margin-left:5px; vertical-align:middle; }
 .hdi-info:hover .hdi-tip { opacity:1; pointer-events:auto; }
-.hdi-tip { position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%); width:200px; background:#fff; color:#222; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.08); border:1px solid #e8e8e8; }
-.trips-title { font-size:9px; font-weight:600; letter-spacing:0.24em; text-transform:uppercase; color:#c8c8c8; margin-bottom:8px; padding-bottom:7px; border-bottom:1px solid #f2f2f2; }
-.trip { padding:9px 0; border-bottom:1px solid #f6f6f6; }
+.hdi-tip { position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%); width:200px; background:#fff; color:#333; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.10); border:1px solid #eee; }
+
+.stats-source { font-size:8px; letter-spacing:0.10em; text-transform:uppercase; color:#e0e0e0; margin-bottom:20px; }
+
+.trips-title { font-size:8px; font-weight:700; letter-spacing:0.24em; text-transform:uppercase; color:#d0d0d0; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f2f2f2; }
+.trip { padding:10px 0; border-bottom:1px solid #f6f6f6; }
 .trip:last-child { border-bottom:none; }
-.trip-date { font-size:9px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:#bbb; margin-bottom:2px; }
-.trip-with { font-size:10px; letter-spacing:0.08em; color:#c5c5c5; margin-bottom:3px; }
-.trip-with strong { color:#888; font-weight:400; }
-.trip-note { font-size:12.5px; line-height:1.65; color:#444; }
+.trip-meta { display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap; }
+.trip-date { display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:#c0c0c0; }
+.trip-date svg { flex-shrink:0; }
+.trip-with { display:flex; align-items:center; gap:5px; font-size:10px; color:#c0c0c0; }
+.trip-with svg { flex-shrink:0; }
+.trip-with strong { color:#888; font-weight:500; }
+.trip-note { font-size:13px; line-height:1.65; color:#444; }
 .db-empty { font-size:11px; color:#d0d0d0; letter-spacing:0.1em; padding:8px 0; font-style:italic; }
-.not-visited { font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#d0d0d0; padding:8px 0; }
-.stats-source { font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:#d0d0d0; margin-bottom:16px; margin-top:-8px; }
+.not-visited { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:#d0d0d0; padding:8px 0; }
 
 /* MAP */
 #map { position:absolute; inset:0; width:100%; height:100%; }
+.mapboxgl-ctrl-logo { opacity:0.35 !important; }
+.mapboxgl-ctrl-attrib { font-size:9px !important; opacity:0.4 !important; }
 
-/* Hide Mapbox logo/attribution minimally */
-.mapboxgl-ctrl-logo { opacity:0.4 !important; }
-.mapboxgl-ctrl-attrib { font-size:9px !important; opacity:0.5 !important; }
+/* Red pin marker */
+.pin-marker {
+  width:22px; height:28px; cursor:none;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
 
 @media (max-width:640px) {
   #panel { bottom:20px; left:20px; padding:18px 20px; min-width:172px; }
@@ -164,8 +194,16 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   </div>
   <div class="p-label">Countries visited</div>
   <div class="p-legend">
-    <div class="legend-row"><div class="swatch v"></div>Visited</div>
-    <div class="legend-row"><div class="swatch u"></div>Not yet</div>
+    <div class="legend-row">
+      <div class="pin-swatch">
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" fill="#e63946"/>
+          <circle cx="5" cy="5" r="2" fill="white"/>
+        </svg>
+      </div>
+      Visited
+    </div>
+    <div class="legend-row" style="color:rgba(26,45,69,0.35)">— Not yet</div>
   </div>
   <div class="p-divider"></div>
   <div class="p-zoom">
@@ -197,6 +235,9 @@ const S = {"AF":{"n":"Afghanistan","cap":"Kabul","pop":42239854,"gdp":338,"gdpT"
 
 /* ── ✏️  EDIT YOUR TRIPS HERE ─────────────────────────────────────── */
 const VISITED = {"AL":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"AU":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"AT":{visited:true,territoryBadge:null,trips:[{date:"2021-12",with:null,note:null}]},"BE":{visited:true,territoryBadge:null,trips:[{date:"2022-06",with:null,note:null}]},"BO":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"BA":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"BR":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"BG":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"CA":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"CN":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"CO":{visited:true,territoryBadge:null,trips:[{date:"2023-11",with:null,note:null}]},"CR":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"HR":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CU":{visited:true,territoryBadge:null,trips:[{date:"2020-02",with:null,note:null}]},"CZ":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"DK":{visited:true,territoryBadge:null,trips:[{date:"2023-05",with:null,note:null}]},"EG":{visited:true,territoryBadge:null,trips:[{date:"2023-03",with:null,note:null}]},"FR":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"DE":{visited:true,territoryBadge:null,trips:[{date:"2023-02",with:"Ellen",note:"First date weekend in Berlin."}]},"GR":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"HU":{visited:true,territoryBadge:null,trips:[{date:"2022-11",with:null,note:null}]},"IS":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"IN":{visited:true,territoryBadge:null,trips:[{date:"2019-12",with:null,note:null}]},"IE":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"IL":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"IT":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"JO":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"KE":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"XK":{visited:true,territoryBadge:"Partially Recognised",trips:[{date:"2023-07",with:null,note:null}]},"LV":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"MY":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"MX":{visited:true,territoryBadge:null,trips:[{date:"2024-03",with:null,note:null}]},"ME":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"MA":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"NA":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"NL":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"NZ":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"MK":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"NO":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"PA":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"PE":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"PH":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"PL":{visited:true,territoryBadge:null,trips:[{date:"2022-10",with:null,note:null}]},"PT":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"RO":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"RS":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SE":{visited:true,territoryBadge:null,trips:[{date:"2023-09",with:null,note:null}]},"SG":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"SI":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SK":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"KR":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"ES":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CH":{visited:true,territoryBadge:null,trips:[{date:"2022-03",with:null,note:null}]},"TR":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"UA":{visited:true,territoryBadge:null,trips:[{date:"2021-08",with:null,note:null}]},"AE":{visited:true,territoryBadge:null,trips:[{date:"2023-12",with:null,note:null}]},"GB":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"US":{visited:true,territoryBadge:null,trips:[{date:"2021-09",with:null,note:null}]},"VA":{visited:true,territoryBadge:"Observer State",trips:[{date:"2023-06",with:null,note:null}]},"VN":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]}};
+
+/* ── Capital/centroid coordinates [lng, lat] for pin placement ──── */
+const CENTROIDS = {"AF":[67.7,33.9],"AL":[20.2,41.2],"DZ":[2.6,28.2],"AD":[1.6,42.5],"AO":[18.5,-11.8],"AR":[-65.2,-34.0],"AM":[44.9,40.3],"AU":[134.5,-25.7],"AT":[14.1,47.6],"AZ":[47.6,40.3],"BH":[50.6,26.1],"BD":[90.3,23.7],"BY":[28.0,53.5],"BE":[4.5,50.5],"BJ":[2.3,9.3],"BO":[-64.7,-16.7],"BA":[17.8,44.2],"BW":[24.7,-22.3],"BR":[-51.9,-14.2],"BN":[114.7,4.5],"BG":[25.5,42.8],"BF":[-1.7,12.4],"BI":[29.9,-3.4],"KH":[105.0,12.7],"CM":[12.4,4.7],"CA":[-96.8,60.3],"CF":[20.9,6.6],"TD":[18.7,15.5],"CL":[-71.6,-35.7],"CN":[104.2,35.9],"CO":[-74.3,4.1],"CD":[24.0,-2.9],"CG":[15.8,-0.7],"CR":[-84.2,9.9],"HR":[15.2,45.1],"CU":[-79.5,21.5],"CY":[33.1,35.0],"CZ":[15.5,49.8],"DK":[10.0,56.0],"DJ":[42.6,11.8],"DO":[-70.2,18.7],"EC":[-78.1,-1.8],"EG":[29.9,26.8],"SV":[-88.9,13.8],"ER":[39.1,15.2],"EE":[25.0,58.7],"ET":[40.5,9.1],"FJ":[178.1,-17.7],"FI":[26.3,64.6],"FR":[2.2,46.2],"GA":[11.6,-0.6],"GM":[-15.3,13.4],"GE":[43.4,42.2],"DE":[10.5,51.2],"GH":[-1.0,7.9],"GR":[22.0,39.1],"GT":[-90.4,15.8],"GN":[-11.3,11.0],"GW":[-14.9,12.1],"GY":[-58.9,4.9],"HT":[-72.3,18.9],"HN":[-86.6,14.9],"HU":[19.4,47.2],"IS":[-18.6,64.9],"IN":[79.1,22.9],"ID":[117.9,-2.5],"IR":[53.7,32.4],"IQ":[43.7,33.2],"IE":[-8.2,53.2],"IL":[34.8,31.4],"IT":[12.6,42.8],"JM":[-77.3,18.1],"JP":[138.3,37.5],"JO":[37.2,31.2],"KZ":[66.9,48.0],"KE":[37.9,0.5],"KW":[47.7,29.3],"KG":[74.6,41.5],"LA":[102.5,18.2],"LV":[25.3,56.9],"LB":[35.9,33.9],"LS":[28.2,-29.6],"LR":[-9.4,6.4],"LY":[17.2,27.1],"LT":[23.9,55.3],"LU":[6.1,49.8],"MG":[46.9,-19.4],"MW":[34.3,-13.2],"MY":[109.7,2.5],"MV":[73.3,3.2],"ML":[-2.0,17.6],"MT":[14.4,35.9],"MR":[-10.9,20.3],"MU":[57.6,-20.3],"MX":[-102.6,23.9],"MD":[28.5,47.4],"MC":[7.4,43.7],"MN":[103.8,46.9],"ME":[19.4,42.8],"MA":[-6.9,31.8],"MZ":[35.5,-18.7],"MM":[96.1,19.7],"NA":[18.5,-22.0],"NP":[84.2,28.4],"NL":[5.3,52.3],"NZ":[172.5,-42.0],"NI":[-85.0,12.9],"NE":[8.1,17.6],"NG":[8.7,9.1],"MK":[21.7,41.6],"NO":[8.5,64.5],"OM":[57.0,21.5],"PK":[69.3,30.4],"PS":[35.2,31.9],"PA":[-80.1,8.4],"PG":[145.0,-6.3],"PY":[-58.2,-23.2],"PE":[-75.0,-9.2],"PH":[122.9,12.9],"PL":[19.5,52.1],"PT":[-8.2,39.6],"QA":[51.2,25.4],"RO":[24.9,45.9],"RU":[96.7,61.5],"RW":[29.9,-2.0],"SM":[12.5,43.9],"SA":[45.1,24.2],"SN":[-14.5,14.5],"RS":[21.0,44.0],"SL":[-11.8,8.6],"SG":[103.8,1.4],"SK":[19.5,48.7],"SI":[14.8,46.1],"SO":[46.2,6.1],"ZA":[25.1,-29.0],"SS":[31.3,7.9],"ES":[-3.7,40.2],"LK":[80.7,7.9],"SD":[29.9,15.8],"SE":[18.6,60.1],"CH":[8.2,46.8],"SY":[38.5,35.0],"TW":[120.9,23.7],"TJ":[71.3,38.9],"TZ":[34.9,-6.4],"TH":[101.0,15.9],"TG":[1.2,8.7],"TT":[-61.2,10.4],"TN":[9.5,33.9],"TR":[35.2,38.9],"TM":[58.4,40.1],"UG":[32.3,1.4],"UA":[32.0,49.0],"AE":[53.8,23.7],"GB":[-3.2,54.7],"US":[-99.1,39.4],"UY":[-56.1,-32.8],"UZ":[63.1,41.4],"VA":[12.4,41.9],"VE":[-66.6,8.0],"VN":[107.0,16.6],"YE":[47.6,16.0],"ZM":[27.8,-13.1],"ZW":[29.9,-19.0],"KR":[127.8,36.4],"KP":[127.2,40.3],"XK":[20.9,42.6]};
 
 const visitedSet = new Set(Object.keys(VISITED).filter(k => VISITED[k].visited));
 document.getElementById('visited-count').textContent = visitedSet.size;
@@ -261,16 +302,16 @@ const map = new mapboxgl.Map({
   style: 'mapbox://styles/mapbox/satellite-v9',
   center: [15, 20],
   zoom: 2.2,
-  pitch: 50,
+  pitch: 0,        // flat top-down view
   bearing: 0,
   projection: 'mercator',
   antialias: true,
-  renderWorldCopies: true   // infinite east/west wrapping
+  renderWorldCopies: true
 });
 
 map.getCanvas().style.cursor = 'none';
 
-/* ── Pan limits: allow full east/west wrap, clamp latitude ──────── */
+/* ── Pan limits: clamp latitude, allow infinite east/west ─────────── */
 const LAT_MAX = 78;
 map.on('move', () => {
   const c = map.getCenter();
@@ -279,11 +320,20 @@ map.on('move', () => {
   }
 });
 
-map.on('style.load', () => {
-  // Flat light blue ocean
-  map.setPaintProperty('background', 'background-color', '#a8d4f5');
+/* ── Pin markers store ───────────────────────────────────────────── */
+const markers = {};
 
-  // Terrain DEM for relief exaggeration
+/* ── PIN SVG ─────────────────────────────────────────────────────── */
+const PIN_SVG = `<svg class="pin-marker" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 0C4.477 0 0 4.477 0 10c0 7.5 10 18 10 18S20 17.5 20 10C20 4.477 15.523 0 10 0z" fill="#e63946"/>
+  <circle cx="10" cy="10" r="4" fill="white" fill-opacity="0.9"/>
+</svg>`;
+
+map.on('style.load', () => {
+  // Light blue ocean background
+  map.setPaintProperty('background', 'background-color', '#b8d9f0');
+
+  // Terrain DEM
   map.addSource('mapbox-dem', {
     type: 'raster-dem',
     url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -292,58 +342,66 @@ map.on('style.load', () => {
   });
   map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
-  // ── Single-layer country rendering via Mapbox's own vector tileset ──
-  // mapbox.country-boundaries-v1 is pixel-perfect and perfectly registered
-  // to the satellite imagery — no GeoJSON overlay, no alignment issues.
-  const visitedList = [...visitedSet];
-
-  // Country fill — single layer, match expression drives visited/unvisited colour
+  // Invisible fill layer for hover hit-testing over all countries
   map.addLayer({
-    id: 'countries-fill',
+    id: 'countries-hit',
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
     paint: {
-      'fill-color': [
-        'case',
-        ['in', ['get', 'iso_3166_1'], ['literal', visitedList]],
-        'rgba(25, 70, 175, 0.45)',
-        'rgba(200, 184, 154, 0.52)'
-      ]
+      'fill-color': 'rgba(0,0,0,0)',
+      'fill-opacity': 0
     }
   });
 
-  // Country borders — single layer
-  map.addLayer({
-    id: 'countries-border',
-    type: 'line',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    paint: {
-      'line-color': [
-        'case',
-        ['in', ['get', 'iso_3166_1'], ['literal', visitedList]],
-        'rgba(100, 160, 255, 0.75)',
-        'rgba(160, 130, 90, 0.35)'
-      ],
-      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.4, 6, 1.2]
-    }
-  });
+  // Invisible border — keeps country outlines totally hidden
+  // (no line layer at all — borders are gone)
 
-  // ── Interactions ─────────────────────────────────────────────────
-  map.on('click', 'countries-fill', e => {
-    const iso2 = e.features[0].properties.iso_3166_1;
-    if (iso2) openDrawer(iso2);
-    else closeDrawer();
-  });
+  // ── Place red pins on visited countries ──────────────────────────
+  for (const iso2 of visitedSet) {
+    const coords = CENTROIDS[iso2];
+    if (!coords) continue;
+    const el = document.createElement('div');
+    el.innerHTML = PIN_SVG;
+    el.style.cssText = 'width:22px;height:28px;cursor:none;';
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      .setLngLat(coords)
+      .addTo(map);
+    markers[iso2] = marker;
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDrawer(iso2);
+    });
+    el.addEventListener('mouseenter', (e) => {
+      const name = S[iso2] ? S[iso2].n : iso2;
+      showTip(name, e.clientX, e.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('mousemove', (e) => {
+      const name = S[iso2] ? S[iso2].n : iso2;
+      showTip(name, e.clientX, e.clientY);
+    });
+  }
 
-  map.on('mousemove', 'countries-fill', e => {
+  // ── Country hover via invisible fill layer ─────────────────────
+  map.on('mousemove', 'countries-hit', e => {
     const iso2 = e.features[0].properties.iso_3166_1;
     const name = iso2 && S[iso2] ? S[iso2].n : (iso2 || null);
     if (name) showTip(name, e.originalEvent.clientX, e.originalEvent.clientY);
   });
+  map.on('mouseleave', 'countries-hit', hideTip);
 
-  map.on('mouseleave', 'countries-fill', hideTip);
+  // ── Click on country to open drawer ───────────────────────────
+  map.on('click', 'countries-hit', e => {
+    const iso2 = e.features[0].properties.iso_3166_1;
+    if (iso2) openDrawer(iso2);
+  });
+
+  // ── Click ocean (no feature) closes drawer ─────────────────────
+  map.on('click', e => {
+    const features = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
+    if (!features.length) closeDrawer();
+  });
 });
 
 /* ── Zoom buttons ─────────────────────────────────────────────────── */
@@ -373,22 +431,35 @@ document.getElementById('d-close').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
 /* ── Body builder ─────────────────────────────────────────────────── */
+const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="#ccc" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="#ccc" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="#ccc" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="#ccc" stroke-width="1"/></svg>`;
+const PPL_ICON = `<svg width="13" height="11" viewBox="0 0 13 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="4.5" cy="3" r="2" stroke="#ccc" stroke-width="1"/><path d="M0.5 10c0-2.21 1.79-4 4-4" stroke="#ccc" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="3" r="2" stroke="#ccc" stroke-width="1"/><path d="M12.5 10c0-2.21-1.79-4-4-4" stroke="#ccc" stroke-width="1" stroke-linecap="round"/></svg>`;
+
 function buildBody(iso2, st, cd) {
   const vis = cd.visited || false;
-  const row = (l, v) => `<tr><td>${esc(l)}</td><td>${v == null ? '<span class="stat-na">N/A</span>' : v}</td></tr>`;
-  let h = '<table class="stats-table">';
-  h += row('Capital', st.cap ? esc(st.cap) : null);
-  h += row('Population', st.pop != null ? fmtPop(st.pop) : null);
+
+  const srow = (label, value) => `
+    <div class="stat-row">
+      <div class="stat-label">${esc(label)}</div>
+      <div class="stat-value">${value == null ? '<span class="stat-na">N/A</span>' : value}</div>
+    </div>`;
+
   let gdpV = null;
   if (st.gdp != null) {
     gdpV = 'EUR ' + fmtNum(st.gdp);
-    if (st.gdpT != null) gdpV += ` <span style="color:#bbb;font-size:11px">(EUR ${st.gdpT.toFixed(1)} B total)</span>`;
+    if (st.gdpT != null) gdpV += ` <span class="stat-sub">(EUR ${st.gdpT.toFixed(1)} B total)</span>`;
   }
-  h += row('GDP per capita (nominal)', gdpV);
+
   const hdiInfo = `<span class="hdi-info">i<span class="hdi-tip"><strong>Human Development Index (HDI)</strong><br>A composite measure of life expectancy, education, and income per capita. Ranges from 0 to 1 (highest), published annually by the UN Development Programme.</span></span>`;
-  const hdiV = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) : null;
-  h += `<tr><td>HDI (rank)</td><td>${hdiV ?? '<span class="stat-na">N/A</span>'}${hdiInfo}</td></tr>`;
-  h += `</table><div class="stats-source">World Bank &amp; UNDP · ${STATS_DATE}</div>`;
+  const hdiV = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) + hdiInfo : null;
+
+  let h = `<div class="stats-grid">
+    ${srow('Capital', st.cap ? esc(st.cap) : null)}
+    ${srow('Population', st.pop != null ? fmtPop(st.pop) : null)}
+    ${srow('GDP per capita', gdpV)}
+    <div class="stat-row"><div class="stat-label">HDI (rank)</div><div class="stat-value">${hdiV ?? '<span class="stat-na">N/A</span>'}</div></div>
+  </div>`;
+  h += `<div class="stats-source">Source: World Bank &amp; UNDP &middot; ${STATS_DATE}</div>`;
+
   h += '<div class="trips-title">Trip Notes</div>';
   if (!vis) {
     h += '<div class="not-visited">Not visited yet</div>';
@@ -398,9 +469,10 @@ function buildBody(iso2, st, cd) {
       h += '<div class="db-empty">No trip notes yet.</div>';
     } else {
       [...trips].sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(t => {
-        h += '<div class="trip">';
-        if (t.date) h += `<div class="trip-date">${fmtDate(t.date)}</div>`;
-        if (t.with) h += `<div class="trip-with">With <strong>${esc(t.with)}</strong></div>`;
+        h += '<div class="trip"><div class="trip-meta">';
+        if (t.date) h += `<div class="trip-date">${CAL_ICON} ${fmtDate(t.date)}</div>`;
+        if (t.with) h += `<div class="trip-with">${PPL_ICON} <strong>${esc(t.with)}</strong></div>`;
+        h += '</div>';
         if (t.note) h += `<div class="trip-note">${esc(t.note)}</div>`;
         h += '</div>';
       });
