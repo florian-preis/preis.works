@@ -90,16 +90,16 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 }
 #drawer.open { transform:translateX(0); }
 
-/* Drawer header — flag + centered name */
+/* Drawer header — flag left, name vertically centered beside it */
 .dh {
-  padding:20px 20px 14px;
+  padding:16px 20px 14px;
   border-bottom:1px solid #f0f0f0;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-  position:relative;
+  display:flex; flex-direction:row; align-items:center; gap:13px;
+  position:relative; min-height:60px;
 }
-.dh-flag { width:48px; height:36px; object-fit:cover; border:1px solid rgba(0,0,0,0.07); flex-shrink:0; }
-.dh-text { text-align:center; }
-.dh-name { font-size:15px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#111; line-height:1.2; margin-bottom:5px; }
+.dh-flag { width:44px; height:33px; object-fit:cover; border:1px solid rgba(0,0,0,0.07); flex-shrink:0; }
+.dh-text { flex:1; min-width:0; }
+.dh-name { font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#111; line-height:1.2; margin-bottom:4px; }
 .dh-badge { display:inline-block; font-size:8px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#999; background:#f5f5f5; border:1px solid #eaeaea; padding:3px 7px; }
 .dh-close { position:absolute; top:14px; right:14px; width:28px; height:28px; background:none; border:none; cursor:none; font-size:20px; line-height:1; color:#ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; font-family:inherit; }
 .dh-close:hover { color:#333; }
@@ -152,8 +152,29 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 /* Red pin marker */
 .pin-marker {
-  width:22px; height:28px; cursor:none;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  width:10px; height:28px; cursor:none;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+}
+
+/* TITLE BANNER */
+#title-banner {
+  position:fixed; top:32px; left:32px; z-index:1000;
+  font-size:9px; font-weight:700; letter-spacing:0.32em; text-transform:uppercase;
+  color:rgba(26,45,69,0.45);
+  pointer-events:none;
+}
+
+/* Hint text */
+.p-hint {
+  margin-top:10px;
+  font-size:8.5px; letter-spacing:0.10em; text-transform:uppercase;
+  color:rgba(26,45,69,0.3); line-height:1.5;
+  text-align:center;
+}
+
+/* HDI info inline in label */
+.stat-label .hdi-info {
+  width:10px; height:10px; font-size:7px; margin-left:4px; border-color:#ddd;
 }
 
 @media (max-width:640px) {
@@ -173,6 +194,9 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 </div>
 
 <div id="loader">
+  <video id="loader-video" autoplay muted loop playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4;">
+    <source src="/assets/travel-loading.mp4" type="video/mp4">
+  </video>
   <div id="loader-content">
     <div id="loader-headline">Travel Diary</div>
     <div id="loader-track"><div id="loader-bar"></div></div>
@@ -181,6 +205,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 </div>
 
 <div id="map"></div>
+<div id="title-banner">Travel Diary</div>
 
 <div id="tooltip"></div>
 
@@ -196,20 +221,20 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   <div class="p-legend">
     <div class="legend-row">
       <div class="pin-swatch">
-        <svg width="10" height="14" viewBox="0 0 10 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" fill="#e63946"/>
-          <circle cx="5" cy="5" r="2" fill="white"/>
+        <svg width="6" height="14" viewBox="0 0 6 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="3" cy="3" r="2.5" fill="#e63946" stroke="white" stroke-width="0.7"/>
+          <line x1="3" y1="5" x2="3" y2="13.5" stroke="#999" stroke-width="1.1" stroke-linecap="round"/>
         </svg>
       </div>
-      Visited
+      Visited Countries
     </div>
-    <div class="legend-row" style="color:rgba(26,45,69,0.35)">— Not yet</div>
   </div>
   <div class="p-divider"></div>
   <div class="p-zoom">
     <button class="z-btn" id="z-in">+</button>
     <button class="z-btn" id="z-out">&#8722;</button>
   </div>
+  <div class="p-hint">Click any country for details</div>
 </div>
 
 <div id="drawer">
@@ -236,8 +261,8 @@ const S = {"AF":{"n":"Afghanistan","cap":"Kabul","pop":42239854,"gdp":338,"gdpT"
 /* ── ✏️  EDIT YOUR TRIPS HERE ─────────────────────────────────────── */
 const VISITED = {"AL":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"AU":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"AT":{visited:true,territoryBadge:null,trips:[{date:"2021-12",with:null,note:null}]},"BE":{visited:true,territoryBadge:null,trips:[{date:"2022-06",with:null,note:null}]},"BO":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"BA":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"BR":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"BG":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"CA":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"CN":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"CO":{visited:true,territoryBadge:null,trips:[{date:"2023-11",with:null,note:null}]},"CR":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"HR":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CU":{visited:true,territoryBadge:null,trips:[{date:"2020-02",with:null,note:null}]},"CZ":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"DK":{visited:true,territoryBadge:null,trips:[{date:"2023-05",with:null,note:null}]},"EG":{visited:true,territoryBadge:null,trips:[{date:"2023-03",with:null,note:null}]},"FR":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"DE":{visited:true,territoryBadge:null,trips:[{date:"2023-02",with:"Ellen",note:"First date weekend in Berlin."}]},"GR":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"HU":{visited:true,territoryBadge:null,trips:[{date:"2022-11",with:null,note:null}]},"IS":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"IN":{visited:true,territoryBadge:null,trips:[{date:"2019-12",with:null,note:null}]},"IE":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"IL":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"IT":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"JO":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"KE":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"XK":{visited:true,territoryBadge:"Partially Recognised",trips:[{date:"2023-07",with:null,note:null}]},"LV":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"MY":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"MX":{visited:true,territoryBadge:null,trips:[{date:"2024-03",with:null,note:null}]},"ME":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"MA":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"NA":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"NL":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"NZ":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"MK":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"NO":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"PA":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"PE":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"PH":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"PL":{visited:true,territoryBadge:null,trips:[{date:"2022-10",with:null,note:null}]},"PT":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"RO":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"RS":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SE":{visited:true,territoryBadge:null,trips:[{date:"2023-09",with:null,note:null}]},"SG":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"SI":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SK":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"KR":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"ES":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CH":{visited:true,territoryBadge:null,trips:[{date:"2022-03",with:null,note:null}]},"TR":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"UA":{visited:true,territoryBadge:null,trips:[{date:"2021-08",with:null,note:null}]},"AE":{visited:true,territoryBadge:null,trips:[{date:"2023-12",with:null,note:null}]},"GB":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"US":{visited:true,territoryBadge:null,trips:[{date:"2021-09",with:null,note:null}]},"VA":{visited:true,territoryBadge:"Observer State",trips:[{date:"2023-06",with:null,note:null}]},"VN":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]}};
 
-/* ── Capital/centroid coordinates [lng, lat] for pin placement ──── */
-const CENTROIDS = {"AF":[67.7,33.9],"AL":[20.2,41.2],"DZ":[2.6,28.2],"AD":[1.6,42.5],"AO":[18.5,-11.8],"AR":[-65.2,-34.0],"AM":[44.9,40.3],"AU":[134.5,-25.7],"AT":[14.1,47.6],"AZ":[47.6,40.3],"BH":[50.6,26.1],"BD":[90.3,23.7],"BY":[28.0,53.5],"BE":[4.5,50.5],"BJ":[2.3,9.3],"BO":[-64.7,-16.7],"BA":[17.8,44.2],"BW":[24.7,-22.3],"BR":[-51.9,-14.2],"BN":[114.7,4.5],"BG":[25.5,42.8],"BF":[-1.7,12.4],"BI":[29.9,-3.4],"KH":[105.0,12.7],"CM":[12.4,4.7],"CA":[-96.8,60.3],"CF":[20.9,6.6],"TD":[18.7,15.5],"CL":[-71.6,-35.7],"CN":[104.2,35.9],"CO":[-74.3,4.1],"CD":[24.0,-2.9],"CG":[15.8,-0.7],"CR":[-84.2,9.9],"HR":[15.2,45.1],"CU":[-79.5,21.5],"CY":[33.1,35.0],"CZ":[15.5,49.8],"DK":[10.0,56.0],"DJ":[42.6,11.8],"DO":[-70.2,18.7],"EC":[-78.1,-1.8],"EG":[29.9,26.8],"SV":[-88.9,13.8],"ER":[39.1,15.2],"EE":[25.0,58.7],"ET":[40.5,9.1],"FJ":[178.1,-17.7],"FI":[26.3,64.6],"FR":[2.2,46.2],"GA":[11.6,-0.6],"GM":[-15.3,13.4],"GE":[43.4,42.2],"DE":[10.5,51.2],"GH":[-1.0,7.9],"GR":[22.0,39.1],"GT":[-90.4,15.8],"GN":[-11.3,11.0],"GW":[-14.9,12.1],"GY":[-58.9,4.9],"HT":[-72.3,18.9],"HN":[-86.6,14.9],"HU":[19.4,47.2],"IS":[-18.6,64.9],"IN":[79.1,22.9],"ID":[117.9,-2.5],"IR":[53.7,32.4],"IQ":[43.7,33.2],"IE":[-8.2,53.2],"IL":[34.8,31.4],"IT":[12.6,42.8],"JM":[-77.3,18.1],"JP":[138.3,37.5],"JO":[37.2,31.2],"KZ":[66.9,48.0],"KE":[37.9,0.5],"KW":[47.7,29.3],"KG":[74.6,41.5],"LA":[102.5,18.2],"LV":[25.3,56.9],"LB":[35.9,33.9],"LS":[28.2,-29.6],"LR":[-9.4,6.4],"LY":[17.2,27.1],"LT":[23.9,55.3],"LU":[6.1,49.8],"MG":[46.9,-19.4],"MW":[34.3,-13.2],"MY":[109.7,2.5],"MV":[73.3,3.2],"ML":[-2.0,17.6],"MT":[14.4,35.9],"MR":[-10.9,20.3],"MU":[57.6,-20.3],"MX":[-102.6,23.9],"MD":[28.5,47.4],"MC":[7.4,43.7],"MN":[103.8,46.9],"ME":[19.4,42.8],"MA":[-6.9,31.8],"MZ":[35.5,-18.7],"MM":[96.1,19.7],"NA":[18.5,-22.0],"NP":[84.2,28.4],"NL":[5.3,52.3],"NZ":[172.5,-42.0],"NI":[-85.0,12.9],"NE":[8.1,17.6],"NG":[8.7,9.1],"MK":[21.7,41.6],"NO":[8.5,64.5],"OM":[57.0,21.5],"PK":[69.3,30.4],"PS":[35.2,31.9],"PA":[-80.1,8.4],"PG":[145.0,-6.3],"PY":[-58.2,-23.2],"PE":[-75.0,-9.2],"PH":[122.9,12.9],"PL":[19.5,52.1],"PT":[-8.2,39.6],"QA":[51.2,25.4],"RO":[24.9,45.9],"RU":[96.7,61.5],"RW":[29.9,-2.0],"SM":[12.5,43.9],"SA":[45.1,24.2],"SN":[-14.5,14.5],"RS":[21.0,44.0],"SL":[-11.8,8.6],"SG":[103.8,1.4],"SK":[19.5,48.7],"SI":[14.8,46.1],"SO":[46.2,6.1],"ZA":[25.1,-29.0],"SS":[31.3,7.9],"ES":[-3.7,40.2],"LK":[80.7,7.9],"SD":[29.9,15.8],"SE":[18.6,60.1],"CH":[8.2,46.8],"SY":[38.5,35.0],"TW":[120.9,23.7],"TJ":[71.3,38.9],"TZ":[34.9,-6.4],"TH":[101.0,15.9],"TG":[1.2,8.7],"TT":[-61.2,10.4],"TN":[9.5,33.9],"TR":[35.2,38.9],"TM":[58.4,40.1],"UG":[32.3,1.4],"UA":[32.0,49.0],"AE":[53.8,23.7],"GB":[-3.2,54.7],"US":[-99.1,39.4],"UY":[-56.1,-32.8],"UZ":[63.1,41.4],"VA":[12.4,41.9],"VE":[-66.6,8.0],"VN":[107.0,16.6],"YE":[47.6,16.0],"ZM":[27.8,-13.1],"ZW":[29.9,-19.0],"KR":[127.8,36.4],"KP":[127.2,40.3],"XK":[20.9,42.6]};
+/* ── Capital city coordinates [lng, lat] for pin placement ──────── */
+const CAPITALS = {"AF":[69.18,34.52],"AL":[19.82,41.33],"DZ":[3.06,36.75],"AD":[1.52,42.51],"AO":[13.23,-8.84],"AR":[-58.38,-34.60],"AM":[44.51,40.19],"AU":[149.13,-35.28],"AT":[16.37,48.21],"AZ":[49.87,40.41],"BH":[50.58,26.22],"BD":[90.41,23.71],"BY":[27.57,53.90],"BE":[4.35,50.85],"BJ":[2.32,6.37],"BO":[-68.15,-16.50],"BA":[18.41,43.86],"BW":[25.92,-24.63],"BR":[-47.93,-15.78],"BN":[114.93,4.94],"BG":[23.32,42.70],"BF":[-1.53,12.36],"BI":[29.36,-3.38],"KH":[104.92,11.56],"CM":[11.50,3.87],"CA":[-75.69,45.42],"CF":[18.56,4.36],"TD":[15.06,12.10],"CL":[-70.65,-33.45],"CN":[116.39,39.91],"CO":[-74.07,4.71],"CD":[15.27,-4.32],"CG":[15.28,-4.27],"CR":[-84.09,9.93],"HR":[15.98,45.82],"CU":[-82.37,23.11],"CY":[33.36,35.17],"CZ":[14.42,50.09],"DK":[12.57,55.68],"DJ":[43.15,11.58],"DO":[-69.89,18.49],"EC":[-78.50,-0.23],"EG":[31.24,30.04],"SV":[-89.22,13.69],"ER":[38.93,15.34],"EE":[24.75,59.44],"ET":[38.76,9.03],"FJ":[178.44,-18.14],"FI":[24.94,60.17],"FR":[2.35,48.85],"GA":[9.45,0.39],"GM":[-16.57,13.45],"GE":[44.79,41.69],"DE":[13.40,52.52],"GH":[-0.20,5.54],"GR":[23.73,37.98],"GT":[-90.53,14.64],"GN":[-13.68,9.54],"GW":[-15.18,11.86],"GY":[-58.15,6.80],"HT":[-72.33,18.54],"HN":[-87.21,14.08],"HU":[19.04,47.50],"IS":[-21.90,64.14],"IN":[77.21,28.61],"ID":[106.82,-6.21],"IR":[51.42,35.69],"IQ":[44.37,33.34],"IE":[-6.26,53.33],"IL":[35.21,31.77],"IT":[12.50,41.90],"JM":[-76.79,17.97],"JP":[139.69,35.69],"JO":[35.93,31.96],"KZ":[71.46,51.18],"KE":[36.82,-1.29],"KW":[47.98,29.37],"KG":[74.57,42.87],"LA":[102.60,17.97],"LV":[24.11,56.95],"LB":[35.50,33.89],"LS":[27.48,-29.32],"LR":[-10.80,6.30],"LY":[13.19,32.90],"LT":[25.28,54.69],"LU":[6.13,49.61],"MG":[47.52,-18.91],"MW":[33.77,-13.97],"MY":[101.69,3.15],"MV":[73.51,4.17],"ML":[-7.99,12.64],"MT":[14.51,35.90],"MR":[-15.98,18.09],"MU":[57.50,-20.17],"MX":[-99.13,19.43],"MD":[28.84,47.01],"MC":[7.41,43.74],"MN":[106.91,47.91],"ME":[19.26,42.43],"MA":[-6.85,33.99],"MZ":[32.59,-25.97],"MM":[96.16,19.76],"NA":[17.08,-22.56],"NP":[85.32,27.72],"NL":[4.90,52.37],"NZ":[174.76,-41.29],"NI":[-86.27,12.13],"NE":[2.11,13.51],"NG":[7.49,9.06],"MK":[21.43,41.99],"NO":[10.75,59.91],"OM":[58.38,23.60],"PK":[73.05,33.72],"PS":[35.20,31.90],"PA":[-79.52,8.99],"PG":[147.19,-9.44],"PY":[-57.64,-25.29],"PE":[-77.04,-12.04],"PH":[120.98,14.60],"PL":[21.01,52.23],"PT":[-9.14,38.72],"QA":[51.51,25.29],"RO":[26.11,44.43],"RU":[37.62,55.75],"RW":[30.06,-1.94],"SM":[12.46,43.94],"SA":[46.70,24.69],"SN":[-17.44,14.69],"RS":[20.47,44.82],"SL":[-13.23,8.47],"SG":[103.82,1.35],"SK":[17.11,48.15],"SI":[14.51,46.05],"SO":[45.32,2.05],"ZA":[28.19,-25.74],"SS":[31.57,4.85],"ES":[-3.68,40.42],"LK":[79.86,6.93],"SD":[32.53,15.55],"SE":[18.07,59.33],"CH":[7.45,46.95],"SY":[36.28,33.51],"TW":[121.57,25.04],"TJ":[68.77,38.55],"TZ":[35.75,-6.17],"TH":[100.50,13.75],"TG":[1.22,6.12],"TT":[-61.52,10.65],"TN":[10.18,36.81],"TR":[32.85,39.92],"TM":[58.38,37.96],"UG":[32.57,0.32],"UA":[30.52,50.45],"AE":[54.37,24.48],"GB":[-0.13,51.51],"US":[-77.04,38.91],"UY":[-56.19,-34.90],"UZ":[69.24,41.30],"VA":[12.45,41.90],"VE":[-66.88,10.48],"VN":[105.84,21.03],"YE":[44.21,15.35],"ZM":[28.29,-15.42],"ZW":[31.05,-17.83],"KR":[126.98,37.57],"KP":[125.74,39.02],"XK":[21.17,42.66]};
 
 const visitedSet = new Set(Object.keys(VISITED).filter(k => VISITED[k].visited));
 document.getElementById('visited-count').textContent = visitedSet.size;
@@ -324,9 +349,9 @@ map.on('move', () => {
 const markers = {};
 
 /* ── PIN SVG ─────────────────────────────────────────────────────── */
-const PIN_SVG = `<svg class="pin-marker" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M10 0C4.477 0 0 4.477 0 10c0 7.5 10 18 10 18S20 17.5 20 10C20 4.477 15.523 0 10 0z" fill="#e63946"/>
-  <circle cx="10" cy="10" r="4" fill="white" fill-opacity="0.9"/>
+const PIN_SVG = `<svg class="pin-marker" viewBox="0 0 10 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="5" cy="5" r="4.5" fill="#e63946" stroke="white" stroke-width="1"/>
+  <line x1="5" y1="9" x2="5" y2="27" stroke="#999" stroke-width="1.2" stroke-linecap="round"/>
 </svg>`;
 
 map.on('style.load', () => {
@@ -341,6 +366,29 @@ map.on('style.load', () => {
     maxzoom: 14
   });
   map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+  // Add water solid blue fill from Mapbox Streets vector tileset
+  map.addLayer({
+    id: 'water-solid',
+    type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
+    'source-layer': 'water',
+    paint: { 'fill-color': '#b8d9f0', 'fill-opacity': 1 }
+  });
+
+  // Mapbox built-in country borders from admin boundaries in streets tileset
+  map.addLayer({
+    id: 'admin-borders',
+    type: 'line',
+    source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
+    'source-layer': 'admin',
+    filter: ['==', ['get', 'admin_level'], 0],
+    paint: {
+      'line-color': 'rgba(80,80,80,0.35)',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.5, 6, 1.2],
+      'line-dasharray': [2, 0]
+    }
+  });
 
   // Invisible fill layer for hover hit-testing over all countries
   map.addLayer({
@@ -359,11 +407,11 @@ map.on('style.load', () => {
 
   // ── Place red pins on visited countries ──────────────────────────
   for (const iso2 of visitedSet) {
-    const coords = CENTROIDS[iso2];
+    const coords = CAPITALS[iso2];
     if (!coords) continue;
     const el = document.createElement('div');
     el.innerHTML = PIN_SVG;
-    el.style.cssText = 'width:22px;height:28px;cursor:none;';
+    el.style.cssText = 'width:10px;height:28px;cursor:none;';
     const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
       .setLngLat(coords)
       .addTo(map);
@@ -432,7 +480,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(
 
 /* ── Body builder ─────────────────────────────────────────────────── */
 const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="#ccc" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="#ccc" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="#ccc" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="#ccc" stroke-width="1"/></svg>`;
-const PPL_ICON = `<svg width="13" height="11" viewBox="0 0 13 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="4.5" cy="3" r="2" stroke="#ccc" stroke-width="1"/><path d="M0.5 10c0-2.21 1.79-4 4-4" stroke="#ccc" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="3" r="2" stroke="#ccc" stroke-width="1"/><path d="M12.5 10c0-2.21-1.79-4-4-4" stroke="#ccc" stroke-width="1" stroke-linecap="round"/></svg>`;
+const PPL_ICON = `<svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="2" stroke="#ccc" stroke-width="1"/><path d="M0.5 10c0-1.93 1.34-3.5 3-3.5s3 1.57 3 3.5" stroke="#ccc" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.5" stroke="#ccc" stroke-width="1"/><path d="M7.5 10c0-1.66 0.67-3 1.5-3s1.5 1.34 1.5 3" stroke="#ccc" stroke-width="1" stroke-linecap="round"/></svg>`;
 
 function buildBody(iso2, st, cd) {
   const vis = cd.visited || false;
@@ -445,18 +493,18 @@ function buildBody(iso2, st, cd) {
 
   let gdpV = null;
   if (st.gdp != null) {
-    gdpV = 'EUR ' + fmtNum(st.gdp);
-    if (st.gdpT != null) gdpV += ` <span class="stat-sub">(EUR ${st.gdpT.toFixed(1)} B total)</span>`;
+    gdpV = 'EUR ' + st.gdp.toLocaleString();
+    if (st.gdpT != null) gdpV += ` <span class="stat-sub">(EUR ${st.gdpT.toFixed(1)} B)</span>`;
   }
 
   const hdiInfo = `<span class="hdi-info">i<span class="hdi-tip"><strong>Human Development Index (HDI)</strong><br>A composite measure of life expectancy, education, and income per capita. Ranges from 0 to 1 (highest), published annually by the UN Development Programme.</span></span>`;
-  const hdiV = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) + hdiInfo : null;
+  const hdiV2 = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) : null;
 
   let h = `<div class="stats-grid">
     ${srow('Capital', st.cap ? esc(st.cap) : null)}
     ${srow('Population', st.pop != null ? fmtPop(st.pop) : null)}
-    ${srow('GDP per capita', gdpV)}
-    <div class="stat-row"><div class="stat-label">HDI (rank)</div><div class="stat-value">${hdiV ?? '<span class="stat-na">N/A</span>'}</div></div>
+    ${srow('GDP per capita (nominal)', gdpV)}
+    <div class="stat-row"><div class="stat-label">HDI (rank) ${hdiInfo}</div><div class="stat-value">${hdiV2 ?? '<span class="stat-na">N/A</span>'}</div></div>
   </div>`;
   h += `<div class="stats-source">Source: World Bank &amp; UNDP &middot; ${STATS_DATE}</div>`;
 
