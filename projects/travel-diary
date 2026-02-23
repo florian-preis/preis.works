@@ -141,7 +141,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 <div id="loader">
   <video id="loader-video" autoplay muted loop playsinline preload="auto">
-    <source src="assets/loading.mp4" type="video/mp4">
+    <source src="assets/travel-loading.mp4" type="video/mp4">
   </video>
   <div id="loader-content">
     <div id="loader-eyebrow">gowiththeflo</div>
