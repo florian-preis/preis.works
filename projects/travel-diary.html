@@ -889,7 +889,7 @@ map.on('style.load', () => {
       'fill-opacity': [
         'match', ['get', 'iso_3166_1'],
         [...visitedArr, 'AQ'], 0,
-        0.25
+        0.15
       ],
       'fill-antialias': true
     }
@@ -904,7 +904,7 @@ map.on('style.load', () => {
     'source-layer': 'admin',
     filter: BORDER_FILTER,
     paint: {
-      'line-color': '#cccccc',
+      'line-color': '#ffffff',
       'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.6, 4, 0.9, 8, 1.4],
       'line-blur': 0
     }
