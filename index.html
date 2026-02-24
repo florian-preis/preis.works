@@ -3,547 +3,426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Diary</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000'/%3E%3Cg transform='translate(3.5%2C3.5) scale(0.78)'%3E%3Cpath fill='%23ddd' stroke='%23555' stroke-width='0.6' d='M29.37%2C14.75%2C20%2C10V6a4%2C4%2C0%2C0%2C0-8%2C0v4L2.63%2C14.75a1%2C1%2C0%2C0%2C0-.63.93v5a1%2C1%2C0%2C0%2C0%2C1%2C1%2C1%2C1%2C0%2C0%2C0%2C.29-.05L12%2C18v5L8.55%2C24.72a1%2C1%2C0%2C0%2C0-.55.9V29a1%2C1%2C0%2C0%2C0%2C1%2C1%2C.9.9%2C0%2C0%2C0%2C.28%2C0L16%2C28l6.72%2C2A.9.9%2C0%2C0%2C0%2C23%2C30a1%2C1%2C0%2C0%2C0%2C1-1V25.62a1%2C1%2C0%2C0%2C0-.55-.9L20%2C23V18l8.71%2C3.61a1%2C1%2C0%2C0%2C0%2C.29.05%2C1%2C1%2C0%2C0%2C0%2C1-1v-5A1%2C1%2C0%2C0%2C0%2C29.37%2C14.75Z'/%3E%3C/g%3E%3C/svg%3E">
-<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.js"></script>
-<style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; background:#e8e0d8; }
-body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Florian Preis</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='white' letter-spacing='0.5'>FP</text></svg>">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* CURSOR */
-#cursor {
-  position:fixed; width:18px; height:18px; pointer-events:none; z-index:10000;
-  transform-origin:center; transform:translate(-50%,-50%) rotate(0deg);
-  will-change:transform;
-}
-#cursor svg { width:100%; height:100%; fill:#fff; stroke:#111; stroke-width:0.8px;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --muted: #888888;
+      --border: #e5e5e5;
+      --nav-h: 68px;
+      --max-w: 1500px;
+      --ham-stroke: 1.5px; /* hamburger & X line thickness */
+    }
 
-/* LOADER */
-#loader {
-  position:fixed; inset:0; z-index:9000; background:#0d1f35;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  transition:opacity 0.9s cubic-bezier(0.4,0,0.2,1);
-}
-#loader.out { opacity:0; pointer-events:none; }
-#loader-content {
-  position:relative; z-index:1; text-align:center;
-  display:inline-flex; flex-direction:column; align-items:stretch;
-  opacity:0; transform:translateY(14px); transition:opacity 0.7s ease, transform 0.7s ease;
-}
-#loader-content.show { opacity:1; transform:translateY(0); }
-#loader-headline { font-size:clamp(30px,5.5vw,60px); font-weight:300; letter-spacing:0.25em; text-transform:uppercase; color:#fff; line-height:1; margin-bottom:44px; white-space:nowrap; }
-#loader-track { height:1px; background:rgba(255,255,255,0.14); }
-#loader-bar { height:100%; width:0%; background:rgba(255,255,255,0.75); transition:width 60ms linear; }
-#loader-pct { margin-top:13px; font-size:10px; letter-spacing:0.2em; color:rgba(255,255,255,0.32); }
+    html { scroll-behavior: smooth; overscroll-behavior: none; }
 
-/* TOOLTIP */
-#tooltip {
-  position:fixed; pointer-events:none; z-index:8000;
-  background:rgba(10,20,35,0.88); color:#fff;
-  font-size:10px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase;
-  padding:6px 11px; white-space:nowrap;
-  opacity:0; transform:translateY(3px);
-  transition:opacity 0.1s ease, transform 0.1s ease;
-  box-shadow:0 2px 12px rgba(0,0,0,0.25);
-  border-radius:2px;
-}
-#tooltip.show { opacity:1; transform:translateY(0); }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-/* PANEL */
-#panel {
-  position:fixed; bottom:32px; left:32px; z-index:1000;
-  background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
-  border:1px solid rgba(0,0,0,0.08); padding:22px 24px; min-width:196px;
-  box-shadow:0 4px 24px rgba(0,0,0,0.10);
-  opacity:0; transform:translateY(6px); transition:opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
-}
-#panel.show { opacity:1; transform:translateY(0); }
-.p-count { font-size:30px; font-weight:300; letter-spacing:-0.03em; color:#1a2d45; line-height:1; display:flex; align-items:baseline; gap:4px; }
-.p-count-num { font-size:30px; }
-.p-count-denom { font-size:13px; color:rgba(26,45,69,0.4); font-weight:400; }
-.p-count-info { display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border-radius:50%; border:1px solid rgba(26,45,69,0.25); font-size:7px; color:rgba(26,45,69,0.4); cursor:default; position:relative; margin-left:2px; line-height:1; flex-shrink:0; }
-.p-count-info:hover .p-count-tip { opacity:1; pointer-events:auto; }
-.p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(20,30,50,0.96); color:#ccc; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 14px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); }
-.p-label { font-size:9px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(26,45,69,0.35); margin:4px 0 14px; }
-.p-legend { display:flex; flex-direction:row; align-items:center; gap:14px; margin-bottom:12px; }
-.legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(26,45,69,0.55); }
-.fog-swatch { width:16px; height:10px; border:1px solid rgba(0,0,0,0.15); flex-shrink:0; }
-.fog-visited { background: linear-gradient(135deg, #c8dba8 0%, #a8c878 40%, #78a858 100%); }
-.fog-unvisited { background:#1a1a2e; }
-.p-divider { height:1px; background:rgba(0,0,0,0.07); margin-bottom:10px; }
-.p-zoom { display:flex; gap:1px; }
-.z-btn { flex:1; height:26px; border:1px solid rgba(0,0,0,0.12); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(26,45,69,0.7); background:rgba(255,255,255,0.6); }
-.z-btn:hover { background:rgba(255,255,255,0.9); border-color:rgba(0,0,0,0.22); }
+    /* ══ NAVBAR ══ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--bg);
+      height: var(--nav-h);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
+                  border-color 0.45s,
+                  padding 0.45s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      justify-content: center;
+      padding: 0 52px;
+    }
+    .navbar.scrolled {
+      background: transparent;
+      border-bottom-color: transparent;
+      padding: 10px 52px;
+    }
+    .navbar-inner {
+      width: 100%;
+      max-width: calc(var(--max-w) - 104px);
+      padding: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0;
+      background: transparent;
+      transition: background 0.45s cubic-bezier(0.4,0,0.2,1),
+                  border-radius 0.45s cubic-bezier(0.4,0,0.2,1),
+                  padding 0.45s cubic-bezier(0.4,0,0.2,1),
+                  box-shadow 0.45s cubic-bezier(0.4,0,0.2,1),
+                  backdrop-filter 0.45s;
+    }
+    .navbar.scrolled .navbar-inner {
+      background: rgba(235,235,235,0.42);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border-radius: 50px;
+      padding: 12px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .logo {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .logo:hover { color: var(--muted); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: var(--text); }
 
-/* DRAWER */
-#drawer {
-  position:fixed; top:0; right:0; width:min(440px,100vw); height:100%; z-index:2000;
-  background:#fff;
-  border-left:1px solid rgba(0,0,0,0.06);
-  box-shadow:-4px 0 32px rgba(0,0,0,0.08);
-  transform:translateX(100%); transition:transform 0.42s cubic-bezier(0.4,0,0.2,1);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-#drawer.open { transform:translateX(0); }
+    /* ══ HAMBURGER ══ */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: var(--ham-stroke);
+      background: var(--text);
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      transform-origin: center;
+      border-radius: 1px;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
-/* Drawer header — flag left, name vertically centered beside it */
-.dh {
-  padding:16px 20px 14px;
-  border-bottom:1px solid #f0f0f0;
-  display:flex; flex-direction:row; align-items:center; gap:13px;
-  position:relative; min-height:60px;
-}
-.dh-flag { width:44px; height:33px; object-fit:cover; border:1px solid rgba(0,0,0,0.07); flex-shrink:0; }
-.dh-text { flex:1; min-width:0; }
-.dh-name { font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#111; line-height:1.2; margin-bottom:4px; }
-.dh-badge { display:inline-block; font-size:8px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#999; background:#f5f5f5; border:1px solid #eaeaea; padding:3px 7px; }
-.dh-close { position:absolute; top:14px; right:14px; width:28px; height:28px; background:none; border:none; cursor:none; font-size:20px; line-height:1; color:#ccc; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:color 0.15s; font-family:inherit; }
-.dh-close:hover { color:#333; }
+    /* ══ MOBILE DRAWER ══ */
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: var(--nav-h);
+      z-index: 999;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.15s;
+    }
+    .mobile-link:last-child { border-bottom: none; }
+    .mobile-link:hover,
+    .mobile-link.active { color: var(--text); }
 
-/* Drawer body */
-.db { flex:1; overflow-y:auto; padding:20px 24px 40px; }
-.db::-webkit-scrollbar { width:2px; }
-.db::-webkit-scrollbar-thumb { background:#e0e0e0; }
+    /* ══ ABOUT ══ */
+    .about-wrap {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 72px 52px 100px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 72px;
+      align-items: start;
+      flex: 1;
+    }
+    .about-photo-col { position: static; }
+    .about-photo {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    .about-text { padding-top: 4px; }
+    .about-text h1 {
+      font-size: 2.2em;
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      line-height: 1.1;
+    }
+    .about-subtitle {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .about-bio {
+      font-size: 14px;
+      line-height: 1.75;
+      color: #444;
+      margin-bottom: 52px;
+    }
+    .contact-block h2 {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+    .contact-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .contact-reveal { color: var(--text); text-decoration: none; }
+    .contact-reveal:hover { text-decoration: underline; }
 
-/* Stats grid — label left, value right, clean spacing */
-.stats-grid { display:grid; grid-template-columns:auto 1fr; gap:0; margin-bottom:20px; }
-.stat-row { display:contents; }
-.stat-label {
-  font-size:8px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase;
-  color:#c0c0c0; padding:7px 16px 7px 0; white-space:nowrap;
-  border-bottom:1px solid #f6f6f6; display:flex; align-items:center;
-}
-.stat-value {
-  font-size:13px; color:#222; font-weight:400; padding:7px 0;
-  border-bottom:1px solid #f6f6f6; line-height:1.4;
-}
-.stat-row:last-child .stat-label,
-.stat-row:last-child .stat-value { border-bottom:none; }
-.stat-na { color:#ddd; font-size:12px; }
-.stat-sub { color:#bbb; font-size:11px; }
+    /* ══ FOOTER ══ */
+    .site-footer {
+      position: relative;
+      width: 100%;
+      height: 58px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+      background: #d0cdc9;
+    }
+    .site-footer::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      opacity: 0.10;
+      animation: grainDrift 8s steps(10, end) infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes grainDrift {
+      0%   { transform: translate(0,    0);  }
+      10%  { transform: translate(-3%,  2%); }
+      20%  { transform: translate(2%,  -3%); }
+      30%  { transform: translate(-2%,  3%); }
+      40%  { transform: translate(3%,   1%); }
+      50%  { transform: translate(-1%, -2%); }
+      60%  { transform: translate(2%,   3%); }
+      70%  { transform: translate(-3%, -1%); }
+      80%  { transform: translate(1%,   2%); }
+      90%  { transform: translate(-2%,  0%); }
+      100% { transform: translate(0,    0);  }
+    }
+    .footer-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: var(--max-w);
+      padding: 0 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .footer-copy, .footer-social {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: #333;
+    }
+    .footer-social { display: flex; gap: 18px; align-items: center; }
+    .footer-social a {
+      color: #333;
+      display: flex;
+      align-items: center;
+      line-height: 0;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .footer-social a:hover { opacity: 1; }
+    .footer-social svg { width: 18px; height: 18px; }
 
-.hdi-info { display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:50%; border:1px solid #ddd; font-size:7.5px; color:#bbb; cursor:default; position:relative; line-height:1; flex-shrink:0; margin-left:5px; vertical-align:middle; }
-.hdi-info:hover .hdi-tip { opacity:1; pointer-events:auto; }
-.hdi-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:260px; background:#fff; color:#333; font-size:10.5px; line-height:1.6; padding:11px 13px; letter-spacing:0.01em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.13); border:1px solid #e0e0e0; white-space:normal; }
-
-.stats-source { font-size:8px; letter-spacing:0.10em; text-transform:uppercase; color:#e0e0e0; margin-bottom:20px; }
-
-.trips-title { font-size:8px; font-weight:700; letter-spacing:0.24em; text-transform:uppercase; color:#d0d0d0; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f2f2f2; }
-.trip { padding:10px 0; border-bottom:1px solid #f6f6f6; }
-.trip:last-child { border-bottom:none; }
-.trip-meta { display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap; }
-.trip-date { display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:#c0c0c0; }
-.trip-date svg { flex-shrink:0; }
-.trip-with { display:flex; align-items:center; gap:5px; font-size:10px; color:#c0c0c0; }
-.trip-with svg { flex-shrink:0; }
-.trip-with strong { color:#888; font-weight:500; }
-.trip-note { font-size:13px; line-height:1.65; color:#444; }
-.db-empty { font-size:11px; color:#d0d0d0; letter-spacing:0.1em; padding:8px 0; font-style:italic; }
-.not-visited { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:#d0d0d0; padding:8px 0; }
-
-/* MAP */
-#map { position:absolute; inset:0; width:100%; height:100%; }
-.mapboxgl-ctrl-logo { opacity:0.35 !important; }
-.mapboxgl-ctrl-attrib { font-size:9px !important; opacity:0.4 !important; }
-
-/* TITLE BANNER */
-#title-banner {
-  position:fixed; top:32px; left:32px; z-index:1000;
-  font-size:9px; font-weight:700; letter-spacing:0.32em; text-transform:uppercase;
-  color:rgba(26,45,69,0.45);
-  pointer-events:none;
-}
-
-/* Hint text */
-.p-hint {
-  margin-top:10px;
-  font-size:8.5px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,45,69,0.3); line-height:1.5;
-  text-align:center;
-}
-
-/* HDI info inline in label */
-.stat-label .hdi-info {
-  width:10px; height:10px; font-size:7px; margin-left:4px; border-color:#ddd;
-}
-
-@media (max-width:640px) {
-  #panel { bottom:20px; left:20px; padding:18px 20px; min-width:172px; }
-  #drawer { width:100vw; }
-}
-@media (hover:none) { body { cursor:auto; } #cursor { display:none; } }
-@media (prefers-reduced-motion:reduce) { *, *::before, *::after { transition-duration:0.01ms !important; } }
-</style>
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .navbar { padding: 0 20px; }
+      .navbar.scrolled { padding: 10px 20px; }
+      .navbar-inner { max-width: 100%; }
+      .about-wrap {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        padding: 40px 20px 80px;
+      }
+      .about-photo-col { position: static; }
+      .about-photo { max-width: 240px; }
+      .footer-inner { padding: 0 20px; }
+    }
+  </style>
 </head>
 <body>
 
-<div id="cursor">
-  <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-    <path d="M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z"/>
-  </svg>
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a class="logo" href="/">Florian Preis</a>
+    <ul class="nav-links">
+      <li><a href="/" class="active">About</a></li>
+      <li><a href="/photography">Photography</a></li>
+      <li><a href="/projects">Projects</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ MOBILE DRAWER ══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/" class="mobile-link active">About</a>
+  <a href="/photography" class="mobile-link">Photography</a>
+  <a href="/projects" class="mobile-link">Projects</a>
 </div>
 
-<div id="loader">
-  <video id="loader-video" autoplay muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4;">
-    <source src="/assets/travel-loading.mp4" type="video/mp4">
-  </video>
-  <div id="loader-content">
-    <div id="loader-headline">Travel Diary</div>
-    <div id="loader-track"><div id="loader-bar"></div></div>
-    <div id="loader-pct">0%</div>
+<!-- ══ ABOUT ══ -->
+<div class="about-wrap">
+  <div class="about-photo-col">
+    <img class="about-photo" src="/assets/florianpreis.jpg" alt="Florian Preis">
   </div>
-</div>
-
-<div id="map"></div>
-<div id="title-banner">Travel Diary</div>
-
-<div id="tooltip"></div>
-
-<div id="panel">
-  <div class="p-count">
-    <span class="p-count-num" id="visited-count">0</span>
-    <span class="p-count-denom">&thinsp;/ 197</span>
-    <span class="p-count-info">i
-      <span class="p-count-tip"><strong>Why 197?</strong><br>This count includes the 193 UN member states, plus Vatican City, Kosovo, Taiwan, and Palestine, territories widely recognised as countries despite varying levels of formal diplomatic status.</span>
-    </span>
-  </div>
-  <div class="p-label">Countries visited</div>
-  <div class="p-legend">
-    <div class="legend-row"><div class="fog-swatch fog-visited"></div>Visited</div>
-    <div class="legend-row"><div class="fog-swatch fog-unvisited"></div>Not yet</div>
-  </div>
-  <div class="p-divider"></div>
-  <div class="p-zoom">
-    <button class="z-btn" id="z-in">+</button>
-    <button class="z-btn" id="z-out">&#8722;</button>
-  </div>
-  <div class="p-hint">Click any country for details</div>
-</div>
-
-<div id="drawer">
-  <div class="dh">
-    <img class="dh-flag" id="d-flag" src="" alt="">
-    <div class="dh-text">
-      <div class="dh-name" id="d-name"></div>
-      <div id="d-badge"></div>
+  <div class="about-text">
+    <p class="about-bio">
+      Hi, I'm Florian.<br><br>
+      I work in life science consulting, supporting companies as they navigate strategic and operational challenges. I enjoy turning complexity into clear thinking and practical decisions.<br><br>
+      Outside of work, I'm curious about almost everything else. This site is home to side projects, photography, and the occasional deep dive into topics that capture my attention.<br><br>
+      Whether professional or personal, I tend to approach things the same way: Ask good questions, explore broadly, and build with intent.<br><br>
+      If you're here because of work, welcome. If you're here because of something I made, I'm glad you found it.
+    </p>
+    <div class="contact-block">
+      <h2>Contact</h2>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+        </svg>
+        <span id="contact-email"></span>
+      </div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.78 1.18 2 2 0 012.77 0h3a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/>
+        </svg>
+        <span id="contact-phone"></span>
+      </div>
+      <div class="contact-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#bbb">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        <a class="contact-reveal" href="https://www.linkedin.com/in/florianpreis/" target="_blank" rel="noopener">florianpreis</a>
+      </div>
     </div>
-    <button class="dh-close" id="d-close">&#215;</button>
   </div>
-  <div class="db" id="d-body"></div>
 </div>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="footer-copy" id="footerCopy"></span>
+    <div class="footer-social">
+      <a href="https://www.linkedin.com/in/florianpreis/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+      <a href="https://www.instagram.com/florianprice/" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
 
 <script>
-window.addEventListener('load', function() {
+/* ══ CONTACT — anti-spam ══ */
+const _c = { eu: 'hello', ed: 'preis.works', ph: '+4550', pn: '331370' };
 (function() {
-'use strict';
-
-/* ── Country stats ──────────────────────────────────────────────────── */
-const STATS_DATE = '2024';
-const S = {"AF":{"n":"Afghanistan","cap":"Kabul","pop":42239854,"gdp":338,"gdpT":14.58,"hdi":0.462,"hdiR":182},"AL":{"n":"Albania","cap":"Tirana","pop":2854191,"gdp":6494,"gdpT":18.7,"hdi":0.796,"hdiR":74},"DZ":{"n":"Algeria","cap":"Algiers","pop":46814308,"gdp":4217,"gdpT":197.6,"hdi":0.745,"hdiR":91},"AD":{"n":"Andorra","cap":"Andorra la Vella","pop":77543,"gdp":43047,"gdpT":3.33,"hdi":0.884,"hdiR":36},"AO":{"n":"Angola","cap":"Luanda","pop":36684202,"gdp":2756,"gdpT":101.1,"hdi":0.615,"hdiR":148},"AR":{"n":"Argentina","cap":"Buenos Aires","pop":46654581,"gdp":10878,"gdpT":507.3,"hdi":0.842,"hdiR":47},"AM":{"n":"Armenia","cap":"Yerevan","pop":2777970,"gdp":7262,"gdpT":20.18,"hdi":0.791,"hdiR":76},"AU":{"n":"Australia","cap":"Canberra","pop":26439111,"gdp":64491,"gdpT":1704.9,"hdi":0.946,"hdiR":10},"AT":{"n":"Austria","cap":"Vienna","pop":9132383,"gdp":56803,"gdpT":518.9,"hdi":0.926,"hdiR":22},"AZ":{"n":"Azerbaijan","cap":"Baku","pop":10412651,"gdp":6876,"gdpT":71.63,"hdi":0.76,"hdiR":89},"BH":{"n":"Bahrain","cap":"Manama","pop":1571569,"gdp":28350,"gdpT":44.56,"hdi":0.888,"hdiR":33},"BD":{"n":"Bangladesh","cap":"Dhaka","pop":172954319,"gdp":2688,"gdpT":465.1,"hdi":0.67,"hdiR":129},"BY":{"n":"Belarus","cap":"Minsk","pop":9408352,"gdp":7619,"gdpT":71.67,"hdi":0.801,"hdiR":69},"BE":{"n":"Belgium","cap":"Brussels","pop":11688762,"gdp":51765,"gdpT":605.0,"hdi":0.937,"hdiR":15},"BJ":{"n":"Benin","cap":"Porto-Novo","pop":13352864,"gdp":1374,"gdpT":18.35,"hdi":0.525,"hdiR":166},"BO":{"n":"Bolivia","cap":"Sucre","pop":12388571,"gdp":3459,"gdpT":42.84,"hdi":0.698,"hdiR":115},"BA":{"n":"Bosnia and Herzegovina","cap":"Sarajevo","pop":3210847,"gdp":7560,"gdpT":24.27,"hdi":0.78,"hdiR":82},"BW":{"n":"Botswana","cap":"Gaborone","pop":2630296,"gdp":7957,"gdpT":20.92,"hdi":0.693,"hdiR":116},"BR":{"n":"Brazil","cap":"Brasília","pop":215313498,"gdp":10075,"gdpT":2170.3,"hdi":0.76,"hdiR":87},"BN":{"n":"Brunei","cap":"Bandar Seri Begawan","pop":449002,"gdp":31449,"gdpT":14.12,"hdi":0.829,"hdiR":52},"BG":{"n":"Bulgaria","cap":"Sofia","pop":6465289,"gdp":14421,"gdpT":93.19,"hdi":0.799,"hdiR":72},"BF":{"n":"Burkina Faso","cap":"Ouagadougou","pop":22673762,"gdp":787,"gdpT":17.85,"hdi":0.449,"hdiR":184},"BI":{"n":"Burundi","cap":"Gitega","pop":13238559,"gdp":235,"gdpT":3.11,"hdi":0.426,"hdiR":187},"KH":{"n":"Cambodia","cap":"Phnom Penh","pop":17218682,"gdp":1763,"gdpT":30.35,"hdi":0.6,"hdiR":148},"CM":{"n":"Cameroon","cap":"Yaoundé","pop":28647293,"gdp":1544,"gdpT":44.22,"hdi":0.572,"hdiR":154},"CA":{"n":"Canada","cap":"Ottawa","pop":38930976,"gdp":54912,"gdpT":2139.9,"hdi":0.935,"hdiR":18},"CF":{"n":"Central African Republic","cap":"Bangui","pop":5579144,"gdp":468,"gdpT":2.61,"hdi":0.387,"hdiR":191},"TD":{"n":"Chad","cap":"N'Djamena","pop":18278568,"gdp":719,"gdpT":13.14,"hdi":0.394,"hdiR":190},"CL":{"n":"Chile","cap":"Santiago","pop":19629590,"gdp":16508,"gdpT":324.0,"hdi":0.86,"hdiR":44},"CN":{"n":"China","cap":"Beijing","pop":1412175000,"gdp":12540,"gdpT":17699.1,"hdi":0.788,"hdiR":75},"CO":{"n":"Colombia","cap":"Bogotá","pop":52215503,"gdp":7139,"gdpT":372.8,"hdi":0.758,"hdiR":91},"CD":{"n":"DR Congo","cap":"Kinshasa","pop":102262808,"gdp":572,"gdpT":58.49,"hdi":0.481,"hdiR":180},"CG":{"n":"Rep. of Congo","cap":"Brazzaville","pop":6142179,"gdp":2417,"gdpT":14.84,"hdi":0.6,"hdiR":149},"CR":{"n":"Costa Rica","cap":"San José","pop":5213374,"gdp":14632,"gdpT":76.28,"hdi":0.806,"hdiR":63},"HR":{"n":"Croatia","cap":"Zagreb","pop":3888529,"gdp":20491,"gdpT":79.66,"hdi":0.871,"hdiR":40},"CU":{"n":"Cuba","cap":"Havana","pop":11089511,"gdp":9433,"gdpT":107.4,"hdi":0.778,"hdiR":83},"CY":{"n":"Cyprus","cap":"Nicosia","pop":1260138,"gdp":33048,"gdpT":28.57,"hdi":0.896,"hdiR":27},"CZ":{"n":"Czechia","cap":"Prague","pop":10900555,"gdp":27779,"gdpT":302.9,"hdi":0.9,"hdiR":32},"DK":{"n":"Denmark","cap":"Copenhagen","pop":5910913,"gdp":66983,"gdpT":395.9,"hdi":0.952,"hdiR":7},"DJ":{"n":"Djibouti","cap":"Djibouti","pop":1120849,"gdp":2842,"gdpT":3.18,"hdi":0.524,"hdiR":166},"DO":{"n":"Dominican Republic","cap":"Santo Domingo","pop":11332972,"gdp":9991,"gdpT":113.3,"hdi":0.767,"hdiR":88},"EC":{"n":"Ecuador","cap":"Quito","pop":18001000,"gdp":6162,"gdpT":110.9,"hdi":0.765,"hdiR":89},"EG":{"n":"Egypt","cap":"Cairo","pop":105914499,"gdp":3699,"gdpT":391.9,"hdi":0.728,"hdiR":100},"SV":{"n":"El Salvador","cap":"San Salvador","pop":6364943,"gdp":4593,"gdpT":32.49,"hdi":0.675,"hdiR":124},"ER":{"n":"Eritrea","cap":"Asmara","pop":3748901,"gdp":639,"gdpT":2.39,"hdi":0.492,"hdiR":178},"EE":{"n":"Estonia","cap":"Tallinn","pop":1365884,"gdp":27944,"gdpT":38.16,"hdi":0.899,"hdiR":31},"ET":{"n":"Ethiopia","cap":"Addis Ababa","pop":126527060,"gdp":1007,"gdpT":127.4,"hdi":0.492,"hdiR":178},"FJ":{"n":"Fiji","cap":"Suva","pop":930748,"gdp":4905,"gdpT":4.56,"hdi":0.73,"hdiR":99},"FI":{"n":"Finland","cap":"Helsinki","pop":5604117,"gdp":53655,"gdpT":300.7,"hdi":0.942,"hdiR":12},"FR":{"n":"France","cap":"Paris","pop":68373433,"gdp":43658,"gdpT":2984.6,"hdi":0.91,"hdiR":28},"GA":{"n":"Gabon","cap":"Libreville","pop":2436566,"gdp":8479,"gdpT":20.65,"hdi":0.706,"hdiR":114},"GM":{"n":"Gambia","cap":"Banjul","pop":2773168,"gdp":826,"gdpT":2.29,"hdi":0.496,"hdiR":175},"GE":{"n":"Georgia","cap":"Tbilisi","pop":3728573,"gdp":6756,"gdpT":25.19,"hdi":0.802,"hdiR":71},"DE":{"n":"Germany","cap":"Berlin","pop":84552242,"gdp":51203,"gdpT":4329.3,"hdi":0.942,"hdiR":7},"GH":{"n":"Ghana","cap":"Accra","pop":33475870,"gdp":2305,"gdpT":77.19,"hdi":0.632,"hdiR":137},"GR":{"n":"Greece","cap":"Athens","pop":10413982,"gdp":22055,"gdpT":229.7,"hdi":0.893,"hdiR":32},"GT":{"n":"Guatemala","cap":"Guatemala City","pop":17843908,"gdp":5237,"gdpT":93.44,"hdi":0.627,"hdiR":138},"GN":{"n":"Guinea","cap":"Conakry","pop":13859341,"gdp":876,"gdpT":21.37,"hdi":0.465,"hdiR":181},"GW":{"n":"Guinea-Bissau","cap":"Bissau","pop":2069471,"gdp":800,"gdpT":1.65,"hdi":0.483,"hdiR":179},"GY":{"n":"Guyana","cap":"Georgetown","pop":813834,"gdp":20612,"gdpT":16.77,"hdi":0.742,"hdiR":94},"HT":{"n":"Haiti","cap":"Port-au-Prince","pop":11470261,"gdp":1601,"gdpT":20.64,"hdi":0.535,"hdiR":163},"HN":{"n":"Honduras","cap":"Tegucigalpa","pop":10593798,"gdp":2874,"gdpT":30.44,"hdi":0.621,"hdiR":140},"HU":{"n":"Hungary","cap":"Budapest","pop":9710882,"gdp":21365,"gdpT":207.5,"hdi":0.851,"hdiR":45},"IS":{"n":"Iceland","cap":"Reykjavik","pop":376248,"gdp":73191,"gdpT":27.55,"hdi":0.959,"hdiR":3},"IN":{"n":"India","cap":"New Delhi","pop":1428627663,"gdp":2485,"gdpT":3549.9,"hdi":0.633,"hdiR":134},"ID":{"n":"Indonesia","cap":"Jakarta","pop":277534122,"gdp":4919,"gdpT":1371.2,"hdi":0.713,"hdiR":108},"IR":{"n":"Iran","cap":"Tehran","pop":87923432,"gdp":4686,"gdpT":412.2,"hdi":0.774,"hdiR":78},"IQ":{"n":"Iraq","cap":"Baghdad","pop":43533592,"gdp":5851,"gdpT":264.8,"hdi":0.686,"hdiR":121},"IE":{"n":"Ireland","cap":"Dublin","pop":5123536,"gdp":102786,"gdpT":531.9,"hdi":0.95,"hdiR":8},"IL":{"n":"Israel","cap":"Jerusalem","pop":9174520,"gdp":54660,"gdpT":521.7,"hdi":0.919,"hdiR":22},"IT":{"n":"Italy","cap":"Rome","pop":58761146,"gdp":38056,"gdpT":2255.4,"hdi":0.906,"hdiR":30},"JM":{"n":"Jamaica","cap":"Kingston","pop":2825544,"gdp":6167,"gdpT":17.41,"hdi":0.706,"hdiR":114},"JP":{"n":"Japan","cap":"Tokyo","pop":123294513,"gdp":39313,"gdpT":4231.1,"hdi":0.92,"hdiR":24},"JO":{"n":"Jordan","cap":"Amman","pop":10265720,"gdp":4420,"gdpT":48.82,"hdi":0.729,"hdiR":96},"KZ":{"n":"Kazakhstan","cap":"Astana","pop":19397998,"gdp":10280,"gdpT":220.7,"hdi":0.802,"hdiR":67},"KE":{"n":"Kenya","cap":"Nairobi","pop":55100586,"gdp":2081,"gdpT":114.5,"hdi":0.601,"hdiR":148},"KW":{"n":"Kuwait","cap":"Kuwait City","pop":4310108,"gdp":32774,"gdpT":149.6,"hdi":0.847,"hdiR":52},"KG":{"n":"Kyrgyzstan","cap":"Bishkek","pop":6735347,"gdp":1332,"gdpT":10.36,"hdi":0.694,"hdiR":117},"LA":{"n":"Laos","cap":"Vientiane","pop":7633779,"gdp":2142,"gdpT":16.34,"hdi":0.62,"hdiR":140},"LV":{"n":"Latvia","cap":"Riga","pop":1830211,"gdp":23095,"gdpT":42.27,"hdi":0.879,"hdiR":39},"LB":{"n":"Lebanon","cap":"Beirut","pop":5489739,"gdp":4136,"gdpT":22.7,"hdi":0.723,"hdiR":101},"LS":{"n":"Lesotho","cap":"Maseru","pop":2330318,"gdp":1045,"gdpT":2.44,"hdi":0.514,"hdiR":169},"LR":{"n":"Liberia","cap":"Monrovia","pop":5418377,"gdp":675,"gdpT":3.66,"hdi":0.481,"hdiR":180},"LY":{"n":"Libya","cap":"Tripoli","pop":7252573,"gdp":8044,"gdpT":58.33,"hdi":0.718,"hdiR":104},"LT":{"n":"Lithuania","cap":"Vilnius","pop":2857279,"gdp":27103,"gdpT":77.43,"hdi":0.879,"hdiR":37},"LU":{"n":"Luxembourg","cap":"Luxembourg City","pop":672050,"gdp":131384,"gdpT":88.3,"hdi":0.927,"hdiR":21},"MG":{"n":"Madagascar","cap":"Antananarivo","pop":29611714,"gdp":522,"gdpT":15.45,"hdi":0.487,"hdiR":178},"MW":{"n":"Malawi","cap":"Lilongwe","pop":20405317,"gdp":553,"gdpT":12.9,"hdi":0.508,"hdiR":171},"MY":{"n":"Malaysia","cap":"Kuala Lumpur","pop":33573874,"gdp":13001,"gdpT":436.0,"hdi":0.803,"hdiR":62},"MV":{"n":"Maldives","cap":"Malé","pop":521021,"gdp":10427,"gdpT":6.62,"hdi":0.762,"hdiR":90},"ML":{"n":"Mali","cap":"Bamako","pop":22909700,"gdp":895,"gdpT":20.51,"hdi":0.41,"hdiR":188},"MT":{"n":"Malta","cap":"Valletta","pop":535064,"gdp":32034,"gdpT":22.59,"hdi":0.915,"hdiR":27},"MR":{"n":"Mauritania","cap":"Nouakchott","pop":4614974,"gdp":1810,"gdpT":8.35,"hdi":0.556,"hdiR":161},"MU":{"n":"Mauritius","cap":"Port Louis","pop":1261208,"gdp":12013,"gdpT":13.97,"hdi":0.796,"hdiR":65},"MX":{"n":"Mexico","cap":"Mexico City","pop":128455567,"gdp":11497,"gdpT":1476.6,"hdi":0.781,"hdiR":77},"MD":{"n":"Moldova","cap":"Chișinău","pop":3273300,"gdp":3673,"gdpT":15.38,"hdi":0.767,"hdiR":80},"MC":{"n":"Monaco","cap":"Monaco","pop":36469,"gdp":234317,"gdpT":8.55,"hdi":null,"hdiR":null},"MN":{"n":"Mongolia","cap":"Ulaanbaatar","pop":3398366,"gdp":4629,"gdpT":15.73,"hdi":0.737,"hdiR":96},"ME":{"n":"Montenegro","cap":"Podgorica","pop":626485,"gdp":10103,"gdpT":6.33,"hdi":0.844,"hdiR":49},"MA":{"n":"Morocco","cap":"Rabat","pop":37840044,"gdp":3853,"gdpT":141.1,"hdi":0.698,"hdiR":123},"MZ":{"n":"Mozambique","cap":"Maputo","pop":32790338,"gdp":565,"gdpT":18.54,"hdi":0.456,"hdiR":183},"MM":{"n":"Myanmar","cap":"Naypyidaw","pop":53411241,"gdp":1178,"gdpT":62.92,"hdi":0.585,"hdiR":149},"NA":{"n":"Namibia","cap":"Windhoek","pop":2604172,"gdp":5151,"gdpT":12.62,"hdi":0.615,"hdiR":139},"NP":{"n":"Nepal","cap":"Kathmandu","pop":30034989,"gdp":1337,"gdpT":40.16,"hdi":0.602,"hdiR":143},"NL":{"n":"Netherlands","cap":"Amsterdam","pop":17890000,"gdp":62007,"gdpT":1108.2,"hdi":0.941,"hdiR":11},"NZ":{"n":"New Zealand","cap":"Wellington","pop":5108800,"gdp":48782,"gdpT":249.2,"hdi":0.939,"hdiR":14},"NI":{"n":"Nicaragua","cap":"Managua","pop":6850540,"gdp":2194,"gdpT":15.03,"hdi":0.667,"hdiR":130},"NE":{"n":"Niger","cap":"Niamey","pop":25252723,"gdp":593,"gdpT":14.97,"hdi":0.394,"hdiR":189},"NG":{"n":"Nigeria","cap":"Abuja","pop":223804632,"gdp":2184,"gdpT":488.9,"hdi":0.535,"hdiR":163},"MK":{"n":"North Macedonia","cap":"Skopje","pop":2093599,"gdp":7552,"gdpT":15.81,"hdi":0.77,"hdiR":82},"NO":{"n":"Norway","cap":"Oslo","pop":5425270,"gdp":106149,"gdpT":579.5,"hdi":0.966,"hdiR":1},"OM":{"n":"Oman","cap":"Muscat","pop":4644384,"gdp":20159,"gdpT":104.9,"hdi":0.816,"hdiR":60},"PK":{"n":"Pakistan","cap":"Islamabad","pop":231402117,"gdp":1580,"gdpT":374.7,"hdi":0.544,"hdiR":161},"PS":{"n":"Palestine","cap":"Ramallah","pop":5250072,"gdp":3663,"gdpT":19.26,"hdi":0.715,"hdiR":null},"PA":{"n":"Panama","cap":"Panama City","pop":4351267,"gdp":16133,"gdpT":66.8,"hdi":0.805,"hdiR":64},"PG":{"n":"Papua New Guinea","cap":"Port Moresby","pop":10329931,"gdp":2848,"gdpT":29.42,"hdi":0.558,"hdiR":159},"PY":{"n":"Paraguay","cap":"Asunción","pop":7359215,"gdp":5745,"gdpT":42.26,"hdi":0.717,"hdiR":105},"PE":{"n":"Peru","cap":"Lima","pop":33359418,"gdp":7266,"gdpT":242.4,"hdi":0.762,"hdiR":87},"PH":{"n":"Philippines","cap":"Manila","pop":117337368,"gdp":3623,"gdpT":425.1,"hdi":0.71,"hdiR":113},"PL":{"n":"Poland","cap":"Warsaw","pop":36753736,"gdp":21001,"gdpT":771.8,"hdi":0.881,"hdiR":35},"PT":{"n":"Portugal","cap":"Lisbon","pop":10247605,"gdp":26090,"gdpT":267.4,"hdi":0.866,"hdiR":42},"QA":{"n":"Qatar","cap":"Doha","pop":2688235,"gdp":87661,"gdpT":235.5,"hdi":0.855,"hdiR":42},"RO":{"n":"Romania","cap":"Bucharest","pop":19031335,"gdp":17442,"gdpT":353.1,"hdi":0.827,"hdiR":55},"RU":{"n":"Russia","cap":"Moscow","pop":144236933,"gdp":15183,"gdpT":2240.4,"hdi":0.822,"hdiR":52},"RW":{"n":"Rwanda","cap":"Kigali","pop":13776698,"gdp":996,"gdpT":13.72,"hdi":0.534,"hdiR":165},"SM":{"n":"San Marino","cap":"City of San Marino","pop":34232,"gdp":64869,"gdpT":2.22,"hdi":null,"hdiR":null},"SA":{"n":"Saudi Arabia","cap":"Riyadh","pop":36408820,"gdp":26001,"gdpT":1061.8,"hdi":0.875,"hdiR":40},"SN":{"n":"Senegal","cap":"Dakar","pop":17763163,"gdp":1618,"gdpT":28.73,"hdi":0.511,"hdiR":170},"RS":{"n":"Serbia","cap":"Belgrade","pop":6646853,"gdp":10543,"gdpT":70.04,"hdi":0.805,"hdiR":65},"SL":{"n":"Sierra Leone","cap":"Freetown","pop":8791092,"gdp":480,"gdpT":4.22,"hdi":0.477,"hdiR":181},"SG":{"n":"Singapore","cap":"Singapore","pop":5917648,"gdp":84734,"gdpT":466.8,"hdi":0.939,"hdiR":9},"SK":{"n":"Slovakia","cap":"Bratislava","pop":5796618,"gdp":22024,"gdpT":127.7,"hdi":0.855,"hdiR":45},"SI":{"n":"Slovenia","cap":"Ljubljana","pop":2116792,"gdp":31773,"gdpT":67.24,"hdi":0.926,"hdiR":23},"SO":{"n":"Somalia","cap":"Mogadishu","pop":17065581,"gdp":522,"gdpT":8.91,"hdi":null,"hdiR":null},"ZA":{"n":"South Africa","cap":"Pretoria","pop":60414495,"gdp":6654,"gdpT":405.2,"hdi":0.717,"hdiR":108},"SS":{"n":"South Sudan","cap":"Juba","pop":10748272,"gdp":1013,"gdpT":10.89,"hdi":0.381,"hdiR":193},"ES":{"n":"Spain","cap":"Madrid","pop":47486935,"gdp":34044,"gdpT":1580.7,"hdi":0.905,"hdiR":30},"LK":{"n":"Sri Lanka","cap":"Colombo","pop":22156000,"gdp":3830,"gdpT":84.84,"hdi":0.78,"hdiR":73},"SD":{"n":"Sudan","cap":"Khartoum","pop":46874204,"gdp":762,"gdpT":35.74,"hdi":0.508,"hdiR":172},"SE":{"n":"Sweden","cap":"Stockholm","pop":10521556,"gdp":60170,"gdpT":593.3,"hdi":0.952,"hdiR":7},"CH":{"n":"Switzerland","cap":"Bern","pop":8738791,"gdp":98767,"gdpT":869.6,"hdi":0.962,"hdiR":2},"SY":{"n":"Syria","cap":"Damascus","pop":21324367,"gdp":657,"gdpT":14.0,"hdi":0.577,"hdiR":150},"TW":{"n":"Taiwan","cap":"Taipei","pop":23516442,"gdp":35513,"gdpT":760.2,"hdi":null,"hdiR":null},"TJ":{"n":"Tajikistan","cap":"Dushanbe","pop":10143543,"gdp":1149,"gdpT":11.64,"hdi":0.685,"hdiR":122},"TZ":{"n":"Tanzania","cap":"Dodoma","pop":65497748,"gdp":1101,"gdpT":79.16,"hdi":0.532,"hdiR":163},"TH":{"n":"Thailand","cap":"Bangkok","pop":71801279,"gdp":7099,"gdpT":500.1,"hdi":0.803,"hdiR":66},"TG":{"n":"Togo","cap":"Lomé","pop":8848699,"gdp":945,"gdpT":8.36,"hdi":0.547,"hdiR":162},"TT":{"n":"Trinidad and Tobago","cap":"Port of Spain","pop":1531044,"gdp":16722,"gdpT":25.52,"hdi":0.814,"hdiR":59},"TN":{"n":"Tunisia","cap":"Tunis","pop":12041317,"gdp":3939,"gdpT":45.82,"hdi":0.731,"hdiR":97},"TR":{"n":"Turkey","cap":"Ankara","pop":85326000,"gdp":10674,"gdpT":906.5,"hdi":0.838,"hdiR":45},"TM":{"n":"Turkmenistan","cap":"Ashgabat","pop":6117924,"gdp":8066,"gdpT":49.35,"hdi":0.745,"hdiR":97},"UG":{"n":"Uganda","cap":"Kampala","pop":48582334,"gdp":907,"gdpT":44.09,"hdi":0.55,"hdiR":159},"UA":{"n":"Ukraine","cap":"Kyiv","pop":44130000,"gdp":5340,"gdpT":160.5,"hdi":0.773,"hdiR":74},"AE":{"n":"United Arab Emirates","cap":"Abu Dhabi","pop":9770529,"gdp":47958,"gdpT":498.8,"hdi":0.911,"hdiR":26},"GB":{"n":"United Kingdom","cap":"London","pop":67791400,"gdp":46371,"gdpT":3131.4,"hdi":0.94,"hdiR":15},"US":{"n":"United States","cap":"Washington D.C.","pop":335893238,"gdp":80035,"gdpT":27360.9,"hdi":0.927,"hdiR":20},"UY":{"n":"Uruguay","cap":"Montevideo","pop":3423108,"gdp":22008,"gdpT":77.01,"hdi":0.83,"hdiR":58},"UZ":{"n":"Uzbekistan","cap":"Tashkent","pop":36950000,"gdp":2246,"gdpT":90.89,"hdi":0.727,"hdiR":100},"VA":{"n":"Vatican City","cap":"Vatican City","pop":800,"gdp":null,"gdpT":null,"hdi":null,"hdiR":null},"VE":{"n":"Venezuela","cap":"Caracas","pop":28838499,"gdp":4249,"gdpT":97.52,"hdi":0.754,"hdiR":113},"VN":{"n":"Vietnam","cap":"Hanoi","pop":98858950,"gdp":4316,"gdpT":449.1,"hdi":0.726,"hdiR":107},"YE":{"n":"Yemen","cap":"Sana'a","pop":34449825,"gdp":689,"gdpT":21.59,"hdi":0.452,"hdiR":183},"ZM":{"n":"Zambia","cap":"Lusaka","pop":20017675,"gdp":1221,"gdpT":28.47,"hdi":0.565,"hdiR":156},"ZW":{"n":"Zimbabwe","cap":"Harare","pop":16665409,"gdp":2085,"gdpT":34.75,"hdi":0.593,"hdiR":150},"KR":{"n":"South Korea","cap":"Seoul","pop":51740025,"gdp":32238,"gdpT":1709.2,"hdi":0.929,"hdiR":19},"KP":{"n":"North Korea","cap":"Pyongyang","pop":26069416,"gdp":1700,"gdpT":28.0,"hdi":null,"hdiR":null},"XK":{"n":"Kosovo","cap":"Pristina","pop":1775680,"gdp":5239,"gdpT":9.29,"hdi":0.762,"hdiR":null},"BT":{"n": "Bhutan", "cap": "Thimphu", "pop": 782455, "gdp": 3360, "gdpT": 2.53, "hdi": 0.681, "hdiR": 125}, "AG":{"n": "Antigua and Barbuda", "cap": "Saint John's", "pop": 93219, "gdp": 16866, "gdpT": 1.73, "hdi": 0.778, "hdiR": 72}, "BS":{"n": "Bahamas", "cap": "Nassau", "pop": 393248, "gdp": 27786, "gdpT": 13.56, "hdi": 0.812, "hdiR": 57}, "BB":{"n": "Barbados", "cap": "Bridgetown", "pop": 281200, "gdp": 17404, "gdpT": 5.56, "hdi": 0.809, "hdiR": 58}, "BZ":{"n": "Belize", "cap": "Belmopan", "pop": 400031, "gdp": 5614, "gdpT": 2.77, "hdi": 0.683, "hdiR": 109}, "CV":{"n": "Cape Verde", "cap": "Praia", "pop": 598682, "gdp": 3775, "gdpT": 2.44, "hdi": 0.662, "hdiR": 126}, "KM":{"n": "Comoros", "cap": "Moroni", "pop": 836774, "gdp": 1395, "gdpT": 1.35, "hdi": 0.558, "hdiR": 156}, "DM":{"n": "Dominica", "cap": "Roseau", "pop": 71986, "gdp": 7716, "gdpT": 0.6, "hdi": 0.72, "hdiR": 98}, "GQ":{"n": "Equatorial Guinea", "cap": "Malabo", "pop": 1468777, "gdp": 6736, "gdpT": 12.01, "hdi": 0.596, "hdiR": 145}, "SZ":{"n": "Eswatini", "cap": "Mbabane", "pop": 1201670, "gdp": 4242, "gdpT": 5.17, "hdi": 0.597, "hdiR": 144}, "GD":{"n": "Grenada", "cap": "Saint George's", "pop": 125438, "gdp": 10758, "gdpT": 1.39, "hdi": 0.773, "hdiR": 74}, "KI":{"n": "Kiribati", "cap": "South Tarawa", "pop": 119446, "gdp": 1700, "gdpT": 0.2, "hdi": 0.624, "hdiR": 132}, "LI":{"n": "Liechtenstein", "cap": "Vaduz", "pop": 38747, "gdp": 169990, "gdpT": 7.06, "hdi": null, "hdiR": null}, "MH":{"n": "Marshall Islands", "cap": "Majuro", "pop": 41569, "gdp": 3800, "gdpT": 0.28, "hdi": null, "hdiR": null}, "FM":{"n": "Micronesia", "cap": "Palikir", "pop": 115023, "gdp": 3584, "gdpT": 0.44, "hdi": 0.628, "hdiR": 130}, "NR":{"n": "Nauru", "cap": "Yaren", "pop": 10876, "gdp": 12000, "gdpT": 0.13, "hdi": null, "hdiR": null}, "PW":{"n": "Palau", "cap": "Ngerulmud", "pop": 18094, "gdp": 12706, "gdpT": 0.26, "hdi": 0.767, "hdiR": 76}, "KN":{"n": "Saint Kitts and Nevis", "cap": "Basseterre", "pop": 47657, "gdp": 19800, "gdpT": 1.1, "hdi": 0.777, "hdiR": 73}, "LC":{"n": "Saint Lucia", "cap": "Castries", "pop": 180251, "gdp": 11095, "gdpT": 2.23, "hdi": 0.715, "hdiR": 98}, "VC":{"n": "Saint Vincent and the Grenadines", "cap": "Kingstown", "pop": 110696, "gdp": 7770, "gdpT": 0.98, "hdi": 0.751, "hdiR": 91}, "WS":{"n": "Samoa", "cap": "Apia", "pop": 222382, "gdp": 3996, "gdpT": 0.92, "hdi": 0.707, "hdiR": 111}, "ST":{"n": "S\u00e3o Tom\u00e9 and Pr\u00edncipe", "cap": "S\u00e3o Tom\u00e9", "pop": 231856, "gdp": 2310, "gdpT": 0.58, "hdi": 0.618, "hdiR": 135}, "SC":{"n": "Seychelles", "cap": "Victoria", "pop": 107118, "gdp": 18470, "gdpT": 2.13, "hdi": 0.785, "hdiR": 69}, "SB":{"n": "Solomon Islands", "cap": "Honiara", "pop": 740424, "gdp": 2225, "gdpT": 1.6, "hdi": 0.567, "hdiR": 150}, "SR":{"n": "Suriname", "cap": "Paramaribo", "pop": 618040, "gdp": 6630, "gdpT": 4.26, "hdi": 0.73, "hdiR": 97}, "TL":{"n": "Timor-Leste", "cap": "Dili", "pop": 1341296, "gdp": 1965, "gdpT": 2.72, "hdi": 0.607, "hdiR": 140}, "TO":{"n": "Tonga", "cap": "Nuku'alofa", "pop": 104175, "gdp": 4534, "gdpT": 0.52, "hdi": 0.74, "hdiR": 94}, "TV":{"n": "Tuvalu", "cap": "Funafuti", "pop": 11931, "gdp": 6004, "gdpT": 0.06, "hdi": null, "hdiR": null}, "VU":{"n": "Vanuatu", "cap": "Port Vila", "pop": 334506, "gdp": 2960, "gdpT": 1.06, "hdi": 0.607, "hdiR": 140}, "AW":{"n": "Aruba"}, "AI":{"n": "Anguilla"}, "AX":{"n": "\u00c5land Islands"}, "AS":{"n": "American Samoa"}, "AN":{"n": "Netherlands Antilles"}, "AQ":{"n": "Antarctica"}, "BL":{"n": "Saint Barth\u00e9lemy"}, "BM":{"n": "Bermuda"}, "BQ":{"n": "Caribbean Netherlands"}, "BV":{"n": "Bouvet Island"}, "CC":{"n": "Cocos (Keeling) Islands"}, "CK":{"n": "Cook Islands"}, "CW":{"n": "Cura\u00e7ao"}, "CX":{"n": "Christmas Island"}, "EH":{"n": "Western Sahara"}, "FK":{"n": "Falkland Islands"}, "FO":{"n": "Faroe Islands"}, "GF":{"n": "French Guiana"}, "GG":{"n": "Guernsey"}, "GI":{"n": "Gibraltar"}, "GL":{"n": "Greenland"}, "GP":{"n": "Guadeloupe"}, "GS":{"n": "South Georgia and the South Sandwich Islands"}, "GU":{"n": "Guam"}, "HK":{"n": "Hong Kong"}, "HM":{"n": "Heard Island and McDonald Islands"}, "IM":{"n": "Isle of Man"}, "IO":{"n": "British Indian Ocean Territory"}, "JE":{"n": "Jersey"}, "KY":{"n": "Cayman Islands"}, "MF":{"n": "Saint Martin"}, "MO":{"n": "Macao"}, "MP":{"n": "Northern Mariana Islands"}, "MQ":{"n": "Martinique"}, "MS":{"n": "Montserrat"}, "NC":{"n": "New Caledonia"}, "NF":{"n": "Norfolk Island"}, "NU":{"n": "Niue"}, "PF":{"n": "French Polynesia"}, "PM":{"n": "Saint Pierre and Miquelon"}, "PN":{"n": "Pitcairn Islands"}, "PR":{"n": "Puerto Rico"}, "RE":{"n": "R\u00e9union"}, "SH":{"n": "Saint Helena, Ascension and Tristan da Cunha"}, "SJ":{"n": "Svalbard and Jan Mayen"}, "SX":{"n": "Sint Maarten"}, "TC":{"n": "Turks and Caicos Islands"}, "TF":{"n": "French Southern Territories"}, "TK":{"n": "Tokelau"}, "UM":{"n": "United States Minor Outlying Islands"}, "VG":{"n": "British Virgin Islands"}, "VI":{"n": "United States Virgin Islands"}, "WF":{"n": "Wallis and Futuna"}, "YT":{"n": "Mayotte"}};
-
-/* ── ✏️  EDIT YOUR TRIPS HERE ─────────────────────────────────────── */
-const VISITED = {"AL":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"AU":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"AT":{visited:true,territoryBadge:null,trips:[{date:"2021-12",with:null,note:null}]},"BE":{visited:true,territoryBadge:null,trips:[{date:"2022-06",with:null,note:null}]},"BO":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"BA":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"BR":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"BG":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"CA":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"CN":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"CO":{visited:true,territoryBadge:null,trips:[{date:"2023-11",with:null,note:null}]},"CR":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"HR":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CU":{visited:true,territoryBadge:null,trips:[{date:"2020-02",with:null,note:null}]},"CZ":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"DK":{visited:true,territoryBadge:null,trips:[{date:"2023-05",with:null,note:null}]},"EG":{visited:true,territoryBadge:null,trips:[{date:"2023-03",with:null,note:null}]},"FR":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"DE":{visited:true,territoryBadge:null,trips:[{date:"2023-02",with:"Ellen",note:"First date weekend in Berlin."}]},"GR":{visited:true,territoryBadge:null,trips:[{date:"2022-08",with:null,note:null}]},"HU":{visited:true,territoryBadge:null,trips:[{date:"2022-11",with:null,note:null}]},"IS":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"IN":{visited:true,territoryBadge:null,trips:[{date:"2019-12",with:null,note:null}]},"IE":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"IL":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"IT":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"JO":{visited:true,territoryBadge:null,trips:[{date:"2023-04",with:null,note:null}]},"KE":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"XK":{visited:true,territoryBadge:"Partially Recognised",trips:[{date:"2023-07",with:null,note:null}]},"LV":{visited:true,territoryBadge:null,trips:[{date:"2023-06",with:null,note:null}]},"MY":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"MX":{visited:true,territoryBadge:null,trips:[{date:"2024-03",with:null,note:null}]},"ME":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"MA":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"NA":{visited:true,territoryBadge:null,trips:[{date:"2024-01",with:null,note:null}]},"NL":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"NZ":{visited:true,territoryBadge:null,trips:[{date:"2022-01",with:null,note:null}]},"MK":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"NO":{visited:true,territoryBadge:null,trips:[{date:"2023-08",with:null,note:null}]},"PA":{visited:true,territoryBadge:null,trips:[{date:"2024-02",with:null,note:null}]},"PE":{visited:true,territoryBadge:null,trips:[{date:"2023-10",with:null,note:null}]},"PH":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"PL":{visited:true,territoryBadge:null,trips:[{date:"2022-10",with:null,note:null}]},"PT":{visited:true,territoryBadge:null,trips:[{date:"2022-05",with:null,note:null}]},"RO":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"RS":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SE":{visited:true,territoryBadge:null,trips:[{date:"2023-09",with:null,note:null}]},"SG":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]},"SI":{visited:true,territoryBadge:null,trips:[{date:"2023-07",with:null,note:null}]},"SK":{visited:true,territoryBadge:null,trips:[{date:"2021-06",with:null,note:null}]},"KR":{visited:true,territoryBadge:null,trips:[{date:"2019-11",with:null,note:null}]},"ES":{visited:true,territoryBadge:null,trips:[{date:"2022-07",with:null,note:null}]},"CH":{visited:true,territoryBadge:null,trips:[{date:"2022-03",with:null,note:null}]},"TR":{visited:true,territoryBadge:null,trips:[{date:"2022-09",with:null,note:null}]},"UA":{visited:true,territoryBadge:null,trips:[{date:"2021-08",with:null,note:null}]},"AE":{visited:true,territoryBadge:null,trips:[{date:"2023-12",with:null,note:null}]},"GB":{visited:true,territoryBadge:null,trips:[{date:"2022-04",with:null,note:null}]},"US":{visited:true,territoryBadge:null,trips:[{date:"2021-09",with:null,note:null}]},"VA":{visited:true,territoryBadge:"Observer State",trips:[{date:"2023-06",with:null,note:null}]},"VN":{visited:true,territoryBadge:null,trips:[{date:"2020-01",with:null,note:null}]}};
-
-/* ── Capital city coordinates [lng, lat] for pin placement ──────── */
-const CAPITALS = {"AF":[69.18,34.52],"AL":[19.82,41.33],"DZ":[3.06,36.75],"AD":[1.52,42.51],"AO":[13.23,-8.84],"AR":[-58.38,-34.60],"AM":[44.51,40.19],"AU":[149.13,-35.28],"AT":[16.37,48.21],"AZ":[49.87,40.41],"BH":[50.58,26.22],"BD":[90.41,23.71],"BY":[27.57,53.90],"BE":[4.35,50.85],"BJ":[2.32,6.37],"BO":[-68.15,-16.50],"BA":[18.41,43.86],"BW":[25.92,-24.63],"BR":[-47.93,-15.78],"BN":[114.93,4.94],"BG":[23.32,42.70],"BF":[-1.53,12.36],"BI":[29.36,-3.38],"KH":[104.92,11.56],"CM":[11.50,3.87],"CA":[-75.69,45.42],"CF":[18.56,4.36],"TD":[15.06,12.10],"CL":[-70.65,-33.45],"CN":[116.39,39.91],"CO":[-74.07,4.71],"CD":[15.27,-4.32],"CG":[15.28,-4.27],"CR":[-84.09,9.93],"HR":[15.98,45.82],"CU":[-82.37,23.11],"CY":[33.36,35.17],"CZ":[14.42,50.09],"DK":[12.57,55.68],"DJ":[43.15,11.58],"DO":[-69.89,18.49],"EC":[-78.50,-0.23],"EG":[31.24,30.04],"SV":[-89.22,13.69],"ER":[38.93,15.34],"EE":[24.75,59.44],"ET":[38.76,9.03],"FJ":[178.44,-18.14],"FI":[24.94,60.17],"FR":[2.35,48.85],"GA":[9.45,0.39],"GM":[-16.57,13.45],"GE":[44.79,41.69],"DE":[13.40,52.52],"GH":[-0.20,5.54],"GR":[23.73,37.98],"GT":[-90.53,14.64],"GN":[-13.68,9.54],"GW":[-15.18,11.86],"GY":[-58.15,6.80],"HT":[-72.33,18.54],"HN":[-87.21,14.08],"HU":[19.04,47.50],"IS":[-21.90,64.14],"IN":[77.21,28.61],"ID":[106.82,-6.21],"IR":[51.42,35.69],"IQ":[44.37,33.34],"IE":[-6.26,53.33],"IL":[35.21,31.77],"IT":[12.50,41.90],"JM":[-76.79,17.97],"JP":[139.69,35.69],"JO":[35.93,31.96],"KZ":[71.46,51.18],"KE":[36.82,-1.29],"KW":[47.98,29.37],"KG":[74.57,42.87],"LA":[102.60,17.97],"LV":[24.11,56.95],"LB":[35.50,33.89],"LS":[27.48,-29.32],"LR":[-10.80,6.30],"LY":[13.19,32.90],"LT":[25.28,54.69],"LU":[6.13,49.61],"MG":[47.52,-18.91],"MW":[33.77,-13.97],"MY":[101.69,3.15],"MV":[73.51,4.17],"ML":[-7.99,12.64],"MT":[14.51,35.90],"MR":[-15.98,18.09],"MU":[57.50,-20.17],"MX":[-99.13,19.43],"MD":[28.84,47.01],"MC":[7.41,43.74],"MN":[106.91,47.91],"ME":[19.26,42.43],"MA":[-6.85,33.99],"MZ":[32.59,-25.97],"MM":[96.16,19.76],"NA":[17.08,-22.56],"NP":[85.32,27.72],"NL":[4.90,52.37],"NZ":[174.76,-41.29],"NI":[-86.27,12.13],"NE":[2.11,13.51],"NG":[7.49,9.06],"MK":[21.43,41.99],"NO":[10.75,59.91],"OM":[58.38,23.60],"PK":[73.05,33.72],"PS":[35.20,31.90],"PA":[-79.52,8.99],"PG":[147.19,-9.44],"PY":[-57.64,-25.29],"PE":[-77.04,-12.04],"PH":[120.98,14.60],"PL":[21.01,52.23],"PT":[-9.14,38.72],"QA":[51.51,25.29],"RO":[26.11,44.43],"RU":[37.62,55.75],"RW":[30.06,-1.94],"SM":[12.46,43.94],"SA":[46.70,24.69],"SN":[-17.44,14.69],"RS":[20.47,44.82],"SL":[-13.23,8.47],"SG":[103.82,1.35],"SK":[17.11,48.15],"SI":[14.51,46.05],"SO":[45.32,2.05],"ZA":[28.19,-25.74],"SS":[31.57,4.85],"ES":[-3.68,40.42],"LK":[79.86,6.93],"SD":[32.53,15.55],"SE":[18.07,59.33],"CH":[7.45,46.95],"SY":[36.28,33.51],"TW":[121.57,25.04],"TJ":[68.77,38.55],"TZ":[35.75,-6.17],"TH":[100.50,13.75],"TG":[1.22,6.12],"TT":[-61.52,10.65],"TN":[10.18,36.81],"TR":[32.85,39.92],"TM":[58.38,37.96],"UG":[32.57,0.32],"UA":[30.52,50.45],"AE":[54.37,24.48],"GB":[-0.13,51.51],"US":[-77.04,38.91],"UY":[-56.19,-34.90],"UZ":[69.24,41.30],"VA":[12.45,41.90],"VE":[-66.88,10.48],"VN":[105.84,21.03],"YE":[44.21,15.35],"ZM":[28.29,-15.42],"ZW":[31.05,-17.83],"KR":[126.98,37.57],"KP":[125.74,39.02],"XK":[21.17,42.66],"BT":[89.64, 27.47], "AG":[-61.85, 17.12], "BS":[-77.35, 25.04], "BB":[-59.62, 13.1], "BZ":[-88.77, 17.25], "CV":[-23.51, 14.93], "KM":[43.26, -11.7], "DM":[-61.39, 15.3], "GQ":[8.78, 3.75], "SZ":[31.13, -26.32], "GD":[-61.75, 12.05], "KI":[172.98, 1.33], "LI":[9.52, 47.14], "MH":[171.38, 7.09], "FM":[158.15, 6.92], "NR":[166.92, -0.55], "PW":[134.62, 7.5], "KN":[-62.72, 17.3], "LC":[-61.0, 14.0], "VC":[-61.2, 13.16], "WS":[-171.77, -13.82], "ST":[6.73, 0.34], "SC":[55.45, -4.62], "SB":[159.95, -9.43], "SR":[-55.17, 5.85], "TL":[125.58, -8.56], "TO":[-175.22, -21.14], "TV":[179.21, -8.52], "VU":[168.32, -17.73]};
-
-const visitedSet = new Set(Object.keys(VISITED).filter(k => VISITED[k].visited));
-document.getElementById('visited-count').textContent = visitedSet.size;
-
-/* ── Loader ───────────────────────────────────────────────────────── */
-const $loader = document.getElementById('loader');
-const $loaderVideo = document.getElementById('loader-video');
-let loaderDone = false;
-
-function showApp() {
-  if (loaderDone) return;
-  loaderDone = true;
-  $loader.classList.add('out');
-  document.getElementById('panel').classList.add('show');
-  setTimeout(() => $loader.style.display = 'none', 1000);
-}
-
-function startProgressBar(videoDuration) {
-  // Bar completes at 88% of video duration, then holds at 100% until video ends
-  const barDuration = videoDuration * 0.88 * 1000;
-  const $bar = document.getElementById('loader-bar');
-  const $pct = document.getElementById('loader-pct');
-  const $content = document.getElementById('loader-content');
-  const hl = document.getElementById('loader-headline');
-  const track = document.getElementById('loader-track');
-  if (hl && track) track.style.width = hl.offsetWidth + 'px';
-  $content.classList.add('show');
-  let t0 = null;
-  (function tick(ts) {
-    if (!t0) t0 = ts;
-    const p = Math.min((ts - t0) / barDuration, 1);
-    const n = Math.round(p * 100);
-    $bar.style.width = n + '%';
-    $pct.textContent = n + '%';
-    if (p < 1) requestAnimationFrame(tick);
-  })(performance.now());
-}
-
-$loaderVideo.addEventListener('loadedmetadata', () => {
-  startProgressBar($loaderVideo.duration);
-});
-if ($loaderVideo.readyState >= 1 && $loaderVideo.duration) {
-  startProgressBar($loaderVideo.duration);
-}
-
-// Video ends → transition immediately without looping
-$loaderVideo.addEventListener('ended', showApp);
-
-// Fallback if video never loads
-setTimeout(() => { if (!loaderDone) showApp(); }, 8000);
-
-/* ── Cursor ───────────────────────────────────────────────────────── */
-const $cur = document.getElementById('cursor');
-let cx = -200, cy = -200, lx = cx, ly = cy, targetAngle = 0, curAngle = 0;
-document.addEventListener('mousemove', e => {
-  const dx = e.clientX - lx, dy = e.clientY - ly;
-  if (Math.hypot(dx, dy) > 1.5) targetAngle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
-  lx = cx = e.clientX; ly = cy = e.clientY;
-});
-(function animCur() {
-  let d = ((targetAngle - curAngle + 540) % 360) - 180;
-  curAngle += d * 0.14;
-  $cur.style.cssText = `left:${cx}px;top:${cy}px;transform:translate(-50%,-50%) rotate(${curAngle}deg)`;
-  requestAnimationFrame(animCur);
+  const emailEl = document.getElementById('contact-email');
+  if (emailEl) {
+    const addr = _c.eu + '@' + _c.ed;
+    const a = document.createElement('a');
+    a.className = 'contact-reveal';
+    a.textContent = addr;
+    setTimeout(() => { a.href = 'mai' + 'lto:' + addr; }, 400);
+    emailEl.appendChild(a);
+  }
+  const phoneEl = document.getElementById('contact-phone');
+  if (phoneEl) {
+    const a = document.createElement('a');
+    a.className = 'contact-reveal';
+    a.textContent = '+45 50 33 13 70';
+    setTimeout(() => { a.href = 'tel:' + _c.ph + _c.pn; }, 400);
+    phoneEl.appendChild(a);
+  }
 })();
 
-/* ── Tooltip ──────────────────────────────────────────────────────── */
-const $tip = document.getElementById('tooltip');
-function showTip(name, x, y) {
-  $tip.textContent = name.toUpperCase();
-  $tip.classList.add('show');
-  const tw = $tip.offsetWidth;
-  $tip.style.left = Math.min(x + 18, window.innerWidth - tw - 10) + 'px';
-  $tip.style.top = Math.max(y - 14, 8) + 'px';
-}
-function hideTip() { $tip.classList.remove('show'); }
-
-/* ── Mapbox GL init ───────────────────────────────────────────────── */
-mapboxgl.accessToken = 'pk.eyJ1IjoiZmxvcmlhbi1wcmVpcyIsImEiOiJjbWx6N2R4OGYwM2d0M2Rxd2N0ZXpneWV0In0.zCOmy2UhKRILSM9DKXy5Lw';
-
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/outdoors-v12',
-  center: [15, 20],
-  zoom: 2.2,
-  pitch: 0,        // flat top-down view
-  bearing: 0,
-  projection: 'mercator',
-  antialias: true,
-  renderWorldCopies: true
-});
-
-map.getCanvas().style.cursor = 'none';
-
-/* ── Pan limits: clamp latitude, allow infinite east/west ─────────── */
-const LAT_MAX = 78;
-map.on('move', () => {
-  const c = map.getCenter();
-  if (Math.abs(c.lat) > LAT_MAX) {
-    map.setCenter([c.lng, Math.sign(c.lat) * LAT_MAX]);
-  }
-});
-
-map.on('style.load', () => {
-  const visitedArr = [...visitedSet];
-  const BORDER_FILTER = ['all',
-    ['==', ['get', 'admin_level'], 0],
-    ['!=', ['get', 'maritime'], 'true'],
-    ['!=', ['get', 'maritime'], true]
-  ];
-
-  // ── Satellite imagery source (for visited countries only) ────────────
-
-
-  // Step 3: dark overlay covering unvisited countries (restores dark-v11 look)
-  // Use a slightly transparent fill so dark-v11 roads/labels still faintly show
-  map.addLayer({
-    id: 'unvisited-dark',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    paint: {
-      'fill-color': '#1a1a2e',
-      'fill-opacity': [
-        'match', ['get', 'iso_3166_1'],
-        visitedArr, 0,
-        0.91
-      ],
-      'fill-antialias': true
-    }
-  });
-
-  // ── Border layers — visible against both dark and satellite ──────────
-  // White casing (drawn first)
-  map.addLayer({
-    id: 'admin-borders-white',
-    type: 'line',
-    source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
-    'source-layer': 'admin',
-    filter: BORDER_FILTER,
-    paint: {
-      'line-color': 'rgba(255,255,255,0.6)',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.4, 4, 3.6, 8, 5.2],
-      'line-blur': 0
-    }
-  });
-  // Dark centre line (drawn on top)
-  map.addLayer({
-    id: 'admin-borders',
-    type: 'line',
-    source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
-    'source-layer': 'admin',
-    filter: BORDER_FILTER,
-    paint: {
-      'line-color': 'rgba(40,40,40,0.9)',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.8, 4, 1.3, 8, 2.0],
-      'line-blur': 0
-    }
-  });
-
-  // ── Hit-test layer (invisible, topmost) ──────────────────────────────
-  map.addLayer({
-    id: 'countries-hit',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    paint: { 'fill-color': 'rgba(0,0,0,0)', 'fill-opacity': 0 }
-  });
-
-
-  // ── Country hover via invisible fill layer ─────────────────────
-  map.on('mousemove', 'countries-hit', e => {
-    const iso2 = e.features[0].properties.iso_3166_1;
-    const name = iso2 && S[iso2] ? S[iso2].n : (iso2 || null);
-    if (name) showTip(name, e.originalEvent.clientX, e.originalEvent.clientY);
-  });
-  map.on('mouseleave', 'countries-hit', hideTip);
-
-  // ── Click on country to open drawer ───────────────────────────
-  map.on('click', 'countries-hit', e => {
-    const iso2 = e.features[0].properties.iso_3166_1;
-    if (iso2) openDrawer(iso2);
-  });
-
-  // ── Click ocean (no feature) closes drawer ─────────────────────
-  map.on('click', e => {
-    const features = map.queryRenderedFeatures(e.point, { layers: ['countries-hit'] });
-    if (!features.length) closeDrawer();
-  });
-});
-
-/* ── Zoom buttons ─────────────────────────────────────────────────── */
-document.getElementById('z-in').addEventListener('click', () => {
-  map.easeTo({ zoom: Math.min(map.getZoom() + 1, 10), duration: 400 });
-});
-document.getElementById('z-out').addEventListener('click', () => {
-  map.easeTo({ zoom: Math.max(map.getZoom() - 1, 1), duration: 400 });
-});
-
-/* ── Drawer ───────────────────────────────────────────────────────── */
-function openDrawer(iso2) {
-  const st = S[iso2] || {}, cd = VISITED[iso2] || {};
-  const name = st.n || iso2;
-  document.getElementById('d-name').textContent = name.toUpperCase();
-  const bdg = cd.territoryBadge;
-  document.getElementById('d-badge').innerHTML = bdg ? `<span class="dh-badge">${esc(bdg)}</span>` : '';
-  const flag = document.getElementById('d-flag');
-  flag.src = `https://flagcdn.com/w80/${iso2.toLowerCase()}.png`;
-  flag.onerror = () => flag.style.display = 'none';
-  flag.style.display = '';
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('d-body').innerHTML = buildBody(iso2, st, cd);
-}
-function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
-document.getElementById('d-close').addEventListener('click', closeDrawer);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
-
-/* ── Body builder ─────────────────────────────────────────────────── */
-const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="#ccc" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="#ccc" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="#ccc" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="#ccc" stroke-width="1"/></svg>`;
-const PPL_ICON = `<svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="2" stroke="#ccc" stroke-width="1"/><path d="M0.5 10c0-1.93 1.34-3.5 3-3.5s3 1.57 3 3.5" stroke="#ccc" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.5" stroke="#ccc" stroke-width="1"/><path d="M7.5 10c0-1.66 0.67-3 1.5-3s1.5 1.34 1.5 3" stroke="#ccc" stroke-width="1" stroke-linecap="round"/></svg>`;
-
-function buildBody(iso2, st, cd) {
-  const vis = cd.visited || false;
-
-  const srow = (label, value) => `
-    <div class="stat-row">
-      <div class="stat-label">${esc(label)}</div>
-      <div class="stat-value">${value == null ? '<span class="stat-na">N/A</span>' : value}</div>
-    </div>`;
-
-  let gdpV = null;
-  if (st.gdp != null) {
-    gdpV = 'EUR ' + st.gdp.toLocaleString();
-    if (st.gdpT != null) gdpV += ` (EUR ${st.gdpT.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1})} B)`;
-  }
-
-  const hdiInfo = `<span class="hdi-info">i<span class="hdi-tip"><strong>Human Development Index (HDI)</strong><br>A composite measure of life expectancy, education, and income per capita. Ranges from 0 to 1 (highest), published annually by the UN Development Programme.</span></span>`;
-  const hdiV2 = st.hdi != null ? esc(st.hdi.toFixed(3) + (st.hdiR != null ? ` (${st.hdiR}/197)` : '')) : null;
-
-  let h = `<div class="stats-grid">
-    ${srow('Capital', st.cap ? esc(st.cap) : null)}
-    ${srow('Population', st.pop != null ? fmtPop(st.pop) : null)}
-    ${srow('GDP per capita (nominal)', gdpV)}
-    <div class="stat-row"><div class="stat-label">HDI (rank) ${hdiInfo}</div><div class="stat-value">${hdiV2 ?? '<span class="stat-na">N/A</span>'}</div></div>
-  </div>`;
-  h += `<div class="stats-source">Source: World Bank &amp; UNDP &middot; ${STATS_DATE}</div>`;
-
-  h += '<div class="trips-title">Trip Notes</div>';
-  if (!vis) {
-    h += '<div class="not-visited">Not visited yet</div>';
-  } else {
-    const trips = (cd.trips || []).filter(t => t.date || t.note);
-    if (!trips.length) {
-      h += '<div class="db-empty">No trip notes yet.</div>';
-    } else {
-      [...trips].sort((a,b) => (b.date||'').localeCompare(a.date||'')).forEach(t => {
-        h += '<div class="trip"><div class="trip-meta">';
-        if (t.date) h += `<div class="trip-date">${CAL_ICON} ${fmtDate(t.date)}</div>`;
-        if (t.with) h += `<div class="trip-with">${PPL_ICON} <strong>${esc(t.with)}</strong></div>`;
-        h += '</div>';
-        if (t.note) h += `<div class="trip-note">${esc(t.note)}</div>`;
-        h += '</div>';
+/* ══ NAVBAR PILL ══ */
+(function() {
+  const nav = document.getElementById('navbar');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        nav.classList.toggle('scrolled', window.scrollY > 1);
+        ticking = false;
       });
+      ticking = true;
     }
-  }
-  return h;
-}
-
-/* ── Helpers ──────────────────────────────────────────────────────── */
-const MO = ['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-function fmtDate(d) { const [y,m] = d.split('-'); return (m && MO[+m]) ? MO[+m]+' '+y : y; }
-function fmtPop(n) {
-  if (n>=1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,'')+' B';
-  if (n>=1e6) return (n/1e6).toFixed(1).replace(/\.?0+$/,'')+' M';
-  if (n>=1e3) return Math.round(n/1e3)+' K';
-  return String(n);
-}
-function fmtNum(n) {
-  if (n>=1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'')+' M';
-  if (n>=1e3) return Math.round(n/1e3).toLocaleString();
-  return n.toLocaleString();
-}
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-/* ── Touch ────────────────────────────────────────────────────────── */
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  $cur.style.display = 'none';
-  document.body.style.cursor = 'auto';
-}
-
+  });
 })();
-}); // end window.addEventListener('load')
+
+/* ══ HAMBURGER ══ */
+(function() {
+  const btn  = document.getElementById('hamburger');
+  const menu = document.getElementById('mobileMenu');
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    btn.classList.toggle('open');
+    menu.classList.toggle('open');
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#navbar') && !e.target.closest('#mobileMenu')) {
+      btn.classList.remove('open');
+      menu.classList.remove('open');
+    }
+  });
+})();
+
+/* ══ FOOTER YEAR ══ */
+document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' Florian Preis';
 </script>
 </body>
 </html>
