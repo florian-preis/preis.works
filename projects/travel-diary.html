@@ -885,7 +885,7 @@ map.on('style.load', () => {
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
     paint: {
-      'fill-color': '#ffffff',
+      'fill-color': '#000000',
       'fill-opacity': [
         'match', ['get', 'iso_3166_1'],
         [...visitedArr, 'AQ'], 0,
@@ -904,7 +904,7 @@ map.on('style.load', () => {
     'source-layer': 'admin',
     filter: BORDER_FILTER,
     paint: {
-      'line-color': '#ffffff',
+      'line-color': '#cccccc',
       'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.6, 4, 0.9, 8, 1.4],
       'line-blur': 0
     }
