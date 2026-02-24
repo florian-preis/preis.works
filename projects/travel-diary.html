@@ -100,7 +100,9 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   display:flex; flex-direction:row; align-items:center; gap:13px;
   position:relative;
 }
-.dh-flag { width:44px; height:33px; object-fit:cover; border:1px solid rgba(0,0,0,0.1); flex-shrink:0; border-radius:3px; }
+.dh-flag-wrap { width:52px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.dh-flag { max-width:52px; max-height:40px; width:auto; height:auto; object-fit:contain; display:block; border-radius:2px; }
+.dh-flag.flag-rect { border:1px solid rgba(0,0,0,0.1); }
 .dh-text { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }
 .dh-name { font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#111; line-height:1.2; }
 .dh-badge { display:inline-block; font-size:8px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#777; background:rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.1); padding:3px 7px; border-radius:3px; margin-top:4px; align-self:flex-start; }
@@ -229,7 +231,9 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 <div id="drawer">
   <div class="dh">
-    <img class="dh-flag" id="d-flag" src="" alt="">
+    <div class="dh-flag-wrap">
+      <img class="dh-flag flag-rect" id="d-flag" src="" alt="">
+    </div>
     <div class="dh-text">
       <div class="dh-name" id="d-name"></div>
       <div id="d-badge"></div>
@@ -878,8 +882,25 @@ map.on('style.load', () => {
   // ── Satellite imagery source (for visited countries only) ────────────
 
 
-  // Step 3: dark overlay covering unvisited countries (restores dark-v11 look)
-  // Use a slightly transparent fill so dark-v11 roads/labels still faintly show
+  // ── Grayscale unvisited countries: white bleach layer strips colour ──
+  // Layer 1: strong white fill to bleach out the map colours underneath
+  map.addLayer({
+    id: 'unvisited-bleach',
+    type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries',
+    filter: ['==', ['get', 'worldview'], 'all'],
+    paint: {
+      'fill-color': '#ffffff',
+      'fill-opacity': [
+        'match', ['get', 'iso_3166_1'],
+        [...visitedArr, 'AQ'], 0,
+        0.82
+      ],
+      'fill-antialias': true
+    }
+  });
+  // Layer 2: subtle dark tint to restore contrast/depth after bleaching
   map.addLayer({
     id: 'unvisited-dark',
     type: 'fill',
@@ -891,7 +912,7 @@ map.on('style.load', () => {
       'fill-opacity': [
         'match', ['get', 'iso_3166_1'],
         [...visitedArr, 'AQ'], 0,
-        0.15
+        0.08
       ],
       'fill-antialias': true
     }
@@ -965,6 +986,9 @@ document.getElementById('z-out').addEventListener('click', () => {
 });
 
 /* ── Drawer ───────────────────────────────────────────────────────── */
+// Flags that are NOT standard rectangles — no border box for these
+const NON_RECT_FLAGS = new Set(['CH','NP']);
+
 function openDrawer(iso2) {
   const st = S[iso2] || {}, cd = VISITED[iso2] || {};
   const name = st.n || iso2;
@@ -975,6 +999,12 @@ function openDrawer(iso2) {
   flag.src = `https://flagcdn.com/w80/${iso2.toLowerCase()}.png`;
   flag.onerror = () => flag.style.display = 'none';
   flag.style.display = '';
+  // Remove rect border for non-rectangular flags (Switzerland, Nepal)
+  if (NON_RECT_FLAGS.has(iso2)) {
+    flag.classList.remove('flag-rect');
+  } else {
+    flag.classList.add('flag-rect');
+  }
   document.getElementById('drawer').classList.add('open');
   document.getElementById('d-body').innerHTML = buildBody(iso2, st, cd);
 }
