@@ -128,7 +128,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 .hdi-info { display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; border-radius:50%; border:1px solid #ddd; font-size:7.5px; color:#bbb; cursor:default; position:relative; line-height:1; flex-shrink:0; margin-left:5px; vertical-align:middle; }
 .hdi-info:hover .hdi-tip { opacity:1; pointer-events:auto; }
-.hdi-tip { position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%); width:200px; background:#fff; color:#333; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.10); border:1px solid #eee; }
+.hdi-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:260px; background:#fff; color:#333; font-size:10.5px; line-height:1.6; padding:11px 13px; letter-spacing:0.01em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.13); border:1px solid #e0e0e0; white-space:normal; }
 
 .stats-source { font-size:8px; letter-spacing:0.10em; text-transform:uppercase; color:#e0e0e0; margin-bottom:20px; }
 
@@ -395,10 +395,10 @@ map.on('style.load', () => {
     paint: { 'fill-color': '#a8d5d1', 'fill-opacity': 1 }
   });
 
-  // Mapbox built-in country borders from admin boundaries in streets tileset
-  // Border casing — white halo so lines read against both light and dark surfaces
+  // Country borders — three consistent layers, no blur, works on all surface colours
+  // 1. White flanking edges (widest, drawn first)
   map.addLayer({
-    id: 'admin-borders-casing',
+    id: 'admin-borders-white',
     type: 'line',
     source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
     'source-layer': 'admin',
@@ -408,13 +408,13 @@ map.on('style.load', () => {
       ['!=', ['get', 'maritime'], true]
     ],
     paint: {
-      'line-color': 'rgba(255, 255, 255, 0.55)',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.2, 4, 3.5, 8, 5.0],
-      'line-blur': 1.5
+      'line-color': 'rgba(255,255,255,0.82)',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.4, 4, 3.6, 8, 5.2],
+      'line-blur': 0
     }
   });
 
-  // Border line — dark stroke on top of the white casing
+  // 2. Dark grey centre line (narrower, drawn on top)
   map.addLayer({
     id: 'admin-borders',
     type: 'line',
@@ -426,8 +426,8 @@ map.on('style.load', () => {
       ['!=', ['get', 'maritime'], true]
     ],
     paint: {
-      'line-color': 'rgba(40, 40, 40, 0.85)',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.8, 4, 1.5, 8, 2.2],
+      'line-color': 'rgba(45,45,45,0.92)',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.8, 4, 1.3, 8, 2.0],
       'line-blur': 0
     }
   });
@@ -536,7 +536,7 @@ function buildBody(iso2, st, cd) {
   let gdpV = null;
   if (st.gdp != null) {
     gdpV = 'EUR ' + st.gdp.toLocaleString();
-    if (st.gdpT != null) gdpV += ` <span class="stat-sub">(EUR ${st.gdpT.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1})} B total)</span>`;
+    if (st.gdpT != null) gdpV += ` (EUR ${st.gdpT.toLocaleString(undefined, {minimumFractionDigits:1, maximumFractionDigits:1})} B)`;
   }
 
   const hdiInfo = `<span class="hdi-info">i<span class="hdi-tip"><strong>Human Development Index (HDI)</strong><br>A composite measure of life expectancy, education, and income per capita. Ranges from 0 to 1 (highest), published annually by the UN Development Programme.</span></span>`;
