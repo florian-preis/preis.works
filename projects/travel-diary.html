@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/mapbox-gl@3.5.1/dist/mapbox-gl.js"></script>
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; background:#0d1f35; }
+html, body { width:100%; height:100%; overflow:hidden; background:#0a0a14; }
 body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 
 /* CURSOR */
@@ -74,8 +74,8 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .p-legend { display:flex; flex-direction:row; align-items:center; gap:14px; margin-bottom:12px; }
 .legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(26,45,69,0.55); }
 .fog-swatch { width:16px; height:10px; border:1px solid rgba(0,0,0,0.15); flex-shrink:0; }
-.fog-visited { background:rgba(180,210,180,0.18); }
-.fog-unvisited { background:rgba(12,12,24,0.68); }
+.fog-visited { background: linear-gradient(135deg, #3a5a3a 0%, #6b8f5e 50%, #8b7355 100%); }
+.fog-unvisited { background:#0a0a14; }
 .p-divider { height:1px; background:rgba(0,0,0,0.07); margin-bottom:10px; }
 .p-zoom { display:flex; gap:1px; }
 .z-btn { flex:1; height:26px; border:1px solid rgba(0,0,0,0.12); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(26,45,69,0.7); background:rgba(255,255,255,0.6); }
@@ -172,6 +172,9 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .stat-label .hdi-info {
   width:10px; height:10px; font-size:7px; margin-left:4px; border-color:#ddd;
 }
+
+/* Pin marker */
+.pin-marker { width:10px; height:28px; cursor:none; }
 
 @media (max-width:640px) {
   #panel { bottom:20px; left:20px; padding:18px 20px; min-width:172px; }
@@ -334,7 +337,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZmxvcmlhbi1wcmVpcyIsImEiOiJjbWx6N2R4OGYwM2d0M
 
 const map = new mapboxgl.Map({
   container: 'map',
-  style: 'mapbox://styles/mapbox/satellite-v9',
+  style: 'mapbox://styles/mapbox/dark-v11',
   center: [15, 20],
   zoom: 2.2,
   pitch: 0,        // flat top-down view
@@ -356,95 +359,120 @@ map.on('move', () => {
 });
 
 map.on('style.load', () => {
-  // Terrain DEM
-  map.addSource('mapbox-dem', {
-    type: 'raster-dem',
-    url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-    tileSize: 512,
-    maxzoom: 14
-  });
-  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+  const visitedArr = [...visitedSet];
+  const BORDER_FILTER = ['all',
+    ['==', ['get', 'admin_level'], 0],
+    ['!=', ['get', 'maritime'], 'true'],
+    ['!=', ['get', 'maritime'], true]
+  ];
 
-  // Light turquoise fill — only ocean & sea, leave inland water as satellite imagery
+  // ── Satellite imagery source (for visited countries only) ────────────
+  map.addSource('satellite', {
+    type: 'raster',
+    url: 'mapbox://mapbox.satellite',
+    tileSize: 256
+  });
+
+  // ── Satellite fill clipped to visited country shapes ────────────────
+  // Step 1: fill visited countries white (creates the clip mask shape)
   map.addLayer({
-    id: 'water-fill',
+    id: 'visited-mask',
     type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
-    'source-layer': 'water',
-    filter: ['in', ['get', 'class'], ['literal', ['ocean', 'sea']]],
-    paint: { 'fill-color': '#a8d5d1', 'fill-opacity': 1 }
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries',
+    paint: {
+      'fill-color': '#ffffff',
+      'fill-opacity': [
+        'match', ['get', 'iso_3166_1'],
+        visitedArr, 1,
+        0
+      ]
+    }
   });
 
-  // Country borders — three consistent layers, no blur, works on all surface colours
-  // 1. White flanking edges (widest, drawn first)
+  // Step 2: satellite raster on top, but use fill-opacity trick —
+  // we can't clip a raster to polygons in GL JS directly, so instead:
+  // paint satellite EVERYWHERE then paint dark-v11's own dark fill over
+  // unvisited countries to "hide" the satellite under them.
+  map.addLayer({ id: 'satellite-overlay', type: 'raster', source: 'satellite', paint: { 'raster-opacity': 1 } });
+
+  // Step 3: dark overlay covering unvisited countries (restores dark-v11 look)
+  // Use a slightly transparent fill so dark-v11 roads/labels still faintly show
+  map.addLayer({
+    id: 'unvisited-dark',
+    type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries',
+    paint: {
+      'fill-color': '#0a0a14',
+      'fill-opacity': [
+        'match', ['get', 'iso_3166_1'],
+        visitedArr, 0,
+        0.91
+      ],
+      'fill-antialias': true
+    }
+  });
+
+  // ── Border layers — visible against both dark and satellite ──────────
+  // White casing (drawn first)
   map.addLayer({
     id: 'admin-borders-white',
     type: 'line',
     source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
     'source-layer': 'admin',
-    filter: ['all',
-      ['==', ['get', 'admin_level'], 0],
-      ['!=', ['get', 'maritime'], 'true'],
-      ['!=', ['get', 'maritime'], true]
-    ],
+    filter: BORDER_FILTER,
     paint: {
-      'line-color': 'rgba(255,255,255,0.82)',
+      'line-color': 'rgba(255,255,255,0.7)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2.4, 4, 3.6, 8, 5.2],
       'line-blur': 0
     }
   });
-
-  // 2. Dark grey centre line (narrower, drawn on top)
+  // Dark centre line (drawn on top)
   map.addLayer({
     id: 'admin-borders',
     type: 'line',
     source: { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' },
     'source-layer': 'admin',
-    filter: ['all',
-      ['==', ['get', 'admin_level'], 0],
-      ['!=', ['get', 'maritime'], 'true'],
-      ['!=', ['get', 'maritime'], true]
-    ],
+    filter: BORDER_FILTER,
     paint: {
-      'line-color': 'rgba(45,45,45,0.92)',
+      'line-color': 'rgba(40,40,40,0.9)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.8, 4, 1.3, 8, 2.0],
       'line-blur': 0
     }
   });
 
-  // Invisible fill layer for hover hit-testing over all countries
+  // ── Hit-test layer (invisible, topmost) ──────────────────────────────
   map.addLayer({
     id: 'countries-hit',
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
-    paint: {
-      'fill-color': 'rgba(0,0,0,0)',
-      'fill-opacity': 0
-    }
+    paint: { 'fill-color': 'rgba(0,0,0,0)', 'fill-opacity': 0 }
   });
 
-  // ── Fog of War: dark overlay on unvisited, clear on visited ───────────
-  const visitedArr = [...visitedSet];
-  map.addLayer({
-    id: 'fog-of-war',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    paint: {
-      'fill-color': [
-        'match', ['get', 'iso_3166_1'],
-        visitedArr, 'rgba(0,0,0,0)',
-        'rgba(12,12,24,0.72)'
-      ],
-      'fill-opacity': 1,
-      'fill-antialias': true
-    }
-  });
 
-  // Invisible border — keeps country outlines totally hidden
-  // (no line layer at all — borders are gone)
-
+  // ── Red pins on visited countries (at capital coordinates) ─────────
+  const PIN_SVG = `<svg class="pin-marker" viewBox="0 0 10 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="5" cy="5" r="4.5" fill="#e63946" stroke="white" stroke-width="1"/>
+  <line x1="5" y1="9" x2="5" y2="27" stroke="#999" stroke-width="1.2" stroke-linecap="round"/>
+</svg>`;
+  for (const iso2 of visitedSet) {
+    const coords = CAPITALS[iso2];
+    if (!coords) continue;
+    const el = document.createElement('div');
+    el.style.cssText = 'width:10px;height:28px;cursor:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));';
+    el.innerHTML = PIN_SVG;
+    el.addEventListener('click', () => openDrawer(iso2));
+    el.addEventListener('mouseenter', ev => {
+      const st = S[iso2] || {};
+      showTip(st.n || iso2, ev.clientX, ev.clientY);
+    });
+    el.addEventListener('mouseleave', hideTip);
+    new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      .setLngLat(coords)
+      .addTo(map);
+  }
 
   // ── Country hover via invisible fill layer ─────────────────────
   map.on('mousemove', 'countries-hit', e => {
