@@ -75,7 +75,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(0,0,0,0.5); }
 .fog-swatch { width:16px; height:10px; border:1px solid rgba(0,0,0,0.15); flex-shrink:0; border-radius:3px; }
 .fog-visited { background: linear-gradient(135deg, #c8dba8 0%, #a8c878 40%, #78a858 100%); }
-.fog-unvisited { background:rgba(180,180,180,0.35); border-color:rgba(0,0,0,0.15); }
+.fog-unvisited { background:#e8e8e8; border-color:rgba(0,0,0,0.12); }
 .p-divider { height:1px; background:rgba(0,0,0,0.08); margin-bottom:10px; }
 .p-zoom { display:flex; gap:1px; }
 .z-btn { flex:1; height:26px; border:1px solid rgba(0,0,0,0.12); cursor:none; font-family:inherit; font-size:15px; font-weight:300; display:flex; align-items:center; justify-content:center; transition:background 0.15s, border-color 0.15s; line-height:1; color:rgba(0,0,0,0.6); background:rgba(255,255,255,0.35); border-radius:4px; }
@@ -882,41 +882,51 @@ map.on('style.load', () => {
   // ── Satellite imagery source (for visited countries only) ────────────
 
 
-  // ── Grayscale unvisited countries: white bleach layer strips colour ──
-  // Layer 1: strong white fill to bleach out the map colours underneath
-  map.addLayer({
-    id: 'unvisited-bleach',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'worldview'], 'all'],
-    paint: {
-      'fill-color': '#ffffff',
-      'fill-opacity': [
-        'match', ['get', 'iso_3166_1'],
-        [...visitedArr, 'AQ'], 0,
-        0.82
-      ],
-      'fill-antialias': true
-    }
+  // ── Grayscale unvisited countries ───────────────────────────────────
+  // Strategy: two passes to cover every territory exactly once.
+  //   Pass A — undisputed features (worldview='all', disputed=false/absent)
+  //   Pass B — disputed-boundary features (worldview='US' only, which are
+  //             never duplicated in worldview='all', so no double-draw)
+  // Each pass has a bleach layer + a dark tint layer for grayscale effect.
+
+  const UNVISITED_PAINT_BLEACH = (opacity) => ({
+    'fill-color': '#ffffff',
+    'fill-opacity': ['match', ['get', 'iso_3166_1'], [...visitedArr, 'AQ'], 0, opacity],
+    'fill-antialias': true
   });
-  // Layer 2: subtle dark tint to restore contrast/depth after bleaching
-  map.addLayer({
-    id: 'unvisited-dark',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    filter: ['==', ['get', 'worldview'], 'all'],
-    paint: {
-      'fill-color': '#000000',
-      'fill-opacity': [
-        'match', ['get', 'iso_3166_1'],
-        [...visitedArr, 'AQ'], 0,
-        0.08
-      ],
-      'fill-antialias': true
-    }
+  const UNVISITED_PAINT_DARK = (opacity) => ({
+    'fill-color': '#000000',
+    'fill-opacity': ['match', ['get', 'iso_3166_1'], [...visitedArr, 'AQ'], 0, opacity],
+    'fill-antialias': true
   });
+
+  // Pass A: undisputed territories
+  const FILTER_UNDISPUTED = ['all',
+    ['in', ['get', 'worldview'], ['literal', ['all']]],
+    ['any', ['!', ['has', 'disputed']], ['!=', ['get', 'disputed'], 'true']]
+  ];
+  map.addLayer({ id: 'unvisited-bleach-a', type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries', filter: FILTER_UNDISPUTED,
+    paint: UNVISITED_PAINT_BLEACH(0.82) });
+  map.addLayer({ id: 'unvisited-dark-a', type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries', filter: FILTER_UNDISPUTED,
+    paint: UNVISITED_PAINT_DARK(0.08) });
+
+  // Pass B: disputed-boundary zones (worldview='US' only — never in 'all')
+  const FILTER_DISPUTED = ['all',
+    ['==', ['get', 'worldview'], 'US'],
+    ['==', ['get', 'disputed'], 'true']
+  ];
+  map.addLayer({ id: 'unvisited-bleach-b', type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries', filter: FILTER_DISPUTED,
+    paint: UNVISITED_PAINT_BLEACH(0.82) });
+  map.addLayer({ id: 'unvisited-dark-b', type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries', filter: FILTER_DISPUTED,
+    paint: UNVISITED_PAINT_DARK(0.08) });
 
   // ── Border layers — visible against both dark and satellite ──────────
   // White casing (drawn first)
