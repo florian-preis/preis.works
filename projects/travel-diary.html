@@ -884,6 +884,7 @@ map.on('style.load', () => {
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
+    filter: ['==', ['get', 'worldview'], 'US'],
     paint: {
       'fill-color': '#000000',
       'fill-opacity': [
