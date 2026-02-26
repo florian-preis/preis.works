@@ -177,11 +177,31 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   width:10px; height:10px; font-size:7px; margin-left:4px; border-color:rgba(0,0,0,0.2);
 }
 
+/* FLIGHT ARC LABEL */
+#flight-label {
+  position:fixed; pointer-events:none; z-index:7500;
+  background:rgba(235,235,235,0.55); color:#000;
+  backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
+  font-size:10px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 12px; white-space:nowrap;
+  border-radius:50px; box-shadow:0 4px 24px rgba(0,0,0,0.07);
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  opacity:0; transition:opacity 0.25s ease;
+}
+#flight-label.show { opacity:1; }
+/* Right-click dot indicator */
+.flight-dot {
+  position:fixed; pointer-events:none; z-index:7400;
+  width:7px; height:7px; border-radius:50%;
+  background:#e02020; border:1.5px solid rgba(255,255,255,0.8);
+  transform:translate(-50%,-50%);
+  box-shadow:0 1px 4px rgba(0,0,0,0.25);
+}
 @media (max-width:640px) {
   #panel { bottom:20px; left:20px; padding:18px 20px; min-width:172px; }
   #drawer { width:100vw; }
 }
-@media (hover:none) { body { cursor:auto; } #cursor { display:none; } }
+@media (hover:none) { body { cursor:auto; } #cursor { display:none; } #flight-hint { display:none; } }
 @media (prefers-reduced-motion:reduce) { *, *::before, *::after { transition-duration:0.01ms !important; } }
 </style>
 </head>
@@ -214,7 +234,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
     <span class="p-count-num" id="visited-count">0</span>
     <span class="p-count-denom">&thinsp;/ 197</span>
     <span class="p-count-info">i
-      <span class="p-count-tip"><strong>Why 197?</strong><br>This count includes the 193 UN member states, plus Kosovo, Palestine, Taiwan, and Vatican City — territories widely recognised as countries despite varying levels of formal diplomatic status.</span>
+      <span class="p-count-tip"><strong>Why 197?</strong><br>This count includes the 193 UN member states, plus Kosovo, Palestine, Taiwan, and Vatican City, territories widely recognised as countries despite varying levels of formal diplomatic status.</span>
     </span>
   </div>
   <div class="p-label">Countries visited</div>
@@ -228,6 +248,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
     <button class="z-btn" id="z-out">&#8722;</button>
   </div>
   <div class="p-hint">Click any country for details</div>
+  <div class="p-hint" id="flight-hint" style="margin-top:5px;opacity:0.75;">Right-click two points to measure air distance</div>
 </div>
 
 <div id="drawer">
@@ -243,6 +264,8 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   </div>
   <div class="db" id="d-body"></div>
 </div>
+
+<div id="flight-label"></div>
 
 <script>
 window.addEventListener('load', function() {
@@ -888,22 +911,14 @@ map.on('style.load', () => {
     }
   });
 
-  // ── Satellite imagery source (for visited countries only) ────────────
-
-
   // ── Grayscale overlay for unvisited countries ────────────────────────
-  // Single pass using worldview='US' — Mapbox guarantees every country
-  // appears exactly once under this worldview, avoiding double-draws.
-  // Overlay covers ALL countries by default; opacity=0 for visited + AQ.
+  // Two-pass approach to avoid double-draws on the Mercator projection:
+  // Pass 1 covers undisputed countries (worldview contains 'all').
+  // Pass 2 covers disputed zones only (worldview is 'US' but NOT 'all'),
+  // e.g. Kashmir, Western Sahara, Palestine, Taiwan, Kosovo.
+  // Visited countries and Antarctica (AQ) are excluded from the overlay.
 
   const EXCLUDE = [...visitedArr, 'AQ'];
-
-  // Use worldview filter that matches features containing 'all' in their
-  // worldview array. In Mapbox country-boundaries-v1, undisputed countries
-  // have worldview=['all',...] and disputed-only zones have worldview=['US',...].
-  // We use two passes: one for 'all' worldview (undisputed, ~no duplicates),
-  // one for disputed zones (worldview contains 'US' but NOT 'all').
-  // This ensures exactly one overlay per country with no double-draws.
 
   // Pass 1: features that include 'all' in worldview (covers most countries once)
   map.addLayer({
@@ -958,7 +973,7 @@ map.on('style.load', () => {
     }
   });
 
-  // ── Border layers — visible against both dark and satellite ──────────
+  // ── Border layers — white double-stroke for visibility on all basemaps ──
   // White casing (drawn first)
   map.addLayer({
     id: 'admin-borders-white',
@@ -1087,6 +1102,158 @@ document.getElementById('z-out').addEventListener('click', () => {
   map.easeTo({ zoom: Math.max(map.getZoom() - 1, 1), duration: 400 });
 });
 
+/* ── Flight arc (right-click two points) ──────────────────────────── */
+(function() {
+  // Disabled entirely on touch/mobile devices
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
+
+  let flightPt1 = null;  // { lat, lng } of first right-clicked point
+  let arcLayerActive = false;
+  let dot1El = null;
+  const $flightLabel = document.getElementById('flight-label');
+
+  // Haversine distance in km
+  function haversineKm(a, b) {
+    const R = 6371;
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const s = Math.sin(dLat/2)**2 +
+              Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) *
+              Math.sin(dLng/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(s));
+  }
+
+  // Format distance: sub-1000 km as whole number, 1000+ as e.g. "1.2k km"
+  function fmtDist(km) {
+    return Math.round(km).toLocaleString() + ' km';
+  }
+
+  // Build a great-circle arc as GeoJSON with slight visual curve boost
+  function buildArc(a, b, steps) {
+    steps = steps || 80;
+    const pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      // Spherical linear interpolation
+      const lat1 = a.lat * Math.PI/180, lng1 = a.lng * Math.PI/180;
+      const lat2 = b.lat * Math.PI/180, lng2 = b.lng * Math.PI/180;
+      // Convert to cartesian
+      const x1 = Math.cos(lat1)*Math.cos(lng1), y1 = Math.cos(lat1)*Math.sin(lng1), z1 = Math.sin(lat1);
+      const x2 = Math.cos(lat2)*Math.cos(lng2), y2 = Math.cos(lat2)*Math.sin(lng2), z2 = Math.sin(lat2);
+      const dot = x1*x2 + y1*y2 + z1*z2;
+      const omega = Math.acos(Math.max(-1, Math.min(1, dot)));
+      let x, y, z;
+      if (omega < 1e-10) {
+        x = x1; y = y1; z = z1;
+      } else {
+        const so = Math.sin(omega);
+        const f1 = Math.sin((1-t)*omega)/so, f2 = Math.sin(t*omega)/so;
+        x = f1*x1 + f2*x2; y = f1*y1 + f2*y2; z = f1*z1 + f2*z2;
+      }
+      const lat = Math.atan2(z, Math.sqrt(x*x+y*y)) * 180/Math.PI;
+      const lng = Math.atan2(y, x) * 180/Math.PI;
+      pts.push([lng, lat]);
+    }
+    return pts;
+  }
+
+  // Remove existing arc
+  function clearArc() {
+    if (arcLayerActive) {
+      try { map.removeLayer('flight-arc'); } catch(e){}
+      try { map.removeSource('flight-arc'); } catch(e){}
+      arcLayerActive = false;
+    }
+    $flightLabel.classList.remove('show');
+  }
+
+  function removeDot1() {
+    if (dot1El && dot1El.parentNode) dot1El.parentNode.removeChild(dot1El);
+    dot1El = null;
+  }
+
+  function makeDot(x, y) {
+    const d = document.createElement('div');
+    d.className = 'flight-dot';
+    d.style.left = x + 'px';
+    d.style.top  = y + 'px';
+    document.body.appendChild(d);
+    return d;
+  }
+
+  // Place the distance label at the arc apex (midpoint, screen space)
+  function positionLabel(arcCoords) {
+    const mid = arcCoords[Math.floor(arcCoords.length / 2)];
+    const p = map.project(mid);
+    $flightLabel.style.left = (p.x - $flightLabel.offsetWidth/2)  + 'px';
+    $flightLabel.style.top  = (p.y - $flightLabel.offsetHeight/2 - 14) + 'px';
+  }
+
+  let lastArcCoords = null;
+
+  function drawArc(p1, p2) {
+    clearArc();
+    const coords = buildArc(p1, p2, 80);
+    lastArcCoords = coords;
+    const km = haversineKm(p1, p2);
+    $flightLabel.textContent = fmtDist(km);
+
+    map.addSource('flight-arc', {
+      type: 'geojson',
+      data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }
+    });
+    map.addLayer({
+      id: 'flight-arc',
+      type: 'line',
+      source: 'flight-arc',
+      paint: {
+        'line-color': '#e02020',
+        'line-width': 1.5,
+        'line-dasharray': [2.5, 2.5],
+        'line-opacity': 0.82
+      }
+    });
+    arcLayerActive = true;
+    $flightLabel.classList.add('show');
+
+    // Position label — try after render
+    requestAnimationFrame(() => positionLabel(coords));
+  }
+
+  // Reposition label on map move/zoom so it tracks the arc
+  map.on('render', () => {
+    if (arcLayerActive && lastArcCoords) {
+      positionLabel(lastArcCoords);
+    }
+  });
+
+  map.getCanvas().addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const rect = map.getCanvas().getBoundingClientRect();
+    const lngLat = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+    const pt = { lat: lngLat.lat, lng: lngLat.lng };
+
+    if (!flightPt1) {
+      // First point
+      clearArc();
+      flightPt1 = pt;
+      dot1El = makeDot(e.clientX, e.clientY);
+    } else {
+      // Second point — draw arc
+      removeDot1();
+      drawArc(flightPt1, pt);
+      flightPt1 = null;
+    }
+  });
+
+  // Any left-click clears the arc, the pending first-point dot, and resets state
+  map.getCanvas().addEventListener('click', () => {
+    clearArc();
+    removeDot1();
+    flightPt1 = null;
+  });
+})();
+
 /* ── Drawer ───────────────────────────────────────────────────────── */
 // Flags that are NOT standard rectangles — no border box for these
 const NON_RECT_FLAGS = new Set(['CH','NP']);
@@ -1115,8 +1282,8 @@ document.getElementById('d-close').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
 
 /* ── Body builder ─────────────────────────────────────────────────── */
-const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="#222" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="#222" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="#222" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="#222" stroke-width="1"/></svg>`;
-const PPL_ICON = `<svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="2" stroke="#222" stroke-width="1"/><path d="M0.5 10c0-1.93 1.34-3.5 3-3.5s3 1.57 3 3.5" stroke="#222" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.5" stroke="#222" stroke-width="1"/><path d="M7.5 10c0-1.66 0.67-3 1.5-3s1.5 1.34 1.5 3" stroke="#222" stroke-width="1" stroke-linecap="round"/></svg>`;
+const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="rgba(0,0,0,0.3)" stroke-width="1"/></svg>`;
+const PPL_ICON = `<svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="2" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M0.5 10c0-1.93 1.34-3.5 3-3.5s3 1.57 3 3.5" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.5" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M7.5 10c0-1.66 0.67-3 1.5-3s1.5 1.34 1.5 3" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/></svg>`;
 
 function buildBody(iso2, st, cd) {
   const vis = cd.visited || false;
