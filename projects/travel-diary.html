@@ -995,29 +995,45 @@ map.on('style.load', () => {
   });
 
 
-  // ── Flag pin markers ───────────────────────────────────────────
-  const FLAG_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="26" viewBox="0 0 18 26">
-    <!-- needle -->
-    <line x1="5" y1="4" x2="5" y2="25" stroke="#888" stroke-width="1.2" stroke-linecap="round"/>
-    <!-- flag -->
-    <polygon points="5,2 17,6 5,11" fill="#e8302a"/>
+  // ── Push-pin markers (zoom-responsive, tooltip on hover) ──────
+  // SVG push pin: red circular head, grey needle pointing down
+  // Pin tip is at bottom-center via anchor:'bottom'
+  const PUSH_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="18" viewBox="0 0 10 18">
+    <circle cx="5" cy="4.5" r="4" fill="#e02020" stroke="rgba(0,0,0,0.18)" stroke-width="0.6"/>
+    <line x1="5" y1="8.2" x2="5" y2="17.5" stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
   </svg>`;
 
-  const flagPinEl = (label) => {
+  const PIN_LOCATIONS = [
+    { lngLat: [12.528158239604943, 55.68017138535179], label: 'Copenhagen' },
+    { lngLat: [7.972038440611342, 48.44502981874032],  label: 'Ortenberg' }
+  ];
+
+  // Scale: 1.0 at zoom≥5, down to 0.45 at zoom 2
+  function pinScale(zoom) {
+    return Math.max(0.45, Math.min(1, (zoom - 2) / 3));
+  }
+
+  const pinMarkers = PIN_LOCATIONS.map(({ lngLat, label }) => {
     const el = document.createElement('div');
-    el.title = label;
-    el.style.cssText = 'width:18px;height:26px;cursor:default;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));';
-    el.innerHTML = FLAG_PIN_SVG;
-    return el;
-  };
+    el.style.cssText = 'width:10px;height:18px;cursor:default;transform-origin:50% 100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.28));transition:transform 0.2s ease;';
+    el.innerHTML = PUSH_PIN_SVG;
 
-  new mapboxgl.Marker({ element: flagPinEl('Copenhagen, Denmark'), anchor: 'bottom-left' })
-    .setLngLat([12.5683, 55.6761])
-    .addTo(map);
+    el.addEventListener('mouseenter', e => showTip(label, e.clientX, e.clientY));
+    el.addEventListener('mousemove',  e => showTip(label, e.clientX, e.clientY));
+    el.addEventListener('mouseleave', () => hideTip());
 
-  new mapboxgl.Marker({ element: flagPinEl('Ortenberg, Germany'), anchor: 'bottom-left' })
-    .setLngLat([9.0594, 48.5631])
-    .addTo(map);
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+      .setLngLat(lngLat)
+      .addTo(map);
+    return { el, marker };
+  });
+
+  function updatePinScales() {
+    const s = pinScale(map.getZoom());
+    pinMarkers.forEach(({ el }) => { el.style.transform = `scale(${s.toFixed(3)})`; });
+  }
+  map.on('zoom', updatePinScales);
+  updatePinScales();
 
   // ── Country hover via invisible fill layer ─────────────────────
   map.on('mousemove', 'countries-hit', e => {
