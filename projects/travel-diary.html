@@ -883,50 +883,42 @@ map.on('style.load', () => {
 
 
   // ── Grayscale unvisited countries ───────────────────────────────────
-  // Strategy: two passes to cover every territory exactly once.
-  //   Pass A — undisputed features (worldview='all', disputed=false/absent)
-  //   Pass B — disputed-boundary features (worldview='US' only, which are
-  //             never duplicated in worldview='all', so no double-draw)
-  // Each pass has a bleach layer + a dark tint layer for grayscale effect.
+  // Strategy: cover ALL countries by default, then use fill-opacity=0
+  // for visited countries and Antarctica. A worldview filter of 'US'
+  // ensures every country appears exactly once (no double-draws for
+  // disputed territories, and full coverage of undisputed ones).
 
-  const UNVISITED_PAINT_BLEACH = (opacity) => ({
-    'fill-color': '#ffffff',
-    'fill-opacity': ['match', ['get', 'iso_3166_1'], [...visitedArr, 'AQ'], 0, opacity],
-    'fill-antialias': true
-  });
-  const UNVISITED_PAINT_DARK = (opacity) => ({
-    'fill-color': '#000000',
-    'fill-opacity': ['match', ['get', 'iso_3166_1'], [...visitedArr, 'AQ'], 0, opacity],
-    'fill-antialias': true
-  });
+  const EXCLUDE = [...visitedArr, 'AQ'];
 
-  // Pass A: undisputed territories
-  const FILTER_UNDISPUTED = ['all',
-    ['in', ['get', 'worldview'], ['literal', ['all']]],
-    ['any', ['!', ['has', 'disputed']], ['!=', ['get', 'disputed'], 'true']]
+  const FILTER_WORLDVIEW_US = ['any',
+    ['in', ['get', 'worldview'], ['literal', ['all', 'US']]],
+    ['!', ['has', 'worldview']]
   ];
-  map.addLayer({ id: 'unvisited-bleach-a', type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries', filter: FILTER_UNDISPUTED,
-    paint: UNVISITED_PAINT_BLEACH(0.82) });
-  map.addLayer({ id: 'unvisited-dark-a', type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries', filter: FILTER_UNDISPUTED,
-    paint: UNVISITED_PAINT_DARK(0.08) });
 
-  // Pass B: disputed-boundary zones (worldview='US' only — never in 'all')
-  const FILTER_DISPUTED = ['all',
-    ['==', ['get', 'worldview'], 'US'],
-    ['==', ['get', 'disputed'], 'true']
-  ];
-  map.addLayer({ id: 'unvisited-bleach-b', type: 'fill',
+  map.addLayer({
+    id: 'unvisited-bleach',
+    type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries', filter: FILTER_DISPUTED,
-    paint: UNVISITED_PAINT_BLEACH(0.82) });
-  map.addLayer({ id: 'unvisited-dark-b', type: 'fill',
+    'source-layer': 'country_boundaries',
+    filter: FILTER_WORLDVIEW_US,
+    paint: {
+      'fill-color': '#ffffff',
+      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.82],
+      'fill-antialias': true
+    }
+  });
+  map.addLayer({
+    id: 'unvisited-dark',
+    type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries', filter: FILTER_DISPUTED,
-    paint: UNVISITED_PAINT_DARK(0.08) });
+    'source-layer': 'country_boundaries',
+    filter: FILTER_WORLDVIEW_US,
+    paint: {
+      'fill-color': '#000000',
+      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.08],
+      'fill-antialias': true
+    }
+  });
 
   // ── Border layers — visible against both dark and satellite ──────────
   // White casing (drawn first)
