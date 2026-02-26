@@ -59,13 +59,14 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
   position:fixed; bottom:32px; left:32px; z-index:1000;
   background:rgba(235,235,235,0.55);
   backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
-  border:none; padding:22px 24px; min-width:196px;
+  border:none; padding:22px 24px;
+  display:grid; grid-template-columns:min-content; width:min-content;
   border-radius:20px;
   box-shadow:0 4px 24px rgba(0,0,0,0.07);
   opacity:0; transform:translateY(6px); transition:opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
 }
 #panel.show { opacity:1; transform:translateY(0); }
-.p-count { font-size:30px; font-weight:300; letter-spacing:-0.03em; color:#111; line-height:1; display:flex; align-items:baseline; gap:4px; }
+.p-count { font-size:30px; font-weight:300; letter-spacing:-0.03em; color:#111; line-height:1; display:flex; align-items:baseline; gap:4px; white-space:normal; overflow-wrap:break-word; }
 .p-count-num { font-size:30px; }
 .p-count-denom { font-size:13px; color:rgba(0,0,0,0.4); font-weight:400; }
 .p-count-info { display:inline-flex; align-items:center; justify-content:center; width:11px; height:11px; border-radius:50%; border:1px solid rgba(0,0,0,0.25); font-size:7px; color:rgba(0,0,0,0.4); cursor:default; position:relative; margin-left:2px; line-height:1; flex-shrink:0; }
@@ -73,7 +74,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .p-count-tip { position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); width:210px; background:rgba(235,235,235,0.55); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%); color:#333; font-size:10px; line-height:1.55; padding:9px 11px; letter-spacing:0.02em; text-transform:none; font-weight:400; opacity:0; pointer-events:none; transition:opacity 0.15s; z-index:100; box-shadow:0 4px 24px rgba(0,0,0,0.07); border:none; border-radius:10px; }
 .p-label { font-size:9px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(0,0,0,0.35); margin:4px 0 14px; }
 .p-legend { display:flex; flex-direction:row; align-items:center; gap:14px; margin-bottom:12px; }
-.legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(0,0,0,0.5); }
+.legend-row { display:flex; align-items:center; gap:6px; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(0,0,0,0.5); white-space:nowrap; }
 .fog-swatch { width:16px; height:10px; border:1px solid rgba(0,0,0,0.15); flex-shrink:0; border-radius:3px; }
 .fog-visited { background: linear-gradient(135deg, #c8dba8 0%, #a8c878 40%, #78a858 100%); }
 .fog-unvisited { background:#e8e8e8; border-color:rgba(0,0,0,0.12); }
@@ -165,12 +166,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 }
 
 /* Hint text */
-.p-hint {
-  margin-top:10px;
-  font-size:8.5px; letter-spacing:0.10em; text-transform:uppercase;
-  color:rgba(26,45,69,0.3); line-height:1.5;
-  text-align:center;
-}
+.p-hint { margin-top:10px; font-size:8.5px; letter-spacing:0.10em; text-transform:uppercase; color:rgba(26,45,69,0.3); line-height:1.6; text-align:justify; }
 
 /* HDI info inline in label */
 .stat-label .hdi-info {
@@ -247,7 +243,7 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
     <button class="z-btn" id="z-in">+</button>
     <button class="z-btn" id="z-out">&#8722;</button>
   </div>
-  <div class="p-hint" style="text-align:left;">Click any country for details.<span id="flight-hint"> Right-click two points to measure air distance</span></div>
+  <div class="p-hint">Click any country for details.<span id="flight-hint"> Right-click two points to measure air distance</span></div>
 </div>
 
 <div id="drawer">
