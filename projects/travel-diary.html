@@ -930,32 +930,9 @@ map.on('style.load', () => {
     }
   });
 
-  // Pass 2: disputed-boundary features that do NOT include 'all' (e.g. Kashmir,
-  // Western Sahara, Palestine, Taiwan, Kosovo etc.) — worldview is 'US' only.
-  map.addLayer({
-    id: 'unvisited-bleach-disputed',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    filter: ['all', ['!', ['in', 'all', ['get', 'worldview']]], ['in', 'US', ['get', 'worldview']]],
-    paint: {
-      'fill-color': '#ffffff',
-      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.82],
-      'fill-antialias': true
-    }
-  });
-  map.addLayer({
-    id: 'unvisited-dark-disputed',
-    type: 'fill',
-    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
-    'source-layer': 'country_boundaries',
-    filter: ['all', ['!', ['in', 'all', ['get', 'worldview']]], ['in', 'US', ['get', 'worldview']]],
-    paint: {
-      'fill-color': '#000000',
-      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.08],
-      'fill-antialias': true
-    }
-  });
+  // Disputed-boundary zones (worldview 'US' only, not 'all') are intentionally
+  // omitted — their parent country's 'all' feature already covers the area,
+  // so adding a second overlay would cause double-draw darkening.
 
   // ── Border layers — visible against both dark and satellite ──────────
   // White casing (drawn first)
