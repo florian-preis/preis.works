@@ -995,51 +995,73 @@ map.on('style.load', () => {
   });
 
 
-  // ── Push-pin markers (zoom-responsive, tooltip on hover) ──────
-  // SVG push pin: red circular head, grey needle pointing down
-  // Pin tip is at bottom-center via anchor:'bottom'
-  const PUSH_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="18" viewBox="0 0 10 18">
-    <circle cx="5" cy="4.5" r="4" fill="#e02020" stroke="rgba(0,0,0,0.18)" stroke-width="0.6"/>
-    <line x1="5" y1="8.2" x2="5" y2="17.5" stroke="#888" stroke-width="1.1" stroke-linecap="round"/>
+  // ── Push-pin markers ──────────────────────────────────────────
+  // Tiny SVG push-pin; size is set directly on the SVG attributes
+  // each zoom frame so there is zero CSS-transition lag.
+  const PUSH_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="7" height="13" viewBox="0 0 7 13">
+    <circle cx="3.5" cy="3" r="2.8" fill="#e02020" stroke="rgba(0,0,0,0.16)" stroke-width="0.5"/>
+    <line x1="3.5" y1="5.6" x2="3.5" y2="12.5" stroke="#999" stroke-width="0.9" stroke-linecap="round"/>
   </svg>`;
 
   const PIN_LOCATIONS = [
     { lngLat: [12.528158239604943, 55.68017138535179], label: 'Copenhagen' },
-    { lngLat: [7.972038440611342, 48.44502981874032],  label: 'Ortenberg' }
+    { lngLat: [7.972038440611342,  48.44502981874032], label: 'Ortenberg'  }
   ];
 
-  // Scale: 1.0 at zoom≥5, down to 0.45 at zoom 2
-  function pinScale(zoom) {
-    return Math.max(0.45, Math.min(1, (zoom - 2) / 3));
+  // Pixel width of pin at a given zoom (height keeps 7:13 ratio)
+  function pinPx(zoom) {
+    const t = Math.max(0, Math.min(1, (zoom - 2) / 4));
+    return 4 + t * 3.5; // 4px at zoom 2 → 7.5px at zoom 6+
   }
 
   const pinMarkers = PIN_LOCATIONS.map(({ lngLat, label }) => {
     const el = document.createElement('div');
-    el.style.cssText = 'width:10px;height:18px;cursor:default;transform-origin:50% 100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.28));transition:transform 0.2s ease;';
+    el.style.cssText = 'cursor:default;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,0.25));overflow:visible;';
     el.innerHTML = PUSH_PIN_SVG;
+    const svg = el.querySelector('svg');
 
-    el.addEventListener('mouseenter', e => showTip(label, e.clientX, e.clientY));
-    el.addEventListener('mousemove',  e => showTip(label, e.clientX, e.clientY));
-    el.addEventListener('mouseleave', () => hideTip());
+    function applySize() {
+      const w = pinPx(map.getZoom());
+      const h = w * (13 / 7);
+      svg.setAttribute('width',  w.toFixed(1));
+      svg.setAttribute('height', h.toFixed(1));
+      el.style.width  = w.toFixed(1) + 'px';
+      el.style.height = h.toFixed(1) + 'px';
+    }
+    applySize();
+    map.on('zoom', applySize);
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
       .setLngLat(lngLat)
       .addTo(map);
-    return { el, marker };
+    return { el, marker, lngLat, label };
   });
 
-  function updatePinScales() {
-    const s = pinScale(map.getZoom());
-    pinMarkers.forEach(({ el }) => { el.style.transform = `scale(${s.toFixed(3)})`; });
-  }
-  map.on('zoom', updatePinScales);
-  updatePinScales();
+  // ── Country hover + pin proximity tooltip ─────────────────────
+  // When the cursor is within PIN_HOVER_RADIUS px of a pin centre,
+  // the pin label overrides the country tooltip.
+  const PIN_HOVER_RADIUS = 22;
 
-  // ── Country hover via invisible fill layer ─────────────────────
+  function nearestPinLabel(mx, my) {
+    for (const { marker, label } of pinMarkers) {
+      const rect = marker.getElement().getBoundingClientRect();
+      const px = rect.left + rect.width  / 2;
+      const py = rect.top  + rect.height / 2;
+      if (Math.hypot(mx - px, my - py) < PIN_HOVER_RADIUS) return label;
+    }
+    return null;
+  }
+
   map.on('mousemove', 'countries-hit', e => {
-    const iso2 = e.features[0].properties.iso_3166_1;
-    const name = iso2 && S[iso2] ? S[iso2].n : (iso2 || null);
-    if (name) showTip(name, e.originalEvent.clientX, e.originalEvent.clientY);
+    const mx = e.originalEvent.clientX, my = e.originalEvent.clientY;
+    const pinLabel = nearestPinLabel(mx, my);
+    if (pinLabel) {
+      showTip(pinLabel, mx, my);
+    } else {
+      const iso2 = e.features[0].properties.iso_3166_1;
+      const name = iso2 && S[iso2] ? S[iso2].n : (iso2 || null);
+      if (name) showTip(name, mx, my);
+    }
   });
   map.on('mouseleave', 'countries-hit', hideTip);
 
