@@ -755,6 +755,14 @@ const VISITED = {
     trips: [
       { date: "2020-01", with: null, note: null }
     ]
+  },
+  // ── PS ──────────────────────────────────────────────────────────────────
+  "PS": {
+    visited: true,
+    territoryBadge: null,
+    trips: [
+      { date: null, with: null, note: null }
+    ]
   }
 };
 
@@ -882,25 +890,20 @@ map.on('style.load', () => {
   // ── Satellite imagery source (for visited countries only) ────────────
 
 
-  // ── Grayscale unvisited countries ───────────────────────────────────
-  // Strategy: cover ALL countries by default, then use fill-opacity=0
-  // for visited countries and Antarctica. A worldview filter of 'US'
-  // ensures every country appears exactly once (no double-draws for
-  // disputed territories, and full coverage of undisputed ones).
+  // ── Grayscale overlay for unvisited countries ────────────────────────
+  // Single pass using worldview='US' — Mapbox guarantees every country
+  // appears exactly once under this worldview, avoiding double-draws.
+  // Overlay covers ALL countries by default; opacity=0 for visited + AQ.
 
   const EXCLUDE = [...visitedArr, 'AQ'];
-
-  const FILTER_WORLDVIEW_US = ['any',
-    ['in', ['get', 'worldview'], ['literal', ['all', 'US']]],
-    ['!', ['has', 'worldview']]
-  ];
+  const FILTER_US_WORLDVIEW = ['==', ['get', 'worldview'], 'US'];
 
   map.addLayer({
     id: 'unvisited-bleach',
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
-    filter: FILTER_WORLDVIEW_US,
+    filter: FILTER_US_WORLDVIEW,
     paint: {
       'fill-color': '#ffffff',
       'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.82],
@@ -912,7 +915,7 @@ map.on('style.load', () => {
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
-    filter: FILTER_WORLDVIEW_US,
+    filter: FILTER_US_WORLDVIEW,
     paint: {
       'fill-color': '#000000',
       'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.08],
