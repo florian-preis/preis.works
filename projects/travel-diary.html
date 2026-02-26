@@ -896,14 +896,21 @@ map.on('style.load', () => {
   // Overlay covers ALL countries by default; opacity=0 for visited + AQ.
 
   const EXCLUDE = [...visitedArr, 'AQ'];
-  const FILTER_US_WORLDVIEW = ['==', ['get', 'worldview'], 'US'];
 
+  // Use worldview filter that matches features containing 'all' in their
+  // worldview array. In Mapbox country-boundaries-v1, undisputed countries
+  // have worldview=['all',...] and disputed-only zones have worldview=['US',...].
+  // We use two passes: one for 'all' worldview (undisputed, ~no duplicates),
+  // one for disputed zones (worldview contains 'US' but NOT 'all').
+  // This ensures exactly one overlay per country with no double-draws.
+
+  // Pass 1: features that include 'all' in worldview (covers most countries once)
   map.addLayer({
     id: 'unvisited-bleach',
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
-    filter: FILTER_US_WORLDVIEW,
+    filter: ['in', 'all', ['get', 'worldview']],
     paint: {
       'fill-color': '#ffffff',
       'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.82],
@@ -915,7 +922,34 @@ map.on('style.load', () => {
     type: 'fill',
     source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
     'source-layer': 'country_boundaries',
-    filter: FILTER_US_WORLDVIEW,
+    filter: ['in', 'all', ['get', 'worldview']],
+    paint: {
+      'fill-color': '#000000',
+      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.08],
+      'fill-antialias': true
+    }
+  });
+
+  // Pass 2: disputed-boundary features that do NOT include 'all' (e.g. Kashmir,
+  // Western Sahara, Palestine, Taiwan, Kosovo etc.) — worldview is 'US' only.
+  map.addLayer({
+    id: 'unvisited-bleach-disputed',
+    type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries',
+    filter: ['all', ['!', ['in', 'all', ['get', 'worldview']]], ['in', 'US', ['get', 'worldview']]],
+    paint: {
+      'fill-color': '#ffffff',
+      'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.82],
+      'fill-antialias': true
+    }
+  });
+  map.addLayer({
+    id: 'unvisited-dark-disputed',
+    type: 'fill',
+    source: { type: 'vector', url: 'mapbox://mapbox.country-boundaries-v1' },
+    'source-layer': 'country_boundaries',
+    filter: ['all', ['!', ['in', 'all', ['get', 'worldview']]], ['in', 'US', ['get', 'worldview']]],
     paint: {
       'fill-color': '#000000',
       'fill-opacity': ['match', ['get', 'iso_3166_1'], EXCLUDE, 0, 0.08],
