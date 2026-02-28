@@ -145,9 +145,9 @@ body { font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; cursor:none; }
 .trip-meta { display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap; }
 .trip-date { display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:rgba(0,0,0,0.3); }
 .trip-date svg { flex-shrink:0; }
-.trip-with { display:flex; align-items:center; gap:5px; font-size:10px; color:rgba(0,0,0,0.3); }
+.trip-with { display:flex; align-items:center; gap:5px; font-size:9px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:rgba(0,0,0,0.3); }
 .trip-with svg { flex-shrink:0; }
-.trip-with strong { color:#555; font-weight:500; }
+.trip-with strong { color:rgba(0,0,0,0.3); font-weight:600; }
 .trip-note { font-size:13px; line-height:1.65; color:#333; }
 .db-empty { font-size:11px; color:rgba(0,0,0,0.25); letter-spacing:0.1em; padding:8px 0; font-style:italic; }
 .not-visited { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:rgba(0,0,0,0.25); padding:8px 0; }
@@ -300,7 +300,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── AU ──────────────────────────────────────────────────────────────────
@@ -308,7 +307,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-01", with: null, note: null }
     ]
   },
   // ── AT ──────────────────────────────────────────────────────────────────
@@ -316,7 +314,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-12", with: null, note: null }
     ]
   },
   // ── BE ──────────────────────────────────────────────────────────────────
@@ -324,7 +321,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-06", with: null, note: null }
     ]
   },
   // ── BO ──────────────────────────────────────────────────────────────────
@@ -332,7 +328,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-10", with: null, note: null }
     ]
   },
   // ── BA ──────────────────────────────────────────────────────────────────
@@ -340,7 +335,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── BR ──────────────────────────────────────────────────────────────────
@@ -348,7 +342,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2024-01", with: null, note: null }
     ]
   },
   // ── BG ──────────────────────────────────────────────────────────────────
@@ -356,7 +349,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-09", with: null, note: null }
     ]
   },
   // ── CA ──────────────────────────────────────────────────────────────────
@@ -364,7 +356,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-08", with: null, note: null }
     ]
   },
   // ── CN ──────────────────────────────────────────────────────────────────
@@ -372,7 +363,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2019-11", with: null, note: null }
     ]
   },
   // ── CO ──────────────────────────────────────────────────────────────────
@@ -381,7 +371,6 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2022-01", with: "Ellen", note: "Arriving in Bogotá in T-shirts and shorts was a shock in the cool mountain air. Ellen bought a colourful Puma sweater that became her favourite piece of clothing. In Neiva, the gateway to Tatacoa, the airport was deserted and friendly police officers helped us find a fair taxi. I took one of my favourite drone photos there, just after I thought I had downed my drone. In Medellín, we enjoyed the energy of the city and the lively nightlife and took a day trip to Guatapé. In Tayrona, we stayed in a very basic lodge and Ellen was peed on by an animal through the ceiling at night. Cartagena stood out for its old town, city walls, and an incredible dinner at Celele. On Isla Tintipán, we saw fluorescent plankton and Ellen got an itchy rash. We visited the most densely populated artificial island in the world and on Isla Rosario stopped at Pablo Escobar's former house where a local man threatened us with a wooden stick when we tried to take photos. Despite that, Colombia turned into our favourite country so far." },
-      { date: "2023-11", with: null, note: null }
     ]
   },
   // ── CR ──────────────────────────────────────────────────────────────────
@@ -390,7 +379,6 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2021-12", with: "Ellen", note: "Between Christmas and New Year, we travelled to Costa Rica and stayed near Manuel Antonio National Park. Our New Year's dinner on the beach was interrupted by heavy rain and there were almost no fireworks because we were inside a national park. It was still a special way to start the year. We continued towards La Fortuna where the volcano remained hidden behind clouds, but we found an amazing local barbecue place we returned to several times. When Nicaragua closed its borders due to COVID, we quickly changed plans and booked flights to Bogotá instead." },
-      { date: "2024-02", with: null, note: null }
     ]
   },
   // ── HR ──────────────────────────────────────────────────────────────────
@@ -398,7 +386,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-07", with: null, note: null }
     ]
   },
   // ── CU ──────────────────────────────────────────────────────────────────
@@ -406,7 +393,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2020-02", with: null, note: null }
     ]
   },
   // ── CZ ──────────────────────────────────────────────────────────────────
@@ -414,7 +400,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-06", with: null, note: null }
     ]
   },
   // ── DK ──────────────────────────────────────────────────────────────────
@@ -424,7 +409,6 @@ const VISITED = {
     trips: [
       { date: "2020-04", with: "Ellen", note: "During the first COVID lockdown we booked a summer house in Gilleleje over Easter. Life had slowed down completely and we spent our days cooking and baking in the amazing spring weather. I made German potato salad and we baked our own bread. We walked along the beach where Ellen slipped on a stone and fell straight into the water, which was objectively very funny. We brought my longboard and went grocery shopping a few kilometres away with Ellen biking and me skating alongside her. It was simple and quiet and exactly what we needed." },
       { date: "2021-03", with: "Ellen", note: "After a COVID-ridden autumn and winter, we spent Easter in a summer house on Bornholm. We took the train with our bikes and cycled onto the ferry. The house was close to the beach and we went for sunset walks almost every evening. For a few days, we rented a car to explore more of the island, but most of the time we cooked, read, and enjoyed the quiet." },
-      { date: "2023-05", with: null, note: null }
     ]
   },
   // ── EG ──────────────────────────────────────────────────────────────────
@@ -432,7 +416,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-03", with: null, note: null }
     ]
   },
   // ── FR ──────────────────────────────────────────────────────────────────
@@ -441,7 +424,6 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2022-04", with: "Novo Nordisk Investor Relations", note: "I travelled to Paris for a roadshow and arrived a day early to walk around the city in spring sunshine. The following day we met banks and analysts across the city. It was a different kind of travel, but I enjoyed being back in Paris." },
-      { date: "2022-04", with: "Ellen and family", note: "After visiting Ellen's hometown in the Netherlands and Rotterdam, we crossed into Strasbourg with Franz as our guide." }
     ]
   },
   // ── DE ──────────────────────────────────────────────────────────────────
@@ -450,8 +432,7 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2020-02", with: "Ellen", note: "After a first techno night out together in Copenhagen we spontaneously booked a weekend to Berlin. I showed Ellen around the city and we went out to Alte Münze. It felt easy and fun and a bit unplanned, and looking back I think this was when we really started dating." },
-      { date: "2022-04", with: "Ellen and family", note: "From Paris, we travelled to my hometown in the Black Forest where I showed Ellen the region, hiked through vineyards, visited Staufenberg Castle, and crossed into Strasbourg with Franz as our guide." },
-      { date: "2023-02", with: "Ellen", note: "First date weekend in Berlin." }
+      { date: "2022-04", with: "Ellen & family", note: "From Paris, we travelled to my hometown in the Black Forest where I showed Ellen the region, hiked through vineyards, visited Staufenberg Castle, and crossed into Strasbourg with Franz as our guide." },
     ]
   },
   // ── GR ──────────────────────────────────────────────────────────────────
@@ -459,7 +440,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-08", with: null, note: null }
     ]
   },
   // ── HU ──────────────────────────────────────────────────────────────────
@@ -467,7 +447,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-11", with: null, note: null }
     ]
   },
   // ── IS ──────────────────────────────────────────────────────────────────
@@ -475,7 +454,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-08", with: null, note: null }
     ]
   },
   // ── IN ──────────────────────────────────────────────────────────────────
@@ -483,7 +461,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2019-12", with: null, note: null }
     ]
   },
   // ── IE ──────────────────────────────────────────────────────────────────
@@ -491,7 +468,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-05", with: null, note: null }
     ]
   },
   // ── IL ──────────────────────────────────────────────────────────────────
@@ -499,7 +475,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-04", with: null, note: null }
     ]
   },
   // ── IT ──────────────────────────────────────────────────────────────────
@@ -508,7 +483,6 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2020-07", with: "Ellen", note: "We flew to Rome at a time when the city was still heavily impacted by COVID. It was almost empty. We had the Trevi Fountain and the Vatican nearly to ourselves and spent our days eating well and wandering through quiet streets. In Naples, we stayed in a beautiful old building with a balcony overlooking a wide avenue. We queued more than an hour for pizza while drinking Aperol Spritz from the bar next door and when we finally got our table, Ellen ordered a goat cheese pizza that she did not like, which meant more pizza for me. In Sorrento, we rented a tiny 50cc scooter that struggled to get the two of us uphill but somehow carried us along the Amalfi coast. In Positano, we kayaked to a beach club but Ellen got sick from the waves so I had to paddle us back alone. On Capri, we ended up in a restaurant overgrown with lemon trees and ate the most expensive pasta of the trip. Back in Rome we stayed at a hotel we still wrongly refer to as \"Fauno Urbano\" and I took Ellen to All'Oro for her first Michelin experience. From there I flew on to Germany to see my family." },
-      { date: "2023-06", with: null, note: null }
     ]
   },
   // ── JO ──────────────────────────────────────────────────────────────────
@@ -516,7 +490,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-04", with: null, note: null }
     ]
   },
   // ── KE ──────────────────────────────────────────────────────────────────
@@ -524,7 +497,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2024-01", with: null, note: null }
     ]
   },
   // ── XK ──────────────────────────────────────────────────────────────────
@@ -532,7 +504,6 @@ const VISITED = {
     visited: true,
     territoryBadge: "Partially Recognised",
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── LV ──────────────────────────────────────────────────────────────────
@@ -540,7 +511,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-06", with: null, note: null }
     ]
   },
   // ── MY ──────────────────────────────────────────────────────────────────
@@ -548,7 +518,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2020-01", with: null, note: null }
     ]
   },
   // ── MX ──────────────────────────────────────────────────────────────────
@@ -556,7 +525,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2024-03", with: null, note: null }
     ]
   },
   // ── ME ──────────────────────────────────────────────────────────────────
@@ -564,7 +532,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── MA ──────────────────────────────────────────────────────────────────
@@ -572,8 +539,7 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-07", with: "Ellen", note: "For my second trip to Morocco, we flew into Casablanca and took the train to Marrakesh. The first evening on the main square was overwhelming when a henna artist would not take Ellen's no for an answer. It was an abrupt introduction to how intense the city can feel. We explored the beautiful sites of Marrakesh before heading into the Atlas Mountains and the Sahara. In Fes, we arrived during Eid and the entire city was preparing goats for slaughter. There were skins and fires in the streets and our hotel hosted a small celebration where we tried goat intestine. We continued to Chefchaouen, the blue city, and then flew to Valencia for a few extra days." },
-      { date: "2023-10", with: null, note: null }
+      { date: "2021-07", with: "Ellen", note: "For my second trip to Morocco, we flew into Casablanca and took the train to Marrakesh. The first evening on the main square was overwhelming when a henna artist would not take Ellen’s no for an answer. It was an abrupt introduction to how intense the city can feel. We explored the beautiful sites of Marrakesh before heading into the Atlas Mountains and the Sahara. In Fes, we arrived during Eid and the entire city was preparing goats for slaughter. There were skins and fires in the streets and our hotel hosted a small celebration where we tried goat intestine. We continued to Chefchaouen, the blue city, and then flew to Valencia for a few extra days of sun, food, and a big picnic with olives, cheese, and cold cuts from the central market before returning to Denmark." },
     ]
   },
   // ── NA ──────────────────────────────────────────────────────────────────
@@ -581,7 +547,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2024-01", with: null, note: null }
     ]
   },
   // ── NL ──────────────────────────────────────────────────────────────────
@@ -589,7 +554,7 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-04", with: "Ellen and family", note: "We finally visited Ellen's hometown Wagenberg and I met her family properly. We also went to Rotterdam. From there, we travelled to my hometown in the Black Forest where I showed her the region, hiked through vineyards, visited Staufenberg Castle, and crossed into Strasbourg with Franz as our guide. It was great to finally visit each other's homes after COVID prevented this earlier." }
+      { date: "2022-04", with: "Ellen & family", note: "We finally visited Ellen's hometown Wagenberg and I met her family properly. We also went to Rotterdam. From there, we travelled to my hometown in the Black Forest where I showed her the region, hiked through vineyards, visited Staufenberg Castle, and crossed into Strasbourg with Franz as our guide. It was great to finally visit each other's homes after COVID prevented this earlier." }
     ]
   },
   // ── NZ ──────────────────────────────────────────────────────────────────
@@ -597,7 +562,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-01", with: null, note: null }
     ]
   },
   // ── MK ──────────────────────────────────────────────────────────────────
@@ -605,7 +569,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── NO ──────────────────────────────────────────────────────────────────
@@ -614,7 +577,6 @@ const VISITED = {
     territoryBadge: null,
     trips: [
       { date: "2019-12", with: "Karo and Vici", note: "I travelled to Oslo to celebrate New Year's and it was my first time in the city. We did the classic sightseeing and spent New Year's Eve with Karo's friends and later hit a club. I remember how crisp the air felt that night. On 01 January, we watched a beautiful sunset in Frogner Park and later down by the harbour, looking out over the water. Somewhere in the city there was also an art installation of a tree oscillating in different colours, which I found captivating." },
-      { date: "2023-08", with: null, note: null }
     ]
   },
   // ── PA ──────────────────────────────────────────────────────────────────
@@ -622,11 +584,10 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-08", with: "solo", note: "I moved to Panama City for my graduate rotation with Novo Nordisk. I arrived late at night and settled into my apartment in the former Trump Tower, now a Marriott Hotel. The first weeks were intense with long hours at work so I could build up extra days for when Ellen would visit. Outside work hours, I explored the city, enjoyed brunch at the American Trade Hotel, cocktails at the Selina rooftop, and worked out in the gym in my building. I spent a weekend on Isla Contadora and another in El Valle de Antón where I hiked Cerro Gaital before sunrise. The trail was overgrown and slippery and on the descent I fell several metres down a rock face, stopping myself by grabbing a root and earning a scar on my ribs that I still have. Ellen had prepared envelopes for specific dates and moments which I opened over time, making the distance easier." },
+      { date: "2021-08", with: "Solo", note: "I moved to Panama City for my graduate rotation with Novo Nordisk. I arrived late at night and settled into my apartment in the former Trump Tower, now a Marriott Hotel. The first weeks were intense with long hours at work so I could build up extra days for when Ellen would visit. Outside work hours, I explored the city, enjoyed brunch at the American Trade Hotel, cocktails at the Selina rooftop, and worked out in the gym in my building. I spent a weekend on Isla Contadora and another in El Valle de Antón where I hiked Cerro Gaital before sunrise. The trail was overgrown and slippery and on the descent I fell several metres down a rock face, stopping myself by grabbing a root and earning a scar on my ribs that I still have. Ellen had prepared envelopes for specific dates and moments which I opened over time, making the distance easier." },
       { date: "2021-10", with: "Lasse", note: "Lasse visited and we drove to Boquete in heavy rain and fallen trees that turned a five hour trip into more than eight. We hiked to waterfalls, saw ancient trees, visited a coffee farm, and celebrated my birthday in a local brewpub. The highlight was climbing Volcán Barú. We started at 01:00 at night and reached the summit well before sunrise, watching the sun rise over both the Atlantic and the Pacific with slightly warm beers in our hands." },
       { date: "2021-12", with: "Ellen", note: "After months apart, I picked Ellen up from the airport and we went straight to Fonda Lo Que Hay, which became our favourite restaurant. We explored Panama City, flew my new drone, and then travelled to Bocas del Toro where we stayed on a remote island and used water taxis to reach different beaches. We celebrated Christmas in a small restaurant surrounded by the sea." },
       { date: "2022-02", with: "Ellen", note: "We spent our final weeks in Panama exploring the San Blas Islands with their white sand and turquoise water. One night on a remote island, someone repeatedly knocked on our door and tried to get in. Ellen was scared, so I found an old knife and a wooden stick and stood guard outside while she tried to sleep. We also finally did the helicopter tour over Panama City that I had gifted her for our first anniversary apart. At the end of the month, Ellen left for New York and I packed up my life in Panama to return to Denmark after six amazing months." },
-      { date: "2024-02", with: null, note: null }
     ]
   },
   // ── PE ──────────────────────────────────────────────────────────────────
@@ -634,7 +595,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-10", with: null, note: null }
     ]
   },
   // ── PH ──────────────────────────────────────────────────────────────────
@@ -642,7 +602,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2020-01", with: null, note: null }
     ]
   },
   // ── PL ──────────────────────────────────────────────────────────────────
@@ -650,7 +609,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-10", with: null, note: null }
     ]
   },
   // ── PT ──────────────────────────────────────────────────────────────────
@@ -658,7 +616,7 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-05", with: "Graduate House Crew", note: "Our master's friends reunited in Lisbon. The boys arrived early and stocked the fridge, so the mood was set when everyone was together. We ate pastel de nata, had long dinners, and one evening I tried snails and squid in its own ink before heading out to packed streets lined with bars. Almost all of us had brought striped shirts without coordinating it, which became the unofficial theme of the trip." }
+      { date: "2022-05", with: "Graduate House Crew", note: "Our master's friends reunited in Lisbon. The boys arrived early at our Airbnb and stocked the fridge, so the mood was set when everyone was together. We ate pastel de nata, had long dinners, and one evening I tried snails and squid in its own ink before heading out to packed streets lined with bars. Almost all of us had brought striped shirts without coordinating it, which became the unofficial theme of the trip." }
     ]
   },
   // ── RO ──────────────────────────────────────────────────────────────────
@@ -666,7 +624,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-09", with: null, note: null }
     ]
   },
   // ── RS ──────────────────────────────────────────────────────────────────
@@ -674,7 +631,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── SE ──────────────────────────────────────────────────────────────────
@@ -684,7 +640,6 @@ const VISITED = {
     trips: [
       { date: "2020-05", with: "Ellen", note: "With Sweden having lighter COVID restrictions, we took the train to Stockholm for a weekend. We arrived late but still went for a walk through the old town that same evening. I took Ellen out for dinner to celebrate signing my contract with Novo Nordisk. It felt like a nice break from everyday life in Copenhagen." },
       { date: "2020-07", with: "Anton", note: "Before starting my new job, I visited Anton in his hometown Luleå. It was the time of year when the sun barely sets and being outside at 02:00 in the morning in (almost) full daylight felt completely surreal. We hiked, kayaked, did wood fire sauna sessions, and celebrated his birthday with his friends. I met his family and saw a lot of the surrounding nature." },
-      { date: "2023-09", with: null, note: null }
     ]
   },
   // ── SG ──────────────────────────────────────────────────────────────────
@@ -692,7 +647,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2020-01", with: null, note: null }
     ]
   },
   // ── SI ──────────────────────────────────────────────────────────────────
@@ -700,7 +654,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-07", with: null, note: null }
     ]
   },
   // ── SK ──────────────────────────────────────────────────────────────────
@@ -708,7 +661,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-06", with: null, note: null }
     ]
   },
   // ── KR ──────────────────────────────────────────────────────────────────
@@ -716,7 +668,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2019-11", with: null, note: null }
     ]
   },
   // ── ES ──────────────────────────────────────────────────────────────────
@@ -724,8 +675,7 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-07", with: "Ellen", note: "After Morocco, we flew to Valencia for a few extra days of sun, food, and a big picnic with olives, cheese, and cold cuts from the central market before returning to Denmark." },
-      { date: "2022-07", with: null, note: null }
+      { date: "2021-07", with: "Ellen", note: "For my second trip to Morocco, we flew into Casablanca and took the train to Marrakesh. The first evening on the main square was overwhelming when a henna artist would not take Ellen’s no for an answer. It was an abrupt introduction to how intense the city can feel. We explored the beautiful sites of Marrakesh before heading into the Atlas Mountains and the Sahara. In Fes, we arrived during Eid and the entire city was preparing goats for slaughter. There were skins and fires in the streets and our hotel hosted a small celebration where we tried goat intestine. We continued to Chefchaouen, the blue city, and then flew to Valencia for a few extra days of sun, food, and a big picnic with olives, cheese, and cold cuts from the central market before returning to Denmark." },
     ]
   },
   // ── CH ──────────────────────────────────────────────────────────────────
@@ -733,7 +683,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-03", with: null, note: null }
     ]
   },
   // ── TR ──────────────────────────────────────────────────────────────────
@@ -741,7 +690,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-09", with: null, note: null }
     ]
   },
   // ── UA ──────────────────────────────────────────────────────────────────
@@ -749,7 +697,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2021-08", with: null, note: null }
     ]
   },
   // ── AE ──────────────────────────────────────────────────────────────────
@@ -757,7 +704,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2023-12", with: null, note: null }
     ]
   },
   // ── GB ──────────────────────────────────────────────────────────────────
@@ -765,7 +711,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-04", with: null, note: null }
     ]
   },
   // ── US ──────────────────────────────────────────────────────────────────
@@ -773,8 +718,7 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2022-06", with: "Novo Nordisk Investor Relations", note: "I joined the ADA conference in New Orleans, supporting investor interactions. Outside the conference we took an airboat through the Louisiana swamps and saw alligators. One evening we had a dinner on a steamboat with the CFO Karsten, and after the conference David, Jakob, and I had a memorable and rather wild night out in the city." },
-      { date: "2021-09", with: null, note: null }
+      { date: "2022-06", with: "Novo Nordisk Investor Relations", note: "I was fortunate to join the ADA conference in New Orleans, supporting investor interactions. Outside the conference we took an airboat through the Louisiana swamps and saw alligators. One evening we had a dinner on a steamboat with the CFO Karsten, and after the conference David, Jakob, and I had a memorable and rather wild night out in the city." },
     ]
   },
   // ── VA ──────────────────────────────────────────────────────────────────
@@ -782,7 +726,6 @@ const VISITED = {
     visited: true,
     territoryBadge: "Observer State",
     trips: [
-      { date: "2023-06", with: null, note: null }
     ]
   },
   // ── VN ──────────────────────────────────────────────────────────────────
@@ -790,7 +733,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: "2020-01", with: null, note: null }
     ]
   },
   // ── PS ──────────────────────────────────────────────────────────────────
@@ -798,7 +740,6 @@ const VISITED = {
     visited: true,
     territoryBadge: null,
     trips: [
-      { date: null, with: null, note: null }
     ]
   }
 };
@@ -1296,7 +1237,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(
 
 /* ── Body builder ─────────────────────────────────────────────────── */
 const CAL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1.5" width="10" height="9" rx="1" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="0.5" y1="4" x2="10.5" y2="4" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="3" y1="0.5" x2="3" y2="3" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><line x1="8" y1="0.5" x2="8" y2="3" stroke="rgba(0,0,0,0.3)" stroke-width="1"/></svg>`;
-const PPL_ICON = `<svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="2" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M0.5 10c0-1.93 1.34-3.5 3-3.5s3 1.57 3 3.5" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="2.5" r="1.5" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M7.5 10c0-1.66 0.67-3 1.5-3s1.5 1.34 1.5 3" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/></svg>`;
+const PPL_ICON = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="3.5" cy="2.5" r="1.5" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M0.5 9.5C0.5 7.5 1.7 6.5 3.5 6.5C5.3 6.5 6.5 7.5 6.5 9.5" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/><circle cx="7.5" cy="2.5" r="1.5" stroke="rgba(0,0,0,0.3)" stroke-width="1"/><path d="M4.5 9.5C4.5 7.5 5.7 6.5 7.5 6.5C9.3 6.5 10.5 7.5 10.5 9.5" stroke="rgba(0,0,0,0.3)" stroke-width="1" stroke-linecap="round"/></svg>`;
 
 function buildBody(iso2, st, cd) {
   const vis = cd.visited || false;
