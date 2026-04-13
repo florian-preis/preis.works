@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>knowhere</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F7F3EE'/%3E%3Ctext x='8' y='23' font-family='DM Sans,Helvetica Neue,sans-serif' font-size='20' font-weight='300' fill='%231A1A1A'%3Ek%3C/text%3E%3Crect x='20' y='25' width='9' height='1.5' rx='0.75' fill='%231A1A1A'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F7F3EE'/%3E%3Ctext x='5' y='23' font-family='DM Sans,Helvetica Neue,sans-serif' font-size='20' font-weight='300' fill='%231A1A1A'%3Ek%3C/text%3E%3Crect x='21' y='22' width='7' height='1.2' rx='0.6' fill='%231A1A1A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -28,12 +28,12 @@ body{font-family:var(--font);color:var(--ink);display:flex;flex-direction:column
 .nav{height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg);position:relative;z-index:100}
 .nav-logo{font-size:15px;font-weight:400;letter-spacing:-0.3px;color:var(--ink);text-decoration:none}
 .nav-right{display:flex;align-items:center;gap:8px}
+.npg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
 .np{font-size:12px;font-weight:500;padding:5px 14px;border-radius:7px;border:none;background:none;color:var(--ink-2);cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:-0.1px}
 .np.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 body.night .np.active{box-shadow:none;background:var(--surface-2)}
 /* Settings icon — pure SVG, no emoji */
-.nib{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);transition:all .15s;flex-shrink:0}
-.npg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px;height:34px;box-sizing:border-box}
+.nib{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);transition:all .15s}
 .nib:hover{border-color:var(--border-strong);color:var(--ink)}
 .nib svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* APP */
@@ -106,9 +106,14 @@ body.night .lb-tab.active{background:var(--surface-2)}
 .lb-section-gap{height:20px}
 .lb-wrong-title{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px;padding-top:16px;border-top:1px solid var(--border)}
 .lb-wrong-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;margin-bottom:5px;display:flex;align-items:center;gap:10px}
-.lb-wrong-flag{width:28px;height:auto;max-height:21px;object-fit:contain;border-radius:2px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.lb-wrong-flag{font-size:22px;line-height:1;flex-shrink:0}
 .lb-wrong-info{flex:1;min-width:0}
 .lb-wrong-name{font-size:13px;font-weight:500;color:var(--ink)}
+.lb-wrong-pairs{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.lb-wrong-pair{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--surface-2);border-radius:4px;padding:2px 6px}
+.lb-wrong-wrong{color:var(--red)}
+.lb-wrong-arrow{color:var(--ink-3)}
+.lb-wrong-right{color:var(--green)}
 .lb-wrong-detail{font-size:11px;color:var(--ink-3);margin-top:1px}
 .lb-wrong-count{font-size:13px;font-weight:500;color:var(--red);font-family:var(--mono);flex-shrink:0}
 .lb-clear{margin-top:16px;background:none;border:1px solid var(--border);border-radius:var(--rs);padding:10px 18px;font-size:12px;color:var(--ink-3);cursor:pointer;font-family:var(--font);transition:all .15s;display:block;width:100%}
@@ -129,10 +134,10 @@ body.night .lb-tab.active{background:var(--surface-2)}
 .qcard{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .fcb{padding:32px 24px 28px;text-align:center}
 /* Flag display using image instead of emoji */
-.flag-img{width:80px;height:auto;max-height:60px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12);image-rendering:-webkit-optimize-contrast}
-.cfsm-img{width:52px;height:auto;max-height:40px;object-fit:contain;border-radius:2px;margin:0 auto 12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.1);image-rendering:-webkit-optimize-contrast}
+.flag-img{width:96px;height:auto;max-height:72px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12);image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges}
 .qclbl{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3)}
 .ccb{padding:28px 24px 16px;text-align:center}
+.cfsm-img{width:44px;height:auto;max-height:34px;object-fit:contain;border-radius:2px;margin:0 auto 12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .ccn{font-size:26px;font-weight:500;letter-spacing:-.8px;color:var(--ink);margin-bottom:4px}
 .cclbl{font-size:12px;color:var(--ink-3)}
 .ciw{padding:0 18px 20px;display:flex;gap:8px}
@@ -157,7 +162,7 @@ body.night .lb-tab.active{background:var(--surface-2)}
 /* MAP display (locations mode) */
 .map-display-wrap{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .map-display-label{padding:14px 18px 10px;font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--border)}
-.map-svg-area{background:#E8EDF5;overflow:hidden;position:relative;height:210px;display:flex;align-items:center;justify-content:center;cursor:grab}
+.map-svg-area{background:#E8EDF5;overflow:hidden;position:relative;height:220px;display:flex;align-items:center;justify-content:center;cursor:grab}
 .map-svg-area:active{cursor:grabbing}
 body.night .map-svg-area{background:#0D1018}
 .map-svg-area svg{display:block;width:100%;height:100%}
@@ -281,8 +286,8 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
         <div><div class="hs-num" id="hs-s">0</div><div class="hs-lbl">Streak</div></div>
       </div>
     </div>
-    <div style="padding:0 20px 20px;text-align:left">
-      <span style="font-size:11px;color:var(--ink-3);letter-spacing:.2px">© Florian Preis <span id="copy-year"></span></span>
+    <div style="padding:0 20px 20px;width:100%;max-width:400px;margin:0 auto;align-self:flex-end">
+      <span id="copyright-year" style="font-size:11px;color:var(--ink-3);letter-spacing:.2px"></span>
     </div>
   </div>
   <!-- LEADERBOARD -->
@@ -361,15 +366,13 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
 </div>
 <script>
 // ─── COUNTRY DATA ────────────────────────────────────────────────────
-// Flag URLs — flagcdn.com valid widths: 20,24,28,32,36,40,48,56,64,72,80,96,112,128,160,240,320
-// Use 160px default (sharp on retina at 80px CSS size), 80px for small capitals flag
-function flagUrl(id,size=160){return`https://flagcdn.com/w${size}/${id}.png`;}
+// Flag URLs use flagcdn.com (reliable, works locally & online)
+function flagUrl(id,size=64){return`https://flagcdn.com/w${size}/${id}.png`;}
 
 // Confusable cities pool for capitals mode distractors
 // Per-country commonly confused cities (assumed capital → real capital traps)
 const CONFUSABLE_CITIES={
 au:[‘Sydney’,‘Melbourne’],
-be:[‘Antwerp’,‘Bruges’,‘Ghent’],
 bz:[‘Belize City’],
 bj:[‘Cotonou’],
 bo:[‘La Paz’],
@@ -377,22 +380,21 @@ br:[‘Rio de Janeiro’,‘São Paulo’],
 bi:[‘Bujumbura’],
 cm:[‘Douala’],
 ca:[‘Toronto’,‘Montreal’,‘Vancouver’],
-cn:[‘Shanghai’,‘Beijing’,‘Guangzhou’],
+cn:[‘Shanghai’],
 ci:[‘Abidjan’],
 ec:[‘Guayaquil’],
-gq:[‘Malabo’,‘Ciudad de la Paz’],
-in:[‘Mumbai’,‘Kolkata’,‘Bangalore’],
+gq:[‘Malabo’],
+in:[‘Mumbai’,‘Kolkata’,‘Bangalore’,‘Chennai’],
 id:[‘Bali’,‘Denpasar’,‘Surabaya’],
 il:[‘Tel Aviv’],
 kz:[‘Almaty’],
-my:[‘Putrajaya’,‘Kuala Lumpur’],
-ma:[‘Casablanca’,‘Marrakesh’],
+my:[‘Putrajaya’],
+ma:[‘Casablanca’,‘Marrakech’],
 mm:[‘Yangon’],
 nl:[‘The Hague’,‘Rotterdam’],
 nz:[‘Auckland’],
-ng:[‘Lagos’,‘Kano’,‘Ibadan’],
+ng:[‘Lagos’,‘Kano’],
 pk:[‘Karachi’,‘Lahore’],
-pw:[‘Koror’],
 ph:[‘Quezon City’,‘Cebu’],
 sa:[‘Jeddah’,‘Mecca’],
 za:[‘Johannesburg’,‘Cape Town’,‘Durban’],
@@ -406,46 +408,45 @@ us:[‘New York City’,‘Los Angeles’,‘Chicago’],
 vn:[‘Ho Chi Minh City’,‘Da Nang’],
 de:[‘Munich’,‘Hamburg’,‘Frankfurt’],
 it:[‘Milan’,‘Naples’,‘Florence’],
-es:[‘Barcelona’,‘Seville’,‘Valencia’],
-ru:[‘St Petersburg’,‘Novosibirsk’],
-gb:[‘Manchester’,‘Birmingham’,‘Edinburgh’],
-fr:[‘Lyon’,‘Marseille’,‘Nice’],
-jp:[‘Osaka’,‘Kyoto’,‘Yokohama’],
-kr:[‘Busan’,‘Incheon’],
-eg:[‘Alexandria’,‘Luxor’],
+es:[‘Barcelona’,‘Seville’],
+ru:[‘St Petersburg’],
+gb:[‘Manchester’,‘Edinburgh’],
+fr:[‘Lyon’,‘Marseille’],
+jp:[‘Osaka’,‘Kyoto’],
+eg:[‘Alexandria’],
 ke:[‘Mombasa’],
 ar:[‘Córdoba’,‘Rosario’],
 mx:[‘Guadalajara’,‘Monterrey’],
-co:[‘Medellín’,‘Cali’,‘Cartagena’],
-pe:[‘Cusco’,‘Arequipa’],
+co:[‘Medellín’,‘Cali’],
+pe:[‘Cusco’],
 gh:[‘Kumasi’],
-sn:[‘Dakar’],
-ir:[‘Isfahan’,‘Shiraz’,‘Tabriz’],
-iq:[‘Basra’,‘Mosul’],
+ir:[‘Isfahan’,‘Shiraz’],
 ua:[‘Kharkiv’,‘Lviv’,‘Odesa’],
-pl:[‘Kraków’,‘Gdańsk’,‘Wrocław’],
+pl:[‘Kraków’,‘Gdańsk’],
+be:[‘Antwerp’,‘Bruges’],
+at:[‘Salzburg’,‘Graz’],
+pt:[‘Porto’],
+gr:[‘Thessaloniki’],
+se:[‘Gothenburg’,‘Malmö’],
+no:[‘Bergen’],
+ro:[‘Cluj-Napoca’],
+hu:[‘Debrecen’],
+cz:[‘Brno’],
 };
 
 // Smart capital distractors: use per-country confusable cities when available
-function getCapDist(country, pool) {
-const base = getDist(country, pool); // 3 countries with real capitals as distractors
+function getCapDist(country,pool){
+const base=getDist(country,pool);
+const confused=CONFUSABLE_CITIES[country.id];
+if(!confused||!confused.length) return base;
 
-const confused = CONFUSABLE_CITIES[country.id];
-if (!confused || !confused.length) return base;
+// Inject confusable city based on difficulty: easy=40%, medium=70%, hard=100%
+const chance={easy:.4,medium:.7,hard:1}[S.diff]||.7;
+if(Math.random()>chance) return base;
 
-// Chance of injecting confusable city increases with difficulty
-const chance = {easy: 0.35, medium: 0.65, hard: 1.0}[S.diff] || 0.65;
-if (Math.random() > chance) return base;
-
-// Pick a confusable city (one that is NOT the actual capital)
-const eligible = confused.filter(city => city !== country.cap);
-if (!eligible.length) return base;
-const city = eligible[Math.floor(Math.random() * eligible.length)];
-
-// Replace one random distractor slot with a fake “country” whose .cap is the confusable city
-const result = […base];
-const slot = Math.floor(Math.random() * result.length);
-result[slot] = {id: ‘*trap’, name: ’*’, cap: city, flag: ‘’};
+const city=confused[Math.floor(Math.random()*confused.length)];
+const result=[…base];
+result[Math.floor(Math.random()*result.length)]={id:’*trap’,name:’*’,cap:city,flag:’’};
 return result;
 }
 
@@ -585,19 +586,22 @@ let S={regions:[‘europe’,‘asia’,‘africa’,‘americas’],diff:‘med
 const saveS=()=>localStorage.setItem(‘kw_s’,JSON.stringify(S));
 
 // ─── WRONG LOG ──────────────────────────────────────────────────────
-function getWrong(){try{return JSON.parse(localStorage.getItem(‘kw_wrong’)||’{}’);}catch(e){return{};}}
-function logWrong(id, selectedLabel, correctLabel){
+// Stores per-mode: {flags:{id:{count,wrong:[{selected,correct}]}}, capitals:{…}, locations:{…}}
+function getWrong(){try{return JSON.parse(localStorage.getItem(‘kw_wrong2’)||’{}’);}catch(e){return{};}}
+function logWrong(mode,countryId,selected,correct){
 const w=getWrong();
-const mode=Q?Q.mode:‘flags’;
-const key=mode+’:’+id;
-if(!w[key])w[key]={id,mode,count:0,selected:selectedLabel||’’,correct:correctLabel||’’};
-w[key].count++;
-// Update with most recent wrong answer
-if(selectedLabel) w[key].selected=selectedLabel;
-if(correctLabel) w[key].correct=correctLabel;
-localStorage.setItem(‘kw_wrong’,JSON.stringify(w));
+if(!w[mode])w[mode]={};
+if(!w[mode][countryId])w[mode][countryId]={count:0,mistakes:[]};
+w[mode][countryId].count++;
+// store last 3 unique mistake pairs
+const pair={selected,correct};
+const existing=w[mode][countryId].mistakes;
+if(!existing.find(m=>m.selected===selected&&m.correct===correct)){
+existing.push(pair);if(existing.length>3)existing.shift();
 }
-function clearWrong(){localStorage.removeItem(‘kw_wrong’);}
+localStorage.setItem(‘kw_wrong2’,JSON.stringify(w));
+}
+function clearWrong(){localStorage.removeItem(‘kw_wrong2’);localStorage.removeItem(‘kw_wrong’);}
 
 // ─── BOARD ──────────────────────────────────────────────────────────
 const getBoard=()=>{try{return JSON.parse(localStorage.getItem(‘kw_board’)||’[]’);}catch(e){return[];}};
@@ -608,57 +612,43 @@ let lbMode=‘flags’; // current leaderboard filter
 
 function renderBoard(){
 const b=getBoard();
-// Filter by selected mode tab
-const rounds=b.filter(e=>e.gamemode===‘rounds’&&e.mode===lbMode);
-const marathon=b.filter(e=>e.gamemode===‘marathon’&&e.mode===lbMode);
+// Sort by score desc, then by time asc (faster = better) as tiebreaker
+function parseTime(ts){
+// “1m 23s” → seconds
+const m=ts.match(/(\d+)m\s*(\d+)s/);return m?parseInt(m[1])*60+parseInt(m[2]):9999;
+}
+const sorted=[…b].sort((a,z)=>z.score!==a.score?z.score-a.score:parseTime(a.time)-parseTime(z.time));
+
+const rounds=sorted.filter(e=>e.gamemode===‘rounds’&&e.mode===lbMode);
+const marathon=sorted.filter(e=>e.gamemode===‘marathon’&&e.mode===lbMode);
 
 const rEl=document.getElementById(‘lb-rounds’);
 const mEl=document.getElementById(‘lb-marathon’);
 
 if(!rounds.length){rEl.innerHTML=’<div class="lb-empty">No rounds yet</div>’;}
 else{
-// Parse time string “Xm Ys” → seconds for sorting
-const toSec=t=>{const m=t.match(/(\d+)m\s*(\d+)s/);return m?parseInt(m[1])*60+parseInt(m[2]):9999;};
-const sorted=[…rounds].sort((a,b)=>b.score-a.score||toSec(a.time)-toSec(b.time));
-rEl.innerHTML=sorted.slice(0,8).map((e,i)=>` <div class="lb-row"> <span class="lb-rank">${String(i+1).padStart(2,'0')}</span> <div class="lb-mr"> <span class="lb-date">${e.date}</span> <div class="lb-badges"><span class="lb-badge">${e.diff}</span><span class="lb-badge">${e.style==='mc'?'MC':'Type'}</span><span class="lb-badge">${e.correct}/${e.total}</span></div> </div> <div><div class="lb-val">${e.score}%</div><div class="lb-sub">${e.time}</div></div> </div>`).join(’’);
+rEl.innerHTML=rounds.slice(0,8).map((e,i)=>` <div class="lb-row"> <span class="lb-rank">${String(i+1).padStart(2,'0')}</span> <div class="lb-mr"> <span class="lb-date">${e.date}</span> <div class="lb-badges"><span class="lb-badge">${e.diff}</span><span class="lb-badge">${e.style==='mc'?'MC':'Type'}</span><span class="lb-badge">${e.correct}/${e.total}</span></div> </div> <div><div class="lb-val">${e.score}%</div><div class="lb-sub">${e.time}</div></div> </div>`).join(’’);
 }
 
-if(!marathon.length){mEl.innerHTML=’<div class="lb-empty">No marathons yet</div>’;}
+// Marathon: sort by streak desc
+const mSorted=[…marathon].sort((a,z)=>z.streak-a.streak);
+if(!mSorted.length){mEl.innerHTML=’<div class="lb-empty">No marathons yet</div>’;}
 else{
-const sortedM=[…marathon].sort((a,b)=>b.streak-a.streak);
-mEl.innerHTML=sortedM.slice(0,8).map((e,i)=>` <div class="lb-row"> <span class="lb-rank">${String(i+1).padStart(2,'0')}</span> <div class="lb-mr"> <span class="lb-date">${e.date}</span> <div class="lb-badges"><span class="lb-badge">${e.diff}</span><span class="lb-badge">${e.total}q</span></div> </div> <div><div class="lb-val">${e.streak}</div><div class="lb-sub">streak</div></div> </div>`).join(’’);
+mEl.innerHTML=mSorted.slice(0,8).map((e,i)=>` <div class="lb-row"> <span class="lb-rank">${String(i+1).padStart(2,'0')}</span> <div class="lb-mr"> <span class="lb-date">${e.date}</span> <div class="lb-badges"><span class="lb-badge">${e.diff}</span><span class="lb-badge">${e.total}q</span></div> </div> <div><div class="lb-val">${e.streak}</div><div class="lb-sub">streak</div></div> </div>`).join(’’);
 }
 
-// Wrong log — filtered to current lbMode tab
+// Wrong log — show only for current lbMode
 const wrong=getWrong();
+const modeWrong=wrong[lbMode]||{};
 const wEl=document.getElementById(‘lb-wrong’);
-// Support both old format (number values) and new format (object values)
-const allEntries=Object.entries(wrong).map(([key,val])=>{
-if(typeof val===‘number’){
-// Legacy: key is just country id, no mode
-const c=C.find(x=>x.id===key);
-return c?{id:key,mode:‘flags’,count:val,selected:’’,correct:c.cap}:null;
-}
-return val;
-}).filter(Boolean);
-const wEntries=allEntries
-.filter(e=>e.mode===lbMode)
-.sort((a,b)=>b.count-a.count)
-.slice(0,15);
-if(!wEntries.length){wEl.innerHTML=’<div class="lb-empty">No mistakes logged yet</div>’;}
+const wEntries=Object.entries(modeWrong).sort((a,z)=>z[1].count-a[1].count).slice(0,12);
+if(!wEntries.length){wEl.innerHTML=’<div class="lb-empty">No mistakes logged yet for this mode</div>’;}
 else{
-wEl.innerHTML=wEntries.map(e=>{
-const c=C.find(x=>x.id===e.id);if(!c)return’’;
-let detail=’’;
-if(lbMode===‘locations’){
-detail=`<div class="lb-wrong-detail">Correct: <strong>${e.correct||c.name}</strong>${e.selected&&e.selected!==e.correct?` · You picked: ${e.selected}`:''}</div>`;
-} else {
-// flags or capitals: show selected → correct
-const selPart=e.selected&&e.selected!==e.correct?`${e.selected} → `:’’;
-const corrLabel=lbMode===‘capitals’?e.correct||c.cap:e.correct||c.name;
-detail=`<div class="lb-wrong-detail">${selPart}<span style="color:var(--green)">${corrLabel}</span></div>`;
-}
-return`<div class="lb-wrong-row"> <img class="lb-wrong-flag" src="${flagUrl(e.id,80)}" alt="${c.name}" onerror="this.style.display='none'"> <div class="lb-wrong-info"><div class="lb-wrong-name">${c.name}</div>${detail}</div> <div class="lb-wrong-count">×${e.count}</div> </div>`;
+wEl.innerHTML=wEntries.map(([id,data])=>{
+const c=C.find(x=>x.id===id);if(!c)return’’;
+const mistakePairs=data.mistakes||[];
+const detail=mistakePairs.map(m=>`<span class="lb-wrong-pair"><span class="lb-wrong-wrong">${m.selected}</span><span class="lb-wrong-arrow">→</span><span class="lb-wrong-right">${m.correct}</span></span>`).join(’’);
+return`<div class="lb-wrong-row"> <img class="lb-wrong-flag" src="${flagUrl(id)}" alt="${c.name}" onerror="this.style.display='none'"> <div class="lb-wrong-info"> <div class="lb-wrong-name">${c.name}</div> <div class="lb-wrong-pairs">${detail}</div> </div> <div class="lb-wrong-count">×${data.count}</div> </div>`;
 }).join(’’);
 }
 }
@@ -726,6 +716,18 @@ for(const c of rest){if(f.length>=3)break;f.push(c);seen.add(c.id);}
 return f;
 }
 
+// Smart capital distractors: mix confusable capitals + non-capital cities
+function getCapDist(country,pool){
+const base=getDist(country,pool);
+// For hard mode, occasionally replace one cap with a confusable non-capital city
+if(S.diff===‘hard’&&Math.random()<0.5&&CITIES.length){
+const city=CITIES[Math.floor(Math.random()*CITIES.length)];
+// replace last distractor with city
+return [{…base[0]},{…base[1]},{id:’*city’,name:’*’,cap:city,flag:’’}];
+}
+return base;
+}
+
 // Shuffle with anti-repeat: track last positions so correct answer moves around
 let lastCorrectPos=-1;
 function shuffleAntiRepeat(arr){
@@ -774,7 +776,7 @@ ${renderBody(Q.mode,country,opts)}
 
 function renderBody(mode,country,opts){
 if(mode===‘flags’){
-return`<div class="qcard"><div class="fcb"> <img class="flag-img" src="${flagUrl(country.id)}" alt="${country.name}" onerror="this.style.display='none'"> <span class="qclbl">Which country is this?</span> </div></div> <div class="choices">${opts.map((o,i)=>`<button class="ch" id="c${i}" onclick="aFlag(${i},'${o.id}','${country.id}')">${o.name}</button>`).join('')}</div>`;
+return`<div class="qcard"><div class="fcb"> <img class="flag-img" src="${flagUrl(country.id,128)}" alt="${country.name}" onerror="this.src='https://flagcdn.com/w80/${country.id}.png'"> <span class="qclbl">Which country is this?</span> </div></div> <div class="choices">${opts.map((o,i)=>`<button class="ch" id="c${i}" onclick="aFlag(${i},'${o.id}','${country.id}')">${o.name}</button>`).join('')}</div>`;
 }
 if(mode===‘capitals’){
 const capDists=getCapDist(country,Q.pool);
@@ -797,6 +799,7 @@ const locOpts=[country,…locDists];shuf(locOpts);
 let lpos=locOpts.indexOf(country);let latt=0;
 while(lpos===lastCorrectPos&&latt<6){shuf(locOpts);lpos=locOpts.indexOf(country);latt++;}
 lastCorrectPos=lpos;
+Q.locOpts=locOpts; // store for logWrong in aLoc
 // render map async after DOM is ready
 setTimeout(()=>buildHighlightedMap(country.id),0);
 return`<div class="map-display-wrap"> <div class="map-display-label">Which country is highlighted?</div> <div class="map-svg-area" id="map-svg-area"></div> </div> <div class="choices">${locOpts.map((o,i)=>`<button class="ch" id="c${i}" onclick="aLoc(${i},'${o.id}','${country.id}')">${o.name}</button>`).join('')}</div>`;
@@ -880,6 +883,12 @@ vn:‘Vietnam’,ye:‘Yemen’,zm:‘Zambia’,zw:‘Zimbabwe’,ne:‘Niger’
 ng:‘Nigeria’,nz:‘New Zealand’,
 };
 
+// Countries that need auto-zoom due to small size — value is initial zoom scale
+const SMALL_COUNTRIES={sg:18,bh:22,kw:10,qa:12,lb:10,cy:8,is:5,lu:12,me:10,al:8,
+mk:10,si:10,ba:8,hr:7,sk:8,ee:7,lv:7,lt:7,md:8,mt:20,bz:8,jm:8,ht:8,do:7,
+gt:8,sv:10,hn:8,ni:7,cr:8,pa:9,tt:14,kp:7,tw:10,lk:9,np:8,bt:10,bd:8,
+ge:9,am:10,az:9,jo:8,il:10,sy:8,dj:15,rw:12,bi:12,ug:8,mw:10};
+
 async function buildHighlightedMap(cid){
 const wrap=document.getElementById(‘map-svg-area’);
 if(!wrap)return;
@@ -894,29 +903,26 @@ const wrap2=document.getElementById(‘map-svg-area’);
 if(!wrap2)return;
 
 ```
-const W=wrap2.clientWidth||460, H=210;
+const W=wrap2.clientWidth||460, H=220;
 
-// Build name→id index from world-atlas names object
+// Build name→id index
 const namesObj=world.objects.countries.geometries.reduce((acc,g)=>{
   if(g.properties&&g.properties.name) acc[g.properties.name]=String(g.id);
   return acc;
 },{});
 
-// Match by name first, fall back to numeric ISO code
 const targetName=ISO2_NAME[cid];
 const targetNum=ISO3_NUM[ISO2_3[cid]];
 const targetId=targetName?namesObj[targetName]:null;
 
-// Shift translate up slightly so S. America tip is visible; Antarctica stays clipped
+// Shift up (negative = less south offset) to keep S. America tip visible, Antarctica hidden
 const projection=d3.geoNaturalEarth1()
   .scale(W/5.6)
-  .translate([W/2, H/2 + 16]);
+  .translate([W/2, H/2 + 14]);
 
 const path=d3.geoPath().projection(projection);
 const countries=topo.feature(world, world.objects.countries);
-
-// Filter Antarctica (id 10)
-const visible=countries.features.filter(d=>String(d.id)!=='10');
+const visible=countries.features.filter(d=>String(d.id)!=='10'); // no Antarctica
 
 const svg=d3.select(wrap2).html('').append('svg')
   .attr('viewBox',`0 0 ${W} ${H}`)
@@ -934,40 +940,32 @@ g.selectAll('path')
   })
   .attr('d', path);
 
-// Zoom + pan; double-click/tap resets
+// Zoom + pan; double-click resets
 const zoom=d3.zoom()
-  .scaleExtent([1, 12])
+  .scaleExtent([1, 20])
   .on('zoom', e=> g.attr('transform', e.transform));
 
 svg.call(zoom)
   .on('dblclick.zoom', ()=>
     svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity)
   );
-
 svg.on('touchstart', e=> e.stopPropagation(), {passive:false});
 
-// Auto-zoom: always zoom to frame the target country
-// Scale is chosen so the country fills roughly 40% of the viewport dimension,
-// clamped so tiny countries don't zoom in excessively and huge ones still get a gentle push
-const targetFeature = visible.find(d=>{
-  const sid=String(d.id);
-  return (targetId&&sid===targetId)||(targetNum&&sid===String(targetNum));
-});
-if(targetFeature){
-  const bounds=path.bounds(targetFeature);
-  const bw=bounds[1][0]-bounds[0][0];
-  const bh=bounds[1][1]-bounds[0][1];
-  const cx=(bounds[0][0]+bounds[1][0])/2;
-  const cy=(bounds[0][1]+bounds[1][1])/2;
-  // Target ~40% of the smaller viewport dimension for the country's largest extent
-  const targetPx=Math.min(W,H)*0.40;
-  const rawScale=targetPx/Math.max(bw,bh,1);
-  // Clamp: min 1.2 (just a gentle nudge for Russia/Canada), max 10 (Singapore etc.)
-  const scale=Math.min(10, Math.max(1.2, rawScale));
-  const tx=W/2-scale*cx;
-  const ty=H/2-scale*cy;
-  svg.transition().duration(600)
-    .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+// Auto-zoom for small countries
+const autoScale=SMALL_COUNTRIES[cid];
+if(autoScale){
+  // Find the highlighted feature's centroid and zoom to it
+  const targetFeature=visible.find(d=>{
+    const sid=String(d.id);
+    return (targetId&&sid===targetId)||(targetNum&&sid===String(targetNum));
+  });
+  if(targetFeature){
+    const [[x0,y0],[x1,y1]]=path.bounds(targetFeature);
+    const cx=(x0+x1)/2, cy=(y0+y1)/2;
+    const sc=Math.min(autoScale, Math.min(W/(x1-x0+20), H/(y1-y0+20))*0.85);
+    const tx=W/2-sc*cx, ty=H/2-sc*cy;
+    svg.call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(sc));
+  }
 }
 ```
 
@@ -993,17 +991,15 @@ function stopTimer(){if(tiv){clearInterval(tiv);tiv=null;}}
 // ─── ANSWER HANDLERS ─────────────────────────────────────────────────
 function aFlag(i,aid,cid){
 if(Q.answered)return;Q.answered=true;const ok=aid===cid;
-const selCountry=Q.opts[i];
+const correctC=C.find(c=>c.id===cid);
+const selectedC=Q.opts[i];
 document.querySelectorAll(’.ch’).forEach((b,j)=>{
 b.disabled=true;
 if(Q.opts[j]&&Q.opts[j].id===cid)b.classList.add(‘ok’);
 if(j===i&&!ok)b.classList.add(‘no’);
 });
-if(!ok){
-const country=C.find(c=>c.id===cid);
-logWrong(cid, selCountry?selCountry.name:’’, country?country.name:’’);
-}
-handleMC(ok,C.find(c=>c.id===cid),true);
+if(!ok&&correctC&&selectedC)logWrong(‘flags’,cid,selectedC.name,correctC.name);
+handleMC(ok,correctC);
 }
 
 function aCapMC(i,ans,correct){
@@ -1013,26 +1009,27 @@ b.disabled=true;
 if(b.textContent===correct)b.classList.add(‘ok’);
 if(j===i&&!ok)b.classList.add(‘no’);
 });
-if(!ok) logWrong(Q.country.id, ans, correct);
-handleMC(ok,Q.country,true);
+if(!ok)logWrong(‘capitals’,Q.country.id,ans,correct);
+handleMC(ok,Q.country);
 }
 
 function aLoc(i,aid,cid){
 if(Q.answered)return;Q.answered=true;const ok=aid===cid;
-const correctCountry=C.find(c=>c.id===cid);
-const selectedCountry=C.find(c=>c.id===aid);
+const correctC=C.find(c=>c.id===cid);
+const selectedC=Q.locOpts&&Q.locOpts[i];
 document.querySelectorAll(’.ch’).forEach((b,j)=>{
 b.disabled=true;
-if(b.textContent===correctCountry?.name)b.classList.add(‘ok’);
+if(b.textContent===correctC?.name)b.classList.add(‘ok’);
 if(j===i&&!ok)b.classList.add(‘no’);
 });
-if(!ok) logWrong(cid, selectedCountry?selectedCountry.name:’’, correctCountry?correctCountry.name:’’);
-handleMC(ok,correctCountry,true);
+if(!ok&&correctC&&selectedC)logWrong(‘locations’,cid,selectedC.name,correctC.name);
+handleMC(ok,correctC);
 }
 
-function handleMC(ok,country,skipLog){
+function handleMC(ok,country){
+if(!country)return;
 if(ok){Q.correct++;Q.streak++;Q.best=Math.max(Q.best,Q.streak);decayW(country.id);}
-else{Q.streak=0;boostW(country.id);if(!skipLog)logWrong(country.id,’’,’’);}
+else{Q.streak=0;boostW(country.id);}
 const sn=document.getElementById(‘qsn’);if(sn)sn.textContent=Q.streak;
 setTimeout(()=>nextQ(),ok?650:1200);
 }
@@ -1044,10 +1041,10 @@ const val=inp.value.trim().toLowerCase();
 const ok=val===correct.toLowerCase()||(val.length>3&&correct.toLowerCase().includes(val));
 Q.answered=true;inp.disabled=true;inp.classList.add(ok?‘ok’:‘no’);
 const fb=document.getElementById(‘cfb’);
-if(fb){fb.textContent=ok?‘Correct!’:’Answer: ’+correct;fb.className=’cfb ‘+(ok?‘ok’:‘no’);}
+if(fb){fb.textContent=ok?‘Correct!’:’Answer: ‘+correct;fb.className=‘cfb ‘+(ok?‘ok’:‘no’);}
 document.getElementById(‘cbtn’).disabled=true;
 if(ok){Q.correct++;Q.streak++;Q.best=Math.max(Q.best,Q.streak);decayW(cid);}
-else{Q.streak=0;boostW(cid);logWrong(cid, inp.value.trim(), correct);}
+else{Q.streak=0;boostW(cid);logWrong(‘capitals’,cid,inp.value.trim()||’(empty)’,correct);}
 const sn=document.getElementById(‘qsn’);if(sn)sn.textContent=Q.streak;
 const slot=document.getElementById(‘fbslot’);
 if(slot){
@@ -1095,20 +1092,11 @@ document.querySelectorAll(’.screen’).forEach(s=>s.classList.remove(‘active
 document.getElementById(‘screen-’+name).classList.add(‘active’);
 document.querySelectorAll(’.np’).forEach(p=>p.classList.toggle(‘active’,p.dataset.screen===name));
 }
-
-document.addEventListener(‘DOMContentLoaded’,()=>{
-
-// Copyright year
-const cy=document.getElementById(‘copy-year’);if(cy)cy.textContent=new Date().getFullYear();
-
-// Nav buttons
 document.querySelectorAll(’.np’).forEach(p=>p.addEventListener(‘click’,()=>{
 showScreen(p.dataset.screen);
 if(p.dataset.screen===‘leaderboard’)renderBoard();
 if(p.dataset.screen===‘home’)updateHomeStats();
 }));
-
-// Home mode tiles
 document.querySelectorAll(’.hmc’).forEach(c=>c.addEventListener(‘click’,()=>startQuiz(c.dataset.mode)));
 
 // LB mode tabs
@@ -1166,6 +1154,7 @@ updateHomeStats();
 });
 
 updateHomeStats();
+document.getElementById(‘copyright-year’).textContent=‘© ‘+new Date().getFullYear()+’ Florian Preis’;
 
 // ─── HOME LOGO ANIMATION — silent looping ────────────────────────────
 (function(){
@@ -1203,8 +1192,6 @@ setTimeout(runCycle, 5800);
 
 setTimeout(runCycle, 1000);
 })();
-
-}); // end DOMContentLoaded
 </script>
 
 </body>
