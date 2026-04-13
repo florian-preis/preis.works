@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>knowhere</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F7F3EE'/%3E%3Ctext x='8' y='23' font-family='DM Sans,Helvetica Neue,sans-serif' font-size='20' font-weight='300' fill='%231A1A1A' opacity='0.45'%3Ek%3C/text%3E%3Ctext x='8' y='23' font-family='DM Sans,Helvetica Neue,sans-serif' font-size='20' font-weight='300' fill='%231A1A1A' opacity='1'%3Ek%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23F7F3EE'/%3E%3Ctext x='8' y='23' font-family='DM Sans,Helvetica Neue,sans-serif' font-size='20' font-weight='300' fill='%231A1A1A'%3Ek%3C/text%3E%3Crect x='20' y='25' width='9' height='1.5' rx='0.75' fill='%231A1A1A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -29,12 +29,12 @@ body{font-family:var(--font);color:var(--ink);display:flex;flex-direction:column
 .nav{height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg);position:relative;z-index:100}
 .nav-logo{font-size:15px;font-weight:400;letter-spacing:-0.3px;color:var(--ink);text-decoration:none}
 .nav-right{display:flex;align-items:center;gap:8px}
-.npg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
 .np{font-size:12px;font-weight:500;padding:5px 14px;border-radius:7px;border:none;background:none;color:var(--ink-2);cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:-0.1px}
 .np.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 body.night .np.active{box-shadow:none;background:var(--surface-2)}
 /* Settings icon — pure SVG, no emoji */
-.nib{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);transition:all .15s}
+.nib{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);transition:all .15s;flex-shrink:0}
+.npg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px;height:34px;box-sizing:border-box}
 .nib:hover{border-color:var(--border-strong);color:var(--ink)}
 .nib svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 /* APP */
@@ -107,7 +107,7 @@ body.night .lb-tab.active{background:var(--surface-2)}
 .lb-section-gap{height:20px}
 .lb-wrong-title{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px;padding-top:16px;border-top:1px solid var(--border)}
 .lb-wrong-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;margin-bottom:5px;display:flex;align-items:center;gap:10px}
-.lb-wrong-flag{font-size:22px;line-height:1;flex-shrink:0}
+.lb-wrong-flag{width:28px;height:auto;max-height:21px;object-fit:contain;border-radius:2px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .lb-wrong-info{flex:1;min-width:0}
 .lb-wrong-name{font-size:13px;font-weight:500;color:var(--ink)}
 .lb-wrong-detail{font-size:11px;color:var(--ink-3);margin-top:1px}
@@ -130,10 +130,10 @@ body.night .lb-tab.active{background:var(--surface-2)}
 .qcard{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .fcb{padding:32px 24px 28px;text-align:center}
 /* Flag display using image instead of emoji */
-.flag-img{width:80px;height:auto;max-height:60px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.flag-img{width:80px;height:auto;max-height:60px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12);image-rendering:-webkit-optimize-contrast}
+.cfsm-img{width:52px;height:auto;max-height:40px;object-fit:contain;border-radius:2px;margin:0 auto 12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.1);image-rendering:-webkit-optimize-contrast}
 .qclbl{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3)}
 .ccb{padding:28px 24px 16px;text-align:center}
-.cfsm-img{width:44px;height:auto;max-height:34px;object-fit:contain;border-radius:2px;margin:0 auto 12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .ccn{font-size:26px;font-weight:500;letter-spacing:-.8px;color:var(--ink);margin-bottom:4px}
 .cclbl{font-size:12px;color:var(--ink-3)}
 .ciw{padding:0 18px 20px;display:flex;gap:8px}
@@ -282,6 +282,9 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
         <div><div class="hs-num" id="hs-s">0</div><div class="hs-lbl">Streak</div></div>
       </div>
     </div>
+    <div style="padding:0 20px 20px;text-align:left">
+      <span style="font-size:11px;color:var(--ink-3);letter-spacing:.2px">© Florian Preis <script>document.write(new Date().getFullYear())</script></span>
+    </div>
   </div>
   <!-- LEADERBOARD -->
   <div class="screen" id="screen-leaderboard">
@@ -312,9 +315,6 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
   </div>
   <!-- QUIZ -->
   <div class="screen" id="screen-quiz"></div>
-</div>
-<div style="position:fixed;bottom:16px;left:20px;z-index:50;pointer-events:none">
-  <span style="font-size:11px;color:var(--ink-3);letter-spacing:.2px">© <script>document.write(new Date().getFullYear())</script> Florian Preis</span>
 </div>
 <!-- SETTINGS DRAWER -->
 <div class="ov" id="ov"></div>
@@ -362,52 +362,95 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
 </div>
 <script>
 // ─── COUNTRY DATA ────────────────────────────────────────────────────
-// Flag URLs use flagcdn.com (reliable, works locally & online)
-function flagUrl(id,size=64){return`https://flagcdn.com/w${size}/${id}.png`;}
+// Flag URLs use flagcdn.com — use 128px for sharp display on retina
+function flagUrl(id,size=128){return`https://flagcdn.com/w${size}/${id}.png`;}
+function flagSrcset(id){return`https://flagcdn.com/w128/${id}.png 1x, https://flagcdn.com/w256/${id}.png 2x`;}
 
 // Confusable cities pool for capitals mode distractors
 // Per-country commonly confused cities (assumed capital → real capital traps)
 const CONFUSABLE_CITIES={
-  au:['Sydney','Melbourne'],be:['Antwerp','Bruges','Ghent'],bz:['Belize City'],
-  bj:['Cotonou'],bo:['La Paz'],br:['Rio de Janeiro','São Paulo'],bi:['Bujumbura'],
-  cm:['Douala'],ca:['Toronto','Montreal','Vancouver'],cn:['Shanghai','Beijing','Guangzhou'],
-  ci:['Abidjan'],ec:['Guayaquil'],gq:['Malabo'],in:['Mumbai','Kolkata','Bangalore'],
-  id:['Bali','Denpasar','Surabaya'],il:['Tel Aviv'],kz:['Almaty'],my:['Putrajaya'],
-  ma:['Casablanca','Marrakech'],mm:['Yangon'],nl:['The Hague','Rotterdam'],
-  nz:['Auckland'],ng:['Lagos'],pk:['Karachi','Lahore'],ph:['Quezon City','Cebu'],
-  sa:['Jeddah','Mecca'],za:['Johannesburg','Cape Town','Durban'],lk:['Colombo'],
-  ch:['Zurich','Geneva'],tz:['Dar es Salaam'],th:['Phuket','Chiang Mai'],
-  tr:['Istanbul','Izmir'],ae:['Dubai','Sharjah'],us:['New York','Los Angeles','Chicago'],
-  vn:['Ho Chi Minh City','Da Nang'],nl:['The Hague','Amsterdam'],
-  de:['Munich','Hamburg','Frankfurt'],it:['Milan','Naples','Florence'],
-  es:['Barcelona','Seville','Valencia'],ru:['St Petersburg','Novosibirsk'],
-  gb:['Manchester','Birmingham','Edinburgh'],fr:['Lyon','Marseille','Nice'],
-  jp:['Osaka','Kyoto','Yokohama'],kr:['Busan','Incheon'],
-  eg:['Alexandria','Luxor'],ke:['Mombasa'],tz:['Dar es Salaam'],
-  ar:['Buenos Aires','Córdoba','Rosario'],mx:['Guadalajara','Monterrey'],
-  co:['Medellín','Cali','Cartagena'],pe:['Cusco','Arequipa'],
-  ng:['Lagos','Kano','Ibadan'],gh:['Kumasi'],sn:['Dakar'],
-  ir:['Isfahan','Shiraz','Tabriz'],iq:['Basra','Mosul'],
-  ua:['Kharkiv','Lviv','Odesa'],pl:['Kraków','Gdańsk','Wrocław'],
+  au:['Sydney','Melbourne'],
+  be:['Antwerp','Bruges','Ghent'],
+  bz:['Belize City'],
+  bj:['Cotonou'],
+  bo:['La Paz'],
+  br:['Rio de Janeiro','São Paulo'],
+  bi:['Bujumbura'],
+  cm:['Douala'],
+  ca:['Toronto','Montreal','Vancouver'],
+  cn:['Shanghai','Beijing','Guangzhou'],
+  ci:['Abidjan'],
+  ec:['Guayaquil'],
+  gq:['Malabo','Ciudad de la Paz'],
+  in:['Mumbai','Kolkata','Bangalore'],
+  id:['Bali','Denpasar','Surabaya'],
+  il:['Tel Aviv'],
+  kz:['Almaty'],
+  my:['Putrajaya','Kuala Lumpur'],
+  ma:['Casablanca','Marrakesh'],
+  mm:['Yangon'],
+  nl:['The Hague','Rotterdam'],
+  nz:['Auckland'],
+  ng:['Lagos','Kano','Ibadan'],
+  pk:['Karachi','Lahore'],
+  pw:['Koror'],
+  ph:['Quezon City','Cebu'],
+  sa:['Jeddah','Mecca'],
+  za:['Johannesburg','Cape Town','Durban'],
+  lk:['Colombo'],
+  ch:['Zurich','Geneva'],
+  tz:['Dar es Salaam'],
+  th:['Phuket','Chiang Mai'],
+  tr:['Istanbul','Izmir'],
+  ae:['Dubai','Sharjah'],
+  us:['New York City','Los Angeles','Chicago'],
+  vn:['Ho Chi Minh City','Da Nang'],
+  de:['Munich','Hamburg','Frankfurt'],
+  it:['Milan','Naples','Florence'],
+  es:['Barcelona','Seville','Valencia'],
+  ru:['St Petersburg','Novosibirsk'],
+  gb:['Manchester','Birmingham','Edinburgh'],
+  fr:['Lyon','Marseille','Nice'],
+  jp:['Osaka','Kyoto','Yokohama'],
+  kr:['Busan','Incheon'],
+  eg:['Alexandria','Luxor'],
+  ke:['Mombasa'],
+  ar:['Córdoba','Rosario'],
+  mx:['Guadalajara','Monterrey'],
+  co:['Medellín','Cali','Cartagena'],
+  pe:['Cusco','Arequipa'],
+  gh:['Kumasi'],
+  sn:['Dakar'],
+  ir:['Isfahan','Shiraz','Tabriz'],
+  iq:['Basra','Mosul'],
+  ua:['Kharkiv','Lviv','Odesa'],
+  pl:['Kraków','Gdańsk','Wrocław'],
 };
 
 // Smart capital distractors: use per-country confusable cities when available
-function getCapDist(country,pool){
-  const base=getDist(country,pool);
-  const confused=CONFUSABLE_CITIES[country.id];
-  if(!confused||!confused.length) return base;
+function getCapDist(country, pool) {
+  const base = getDist(country, pool); // 3 countries with real capitals as distractors
 
-  // Always inject at least one confusable city as a distractor
-  // Chance increases with difficulty: easy=30%, medium=60%, hard=100%
-  const chance={easy:.3,medium:.6,hard:1}[S.diff]||.6;
-  if(Math.random()>chance) return base;
+  const confused = CONFUSABLE_CITIES[country.id];
+  if (!confused || !confused.length) return base;
 
-  const city=confused[Math.floor(Math.random()*confused.length)];
-  // Replace one distractor with the confusable city, keeping the others as real caps
-  const result=[...base];
-  result[Math.floor(Math.random()*result.length)]={id:'_trap',name:'_',cap:city,flag:''};
+  // Chance of injecting confusable city increases with difficulty
+  const chance = {easy: 0.35, medium: 0.65, hard: 1.0}[S.diff] || 0.65;
+  if (Math.random() > chance) return base;
+
+  // Pick a confusable city (one that is NOT the actual capital)
+  const eligible = confused.filter(city => city !== country.cap);
+  if (!eligible.length) return base;
+  const city = eligible[Math.floor(Math.random() * eligible.length)];
+
+  // Replace one random distractor slot with a fake "country" whose .cap is the confusable city
+  const result = [...base];
+  const slot = Math.floor(Math.random() * result.length);
+  result[slot] = {id: '_trap', name: '_', cap: city, flag: ''};
   return result;
-}const C=[
+}
+
+const C=[
   {id:'gb',name:'United Kingdom',cap:'London',r:'europe',d:'easy',x:['ie','fr','nl']},
   {id:'fr',name:'France',cap:'Paris',r:'europe',d:'easy',x:['be','nl','lu']},
   {id:'de',name:'Germany',cap:'Berlin',r:'europe',d:'easy',x:['at','ch','nl']},
@@ -544,7 +587,17 @@ const saveS=()=>localStorage.setItem('kw_s',JSON.stringify(S));
 
 // ─── WRONG LOG ──────────────────────────────────────────────────────
 function getWrong(){try{return JSON.parse(localStorage.getItem('kw_wrong')||'{}');}catch(e){return{};}}
-function logWrong(id){const w=getWrong();w[id]=(w[id]||0)+1;localStorage.setItem('kw_wrong',JSON.stringify(w));}
+function logWrong(id, selectedLabel, correctLabel){
+  const w=getWrong();
+  const mode=Q?Q.mode:'flags';
+  const key=mode+':'+id;
+  if(!w[key])w[key]={id,mode,count:0,selected:selectedLabel||'',correct:correctLabel||''};
+  w[key].count++;
+  // Update with most recent wrong answer
+  if(selectedLabel) w[key].selected=selectedLabel;
+  if(correctLabel) w[key].correct=correctLabel;
+  localStorage.setItem('kw_wrong',JSON.stringify(w));
+}
 function clearWrong(){localStorage.removeItem('kw_wrong');}
 
 // ─── BOARD ──────────────────────────────────────────────────────────
@@ -589,18 +642,39 @@ function renderBoard(){
       </div>`).join('');
   }
 
-  // Wrong log
+  // Wrong log — filtered to current lbMode tab
   const wrong=getWrong();
   const wEl=document.getElementById('lb-wrong');
-  const wEntries=Object.entries(wrong).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  // Support both old format (number values) and new format (object values)
+  const allEntries=Object.entries(wrong).map(([key,val])=>{
+    if(typeof val==='number'){
+      // Legacy: key is just country id, no mode
+      const c=C.find(x=>x.id===key);
+      return c?{id:key,mode:'flags',count:val,selected:'',correct:c.cap}:null;
+    }
+    return val;
+  }).filter(Boolean);
+  const wEntries=allEntries
+    .filter(e=>e.mode===lbMode)
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,15);
   if(!wEntries.length){wEl.innerHTML='<div class="lb-empty">No mistakes logged yet</div>';}
   else{
-    wEl.innerHTML=wEntries.map(([id,count])=>{
-      const c=C.find(x=>x.id===id);if(!c)return'';
+    wEl.innerHTML=wEntries.map(e=>{
+      const c=C.find(x=>x.id===e.id);if(!c)return'';
+      let detail='';
+      if(lbMode==='locations'){
+        detail=`<div class="lb-wrong-detail">Correct: <strong>${e.correct||c.name}</strong>${e.selected&&e.selected!==e.correct?` · You picked: ${e.selected}`:''}</div>`;
+      } else {
+        // flags or capitals: show selected → correct
+        const selPart=e.selected&&e.selected!==e.correct?`${e.selected} → `:'';
+        const corrLabel=lbMode==='capitals'?e.correct||c.cap:e.correct||c.name;
+        detail=`<div class="lb-wrong-detail">${selPart}<span style="color:var(--green)">${corrLabel}</span></div>`;
+      }
       return`<div class="lb-wrong-row">
-        <img class="lb-wrong-flag" src="${flagUrl(id)}" alt="${c.name}" onerror="this.style.display='none'">
-        <div class="lb-wrong-info"><div class="lb-wrong-name">${c.name}</div><div class="lb-wrong-detail">Capital: ${c.cap}</div></div>
-        <div class="lb-wrong-count">×${count}</div>
+        <img class="lb-wrong-flag" src="${flagUrl(e.id)}" srcset="${flagSrcset(e.id)}" alt="${c.name}" onerror="this.style.display='none'">
+        <div class="lb-wrong-info"><div class="lb-wrong-name">${c.name}</div>${detail}</div>
+        <div class="lb-wrong-count">×${e.count}</div>
       </div>`;
     }).join('');
   }
@@ -669,18 +743,6 @@ function getDist(country,p){
   return f;
 }
 
-// Smart capital distractors: mix confusable capitals + non-capital cities
-function getCapDist(country,pool){
-  const base=getDist(country,pool);
-  // For hard mode, occasionally replace one cap with a confusable non-capital city
-  if(S.diff==='hard'&&Math.random()<0.5&&CITIES.length){
-    const city=CITIES[Math.floor(Math.random()*CITIES.length)];
-    // replace last distractor with city
-    return [{...base[0]},{...base[1]},{id:'_city',name:'_',cap:city,flag:''}];
-  }
-  return base;
-}
-
 // Shuffle with anti-repeat: track last positions so correct answer moves around
 let lastCorrectPos=-1;
 function shuffleAntiRepeat(arr){
@@ -737,7 +799,7 @@ function renderQ(){
 function renderBody(mode,country,opts){
   if(mode==='flags'){
     return`<div class="qcard"><div class="fcb">
-      <img class="flag-img" src="${flagUrl(country.id,128)}" alt="${country.name}" onerror="this.src='https://flagcdn.com/w80/${country.id}.png'">
+      <img class="flag-img" src="${flagUrl(country.id)}" srcset="${flagSrcset(country.id)}" alt="${country.name}" onerror="this.style.opacity='0'">
       <span class="qclbl">Which country is this?</span>
     </div></div>
     <div class="choices">${opts.map((o,i)=>`<button class="ch" id="c${i}" onclick="aFlag(${i},'${o.id}','${country.id}')">${o.name}</button>`).join('')}</div>`;
@@ -753,14 +815,14 @@ function renderBody(mode,country,opts){
       while(pos2===lastCorrectPos&&att2<6){shuf(allCaps);pos2=allCaps.indexOf(country);att2++;}
       lastCorrectPos=pos2;
       return`<div class="qcard"><div class="ccb">
-        <img class="cfsm-img" src="${flagUrl(country.id)}" alt="${country.name}" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
+        <img class="cfsm-img" src="${flagUrl(country.id)}" srcset="${flagSrcset(country.id)}" alt="${country.name}" onerror="this.style.display='none'">
         <div class="ccn">${country.name}</div>
         <div class="cclbl">What is the capital city?</div>
       </div></div>
       <div class="choices">${allCaps.map((o,i)=>`<button class="ch" id="c${i}" onclick="aCapMC(${i},'${o.cap||o}','${country.cap}')">${o.cap||o}</button>`).join('')}</div>`;
     } else {
       return`<div class="qcard"><div class="ccb">
-        <img class="cfsm-img" src="${flagUrl(country.id)}" alt="${country.name}" onerror="this.style.display='none'">
+        <img class="cfsm-img" src="${flagUrl(country.id)}" srcset="${flagSrcset(country.id)}" alt="${country.name}" onerror="this.style.display='none'">
         <div class="ccn">${country.name}</div>
         <div class="cclbl">What is the capital city?</div>
       </div>
@@ -887,10 +949,10 @@ async function buildHighlightedMap(cid){
     const targetNum=ISO3_NUM[ISO2_3[cid]];
     const targetId=targetName?namesObj[targetName]:null;
 
-    // Shift translate down to crop Antarctica off the bottom
+    // Shift translate up slightly so S. America tip is visible; Antarctica stays clipped
     const projection=d3.geoNaturalEarth1()
       .scale(W/5.6)
-      .translate([W/2, H/2 + 30]);
+      .translate([W/2, H/2 + 16]);
 
     const path=d3.geoPath().projection(projection);
     const countries=topo.feature(world, world.objects.countries);
@@ -913,6 +975,30 @@ async function buildHighlightedMap(cid){
         return hit?'highlighted':'land';
       })
       .attr('d', path);
+
+    // Small-country fix: for countries whose path bbox is tiny (< 4px²), render a dot
+    const isTarget = d => {
+      const sid=String(d.id);
+      return (targetId&&sid===targetId)||(targetNum&&sid===String(targetNum));
+    };
+    visible.forEach(d => {
+      const p = path(d);
+      if (!p) return;
+      const bounds = path.bounds(d);
+      const w = bounds[1][0] - bounds[0][0];
+      const h2 = bounds[1][1] - bounds[0][1];
+      if (w < 4 || h2 < 4) {
+        // Render a visible dot at centroid
+        const c = path.centroid(d);
+        if (!isNaN(c[0])) {
+          g.append('circle')
+            .attr('cx', c[0]).attr('cy', c[1])
+            .attr('r', isTarget(d) ? 5 : 3)
+            .attr('class', isTarget(d) ? 'highlighted' : 'land')
+            .style('stroke', 'none');
+        }
+      }
+    });
 
     // Zoom + pan; double-click/tap resets
     const zoom=d3.zoom()
@@ -948,12 +1034,17 @@ function stopTimer(){if(tiv){clearInterval(tiv);tiv=null;}}
 // ─── ANSWER HANDLERS ─────────────────────────────────────────────────
 function aFlag(i,aid,cid){
   if(Q.answered)return;Q.answered=true;const ok=aid===cid;
+  const selCountry=Q.opts[i];
   document.querySelectorAll('.ch').forEach((b,j)=>{
     b.disabled=true;
     if(Q.opts[j]&&Q.opts[j].id===cid)b.classList.add('ok');
     if(j===i&&!ok)b.classList.add('no');
   });
-  handleMC(ok,C.find(c=>c.id===cid));
+  if(!ok){
+    const country=C.find(c=>c.id===cid);
+    logWrong(cid, selCountry?selCountry.name:'', country?country.name:'');
+  }
+  handleMC(ok,C.find(c=>c.id===cid),true);
 }
 
 function aCapMC(i,ans,correct){
@@ -963,24 +1054,26 @@ function aCapMC(i,ans,correct){
     if(b.textContent===correct)b.classList.add('ok');
     if(j===i&&!ok)b.classList.add('no');
   });
-  handleMC(ok,Q.country);
+  if(!ok) logWrong(Q.country.id, ans, correct);
+  handleMC(ok,Q.country,true);
 }
 
 function aLoc(i,aid,cid){
   if(Q.answered)return;Q.answered=true;const ok=aid===cid;
+  const correctCountry=C.find(c=>c.id===cid);
+  const selectedCountry=C.find(c=>c.id===aid);
   document.querySelectorAll('.ch').forEach((b,j)=>{
     b.disabled=true;
-    // find which option is correct country
-    const locOpts=Array.from(document.querySelectorAll('.ch')).map((_,idx)=>idx);
-    if(b.textContent===C.find(c=>c.id===cid)?.name)b.classList.add('ok');
+    if(b.textContent===correctCountry?.name)b.classList.add('ok');
     if(j===i&&!ok)b.classList.add('no');
   });
-  handleMC(ok,C.find(c=>c.id===cid));
+  if(!ok) logWrong(cid, selectedCountry?selectedCountry.name:'', correctCountry?correctCountry.name:'');
+  handleMC(ok,correctCountry,true);
 }
 
-function handleMC(ok,country){
+function handleMC(ok,country,skipLog){
   if(ok){Q.correct++;Q.streak++;Q.best=Math.max(Q.best,Q.streak);decayW(country.id);}
-  else{Q.streak=0;boostW(country.id);logWrong(country.id);}
+  else{Q.streak=0;boostW(country.id);if(!skipLog)logWrong(country.id,'','');}
   const sn=document.getElementById('qsn');if(sn)sn.textContent=Q.streak;
   setTimeout(()=>nextQ(),ok?650:1200);
 }
@@ -995,7 +1088,7 @@ function aCapType(correct,cid){
   if(fb){fb.textContent=ok?'Correct!':'Answer: '+correct;fb.className='cfb '+(ok?'ok':'no');}
   document.getElementById('cbtn').disabled=true;
   if(ok){Q.correct++;Q.streak++;Q.best=Math.max(Q.best,Q.streak);decayW(cid);}
-  else{Q.streak=0;boostW(cid);logWrong(cid);}
+  else{Q.streak=0;boostW(cid);logWrong(cid, inp.value.trim(), correct);}
   const sn=document.getElementById('qsn');if(sn)sn.textContent=Q.streak;
   const slot=document.getElementById('fbslot');
   if(slot){
