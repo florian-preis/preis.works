@@ -1,5 +1,3 @@
----
----
 <!DOCTYPE html>
 
 <html lang="en">
@@ -284,7 +282,7 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
       </div>
     </div>
     <div style="padding:0 20px 20px;text-align:left">
-      <span style="font-size:11px;color:var(--ink-3);letter-spacing:.2px">© Florian Preis <script>document.write(new Date().getFullYear())</script></span>
+      <span style="font-size:11px;color:var(--ink-3);letter-spacing:.2px">© Florian Preis <span id="copy-year"></span></span>
     </div>
   </div>
   <!-- LEADERBOARD -->
@@ -1097,11 +1095,20 @@ document.querySelectorAll(’.screen’).forEach(s=>s.classList.remove(‘active
 document.getElementById(‘screen-’+name).classList.add(‘active’);
 document.querySelectorAll(’.np’).forEach(p=>p.classList.toggle(‘active’,p.dataset.screen===name));
 }
+
+document.addEventListener(‘DOMContentLoaded’,()=>{
+
+// Copyright year
+const cy=document.getElementById(‘copy-year’);if(cy)cy.textContent=new Date().getFullYear();
+
+// Nav buttons
 document.querySelectorAll(’.np’).forEach(p=>p.addEventListener(‘click’,()=>{
 showScreen(p.dataset.screen);
 if(p.dataset.screen===‘leaderboard’)renderBoard();
 if(p.dataset.screen===‘home’)updateHomeStats();
 }));
+
+// Home mode tiles
 document.querySelectorAll(’.hmc’).forEach(c=>c.addEventListener(‘click’,()=>startQuiz(c.dataset.mode)));
 
 // LB mode tabs
@@ -1196,6 +1203,8 @@ setTimeout(runCycle, 5800);
 
 setTimeout(runCycle, 1000);
 })();
+
+}); // end DOMContentLoaded
 </script>
 
 </body>
