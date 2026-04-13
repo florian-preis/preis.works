@@ -363,8 +363,9 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
 </div>
 <script>
 // ─── COUNTRY DATA ────────────────────────────────────────────────────
-// Flag URLs use flagcdn.com — 256px for sharp retina rendering
-function flagUrl(id,size=256){return`https://flagcdn.com/w${size}/${id}.png`;}
+// Flag URLs — flagcdn.com valid widths: 20,24,28,32,36,40,48,56,64,72,80,96,112,128,160,240,320
+// Use 160px default (sharp on retina at 80px CSS size), 80px for small capitals flag
+function flagUrl(id,size=160){return`https://flagcdn.com/w${size}/${id}.png`;}
 
 // Confusable cities pool for capitals mode distractors
 // Per-country commonly confused cities (assumed capital → real capital traps)
@@ -659,7 +660,7 @@ const selPart=e.selected&&e.selected!==e.correct?`${e.selected} → `:’’;
 const corrLabel=lbMode===‘capitals’?e.correct||c.cap:e.correct||c.name;
 detail=`<div class="lb-wrong-detail">${selPart}<span style="color:var(--green)">${corrLabel}</span></div>`;
 }
-return`<div class="lb-wrong-row"> <img class="lb-wrong-flag" src="${flagUrl(e.id)}" alt="${c.name}" onerror="this.style.display='none'"> <div class="lb-wrong-info"><div class="lb-wrong-name">${c.name}</div>${detail}</div> <div class="lb-wrong-count">×${e.count}</div> </div>`;
+return`<div class="lb-wrong-row"> <img class="lb-wrong-flag" src="${flagUrl(e.id,80)}" alt="${c.name}" onerror="this.style.display='none'"> <div class="lb-wrong-info"><div class="lb-wrong-name">${c.name}</div>${detail}</div> <div class="lb-wrong-count">×${e.count}</div> </div>`;
 }).join(’’);
 }
 }
@@ -787,9 +788,9 @@ shuf(allCaps);
 let pos2=allCaps.indexOf(country);let att2=0;
 while(pos2===lastCorrectPos&&att2<6){shuf(allCaps);pos2=allCaps.indexOf(country);att2++;}
 lastCorrectPos=pos2;
-return`<div class="qcard"><div class="ccb"> <img class="cfsm-img" src="${flagUrl(country.id)}" alt="${country.name}" onerror="this.style.display='none'"> <div class="ccn">${country.name}</div> <div class="cclbl">What is the capital city?</div> </div></div> <div class="choices">${allCaps.map((o,i)=>`<button class="ch" id="c${i}" onclick="aCapMC(${i},'${o.cap||o}','${country.cap}')">${o.cap||o}</button>`).join('')}</div>`;
+return`<div class="qcard"><div class="ccb"> <img class="cfsm-img" src="${flagUrl(country.id,80)}" alt="${country.name}" onerror="this.style.display='none'"> <div class="ccn">${country.name}</div> <div class="cclbl">What is the capital city?</div> </div></div> <div class="choices">${allCaps.map((o,i)=>`<button class="ch" id="c${i}" onclick="aCapMC(${i},'${o.cap||o}','${country.cap}')">${o.cap||o}</button>`).join('')}</div>`;
 } else {
-return`<div class="qcard"><div class="ccb"> <img class="cfsm-img" src="${flagUrl(country.id)}" alt="${country.name}" onerror="this.style.display='none'"> <div class="ccn">${country.name}</div> <div class="cclbl">What is the capital city?</div> </div> <div class="ciw"><input class="ci" id="ci" type="text" placeholder="Type the capital…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="cbtn" id="cbtn" onclick="aCapType('${country.cap}','${country.id}')">Check</button></div> <div class="cfb" id="cfb"></div></div>`;
+return`<div class="qcard"><div class="ccb"> <img class="cfsm-img" src="${flagUrl(country.id,80)}" alt="${country.name}" onerror="this.style.display='none'"> <div class="ccn">${country.name}</div> <div class="cclbl">What is the capital city?</div> </div> <div class="ciw"><input class="ci" id="ci" type="text" placeholder="Type the capital…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="cbtn" id="cbtn" onclick="aCapType('${country.cap}','${country.id}')">Check</button></div> <div class="cfb" id="cfb"></div></div>`;
 }
 }
 if(mode===‘locations’){
@@ -947,7 +948,9 @@ svg.call(zoom)
 
 svg.on('touchstart', e=> e.stopPropagation(), {passive:false});
 
-// Auto-zoom: if the target country is too small to see, zoom in to frame it
+// Auto-zoom: always zoom to frame the target country
+// Scale is chosen so the country fills roughly 40% of the viewport dimension,
+// clamped so tiny countries don't zoom in excessively and huge ones still get a gentle push
 const targetFeature = visible.find(d=>{
   const sid=String(d.id);
   return (targetId&&sid===targetId)||(targetNum&&sid===String(targetNum));
@@ -956,16 +959,17 @@ if(targetFeature){
   const bounds=path.bounds(targetFeature);
   const bw=bounds[1][0]-bounds[0][0];
   const bh=bounds[1][1]-bounds[0][1];
-  // Only auto-zoom when the country renders very small (< 12px in either dimension)
-  if(bw<12||bh<12){
-    const cx=(bounds[0][0]+bounds[1][0])/2;
-    const cy=(bounds[0][1]+bounds[1][1])/2;
-    const scale=Math.min(8, Math.max(4, 80/Math.max(bw,bh,1)));
-    const tx=W/2-scale*cx;
-    const ty=H/2-scale*cy;
-    svg.transition().duration(600)
-      .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
-  }
+  const cx=(bounds[0][0]+bounds[1][0])/2;
+  const cy=(bounds[0][1]+bounds[1][1])/2;
+  // Target ~40% of the smaller viewport dimension for the country's largest extent
+  const targetPx=Math.min(W,H)*0.40;
+  const rawScale=targetPx/Math.max(bw,bh,1);
+  // Clamp: min 1.2 (just a gentle nudge for Russia/Canada), max 10 (Singapore etc.)
+  const scale=Math.min(10, Math.max(1.2, rawScale));
+  const tx=W/2-scale*cx;
+  const ty=H/2-scale*cy;
+  svg.transition().duration(600)
+    .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
 }
 ```
 
