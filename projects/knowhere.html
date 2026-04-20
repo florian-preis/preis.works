@@ -135,7 +135,7 @@ body.night .lb-tab.active{background:var(--surface-2)}
 .qcard{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .fcb{padding:32px 24px 28px;text-align:center}
 /* Flag display using image instead of emoji */
-.flag-img{width:96px;height:auto;max-height:72px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12);image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges}
+.flag-img{width:120px;height:auto;max-height:90px;object-fit:contain;border-radius:3px;margin-bottom:14px;display:block;margin-left:auto;margin-right:auto;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .qclbl{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3)}
 .ccb{padding:28px 24px 16px;text-align:center}
 .cfsm-img{width:44px;height:auto;max-height:34px;object-fit:contain;border-radius:2px;margin:0 auto 12px;display:block;box-shadow:0 1px 3px rgba(0,0,0,.1)}
@@ -200,8 +200,8 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
 /* SETTINGS DRAWER */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px)}
 .ov.open{opacity:1;pointer-events:all}
-.drawer{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border);z-index:500;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px)}
-.drawer.open{transform:translateY(0)}
+.drawer{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;background:var(--surface);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;z-index:500;transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px)}
+.drawer.open{transform:translateX(-50%) translateY(0)}
 .dpull{width:32px;height:3px;background:var(--surface-2);border-radius:2px;margin:12px auto 0}
 .dhd{padding:16px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .dhd-t{font-size:14px;font-weight:600;letter-spacing:-.2px;color:var(--ink)}
@@ -368,7 +368,7 @@ body.night .map-svg-area .highlighted{fill:#E8E4DF}
 <script>
 // ─── COUNTRY DATA ────────────────────────────────────────────────────
 // Flag URLs use flagcdn.com (reliable, works locally & online)
-function flagUrl(id,size=64){return`https://flagcdn.com/w${size}/${id}.png`;}
+function flagUrl(id,size=320){return`https://flagcdn.com/w${size}/${id}.png`;}
 
 // Confusable cities pool for capitals mode distractors
 // Per-country commonly confused cities (assumed capital → real capital traps)
@@ -700,41 +700,47 @@ function boostW(id){const w=getW();w[id]=Math.min((w[id]||1)*2,12);setW(w);}
 function decayW(id){const w=getW();if(w[id])w[id]=Math.max(w[id]*.65,1);setW(w);}
 
 function wPick(p,ex=[]){
-  const w=getW();
-  const el=p.filter(c=>!ex.includes(c.id));
-  if(!el.length)return p[Math.floor(Math.random()*p.length)];
-  const tot=el.reduce((s,c)=>s+(w[c.id]||1),0);
-  let r=Math.random()*tot;
-  for(const c of el){r-=w[c.id]||1;if(r<=0)return c;}
-  return el[el.length-1];
+  // Full-deck approach: shuffle entire pool, draw without replacement, then refill
+  if(!Q.deck||Q.deck.length===0){
+    const w=getW();
+    // True weighted shuffle: assign each country a random key biased by mistake weight
+    const deck=[...p].map(c=>({id:c.id,key:Math.random()*Math.pow(w[c.id]||1, 0.4)}));
+    deck.sort((a,b)=>b.key-a.key); // higher key = appears sooner
+    Q.deck=deck.map(d=>d.id);
+  }
+  const exSet=new Set(ex);
+  const idx=Q.deck.findIndex(id=>!exSet.has(id));
+  if(idx===-1){
+    const eligible=p.filter(c=>!exSet.has(c.id));
+    if(eligible.length) return eligible[Math.floor(Math.random()*eligible.length)];
+    return p[Math.floor(Math.random()*p.length)];
+  }
+  const [id]=Q.deck.splice(idx,1);
+  return p.find(c=>c.id===id)||p[Math.floor(Math.random()*p.length)];
 }
 
-// Smarter distractors: strongly prefer confusable neighbours, fallback to same region
+// Smarter distractors: prefer confusable neighbours but randomise heavily
 function getDist(country,p){
   const seen=new Set([country.id]);
   const f=[];
-  // 1. confusable neighbours first
-  for(const xid of(country.x||[])){
+
+  // 1. From confusable list — shuffle so we don't always pick the same ones
+  const xShuffled=[...(country.x||[])].sort(()=>Math.random()-.5);
+  for(const xid of xShuffled){
     const c=p.find(c=>c.id===xid&&!seen.has(c.id));
     if(c){f.push(c);seen.add(c.id);}
-    if(f.length>=3)break;
+    if(f.length>=2)break; // only take up to 2 from confusable list, leave room for variety
   }
-  // 2. same region, same difficulty
+
+  // 2. Same region — fully randomised each time
   if(f.length<3){
-    const sameRD=p.filter(c=>!seen.has(c.id)&&c.r===country.r&&c.d===country.d);
-    sameRD.sort(()=>Math.random()-.5);
-    for(const c of sameRD){if(f.length>=3)break;f.push(c);seen.add(c.id);}
-  }
-  // 3. same region any difficulty
-  if(f.length<3){
-    const sameR=p.filter(c=>!seen.has(c.id)&&c.r===country.r);
-    sameR.sort(()=>Math.random()-.5);
+    const sameR=p.filter(c=>!seen.has(c.id)&&c.r===country.r).sort(()=>Math.random()-.5);
     for(const c of sameR){if(f.length>=3)break;f.push(c);seen.add(c.id);}
   }
-  // 4. any remaining
+
+  // 3. Any remaining
   if(f.length<3){
-    const rest=p.filter(c=>!seen.has(c.id));
-    rest.sort(()=>Math.random()-.5);
+    const rest=p.filter(c=>!seen.has(c.id)).sort(()=>Math.random()-.5);
     for(const c of rest){if(f.length>=3)break;f.push(c);seen.add(c.id);}
   }
   return f;
@@ -767,7 +773,7 @@ function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*
 function startQuiz(mode){
   const p=pool();
   if(p.length<4){alert('Not enough countries. Adjust regions or difficulty.');return;}
-  Q={mode,pool:p,hist:[],n:0,correct:0,streak:0,best:0,t0:Date.now(),marathon:S.mode==='marathon',answered:false,sel:null};
+  Q={mode,pool:p,hist:[],deck:null,n:0,correct:0,streak:0,best:0,t0:Date.now(),marathon:S.mode==='marathon',answered:false,sel:null};
   showScreen('quiz');renderQ();
 }
 
@@ -808,27 +814,63 @@ function renderQ(){
 function renderBody(mode,country,opts){
   if(mode==='flags'){
     return`<div class="qcard"><div class="fcb">
-      <img class="flag-img" src="${flagUrl(country.id,128)}" alt="${country.name}" onerror="this.src='https://flagcdn.com/w80/${country.id}.png'">
+      <img class="flag-img" src="${flagUrl(country.id,320)}" alt="${country.name}" onerror="this.style.opacity='0'">
       <span class="qclbl">Which country is this?</span>
     </div></div>
     <div class="choices">${opts.map((o,i)=>`<button class="ch" id="c${i}" onclick="aFlag(${i},'${o.id}','${country.id}')">${o.name}</button>`).join('')}</div>`;
   }
   if(mode==='capitals'){
-    const capDists=getCapDist(country,Q.pool);
     if(S.style==='mc'){
-      // Build capital options with possible city decoys
-      const allCaps=[country,...capDists];
-      shuf(allCaps);
-      // Ensure no same position repeat
-      let pos2=allCaps.indexOf(country);let att2=0;
-      while(pos2===lastCorrectPos&&att2<6){shuf(allCaps);pos2=allCaps.indexOf(country);att2++;}
+      const correctCap=country.cap;
+      const confused=CONFUSABLE_CITIES[country.id];
+
+      // Difficulty controls how many of the 3 distractors are trap cities vs real caps
+      // hard: up to 2 traps; medium: 1 trap; easy: 50% chance of 1 trap
+      const diffTrapCount={easy:Math.random()<0.5?1:0, medium:1, hard:Math.min(2,confused?.length||0)};
+      const trapCount=confused?.length ? (diffTrapCount[S.diff]??1) : 0;
+
+      // Pick trap cities (shuffled so we don't always show the same one)
+      const shuffledTraps=confused?[...confused].sort(()=>Math.random()-.5):[];
+      const trapsToUse=shuffledTraps.slice(0,trapCount);
+
+      // Fill remaining slots with real country capitals from same region, shuffled
+      const needed=3-trapsToUse.length;
+      const regionPool=Q.pool
+        .filter(c=>c.id!==country.id&&c.r===country.r)
+        .sort(()=>Math.random()-.5);
+      // Also pull from any region if not enough
+      const anyPool=Q.pool
+        .filter(c=>c.id!==country.id&&!regionPool.includes(c))
+        .sort(()=>Math.random()-.5);
+      const combined=[...regionPool,...anyPool];
+
+      const fillerCaps=[];
+      const usedCaps=new Set([correctCap,...trapsToUse]);
+      for(const c of combined){
+        if(fillerCaps.length>=needed)break;
+        if(!usedCaps.has(c.cap)){usedCaps.add(c.cap);fillerCaps.push(c.cap);}
+      }
+
+      const final=[correctCap,...trapsToUse,...fillerCaps].slice(0,4);
+      // Pad safety
+      while(final.length<4){
+        const extra=combined.find(c=>!usedCaps.has(c.cap));
+        if(extra){usedCaps.add(extra.cap);final.push(extra.cap);}
+        else break;
+      }
+
+      shuf(final);
+      let pos2=final.indexOf(correctCap);let att2=0;
+      while(pos2===lastCorrectPos&&att2<8){shuf(final);pos2=final.indexOf(correctCap);att2++;}
       lastCorrectPos=pos2;
+      Q.capOpts=final;
+
       return`<div class="qcard"><div class="ccb">
-        <img class="cfsm-img" src="${flagUrl(country.id,80)}" alt="${country.name}" onerror="this.style.display='none'">
+        <img class="cfsm-img" src="${flagUrl(country.id,160)}" alt="${country.name}" onerror="this.style.display='none'">
         <div class="ccn">${country.name}</div>
         <div class="cclbl">What is the capital city?</div>
       </div></div>
-      <div class="choices">${allCaps.map((o,i)=>`<button class="ch" id="c${i}" onclick="aCapMC(${i},'${o.cap||o}','${country.cap}')">${o.cap||o}</button>`).join('')}</div>`;
+      <div class="choices">${final.map((cap,i)=>`<button class="ch" id="c${i}" onclick="aCapMC(${i})">${cap}</button>`).join('')}</div>`;
     } else {
       return`<div class="qcard"><div class="ccb">
         <img class="cfsm-img" src="${flagUrl(country.id,80)}" alt="${country.name}" onerror="this.style.display='none'">
@@ -1014,7 +1056,7 @@ async function buildHighlightedMap(cid){
       const tx=W/2-sc*cx, ty=H/2-sc*cy;
       // Delay slightly so the world view renders first, then animate in
       setTimeout(()=>{
-        svg.transition().duration(900).ease(d3.easeCubicInOut)
+        svg.transition().duration(1400).ease(d3.easeCubicInOut)
           .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(sc));
       }, 120);
     }
@@ -1052,11 +1094,14 @@ function aFlag(i,aid,cid){
   handleMC(ok,correctC);
 }
 
-function aCapMC(i,ans,correct){
-  if(Q.answered)return;Q.answered=true;const ok=ans===correct;
+function aCapMC(i){
+  if(Q.answered)return;Q.answered=true;
+  const ans=Q.capOpts[i];
+  const correct=Q.country.cap;
+  const ok=ans===correct;
   document.querySelectorAll('.ch').forEach((b,j)=>{
     b.disabled=true;
-    if(b.textContent===correct)b.classList.add('ok');
+    if(Q.capOpts[j]===correct)b.classList.add('ok');
     if(j===i&&!ok)b.classList.add('no');
   });
   if(!ok)logWrong('capitals',Q.country.id,ans,correct);
