@@ -4,6 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+{% if page.noindex %}  <meta name="robots" content="noindex">
+{% endif %}
+  <!-- Social preview: how the page looks when shared on LinkedIn, WhatsApp, Slack, etc. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site.title }}">
+  <meta property="og:title" content="{{ page.title }}">
+  <meta property="og:description" content="{{ page.description | default: site.description }}">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:image" content="{{ page.image | default: '/assets/social-card.jpg' | uri_escape | absolute_url }}">
+  <meta property="og:image:width" content="{{ page.image_width | default: 1200 }}">
+  <meta property="og:image:height" content="{{ page.image_height | default: 630 }}">
+  <meta property="og:image:alt" content="{{ page.image_alt | default: 'Portrait of Florian Preis' }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page.title }}">
+  <meta name="twitter:description" content="{{ page.description | default: site.description }}">
+  <meta name="twitter:image" content="{{ page.image | default: '/assets/social-card.jpg' | uri_escape | absolute_url }}">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='white' letter-spacing='0.5'>FP</text></svg>">
   <style>
 {% include chrome.css %}
