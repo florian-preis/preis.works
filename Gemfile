@@ -1,6 +1,9 @@
 source "https://rubygems.org"
 
-# Pinned to the same gem version GitHub Pages was already using, so the site
-# builds exactly as it did before we took over the build. Do not upgrade this
-# casually: newer Jekyll versions change Liquid behaviour in small ways.
-gem "github-pages", "~> 232", group: :jekyll_plugins
+# Jekyll only. This site deliberately uses no Jekyll plugins: the sitemap and the
+# meta tags are hand-written in the layout, so nothing else is needed.
+#
+# Do NOT reintroduce the "github-pages" gem. It bundles jekyll-github-metadata,
+# which cannot resolve the repository name inside our own workflow and fails the
+# build with "No repo name found".
+gem "jekyll", "~> 4.3"
