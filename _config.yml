@@ -6,6 +6,11 @@ url: "https://preis.works"
 # Pretty URLs (/photography/ instead of /photography.html)
 permalink: pretty
 
-# Keep build output tidy
+# Files that belong in the repository but not in the published site
 exclude:
   - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - tools
+  - .github
