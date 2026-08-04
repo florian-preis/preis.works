@@ -20,12 +20,41 @@ No build tools are needed on your machine: GitHub builds the site on every push 
 | `projects.html` | Project cards | When adding a project |
 | `photography/` | Photo files, named `YYYYMMDD_Caption.jpg` | Every time you publish photos |
 | `projects/` | The three standalone project apps | Independent of the rest of the site |
+| `sitemap.xml` | Lists every page for search engines, builds itself | Never |
+| `robots.txt` | Tells crawlers they may index the site | Never |
+| `404.html` | Shown for a URL that does not exist | Rarely |
+| `_includes/notfound.css` | Styles for the 404 page only | Rarely |
+| `assets/social-card.jpg` | 1200x630 preview image used when the site is shared | Rarely |
 
 ## The one rule that matters
 
 **To change the navbar, footer, or any site-wide design value, edit the file in `_includes/`.
 Never edit those things inside a page file.** That is the whole point of this structure:
 one change, three pages updated.
+
+## Social previews and search
+
+The layout builds the meta description, canonical URL, and social preview card for every
+page from its front matter. To change how a page looks when shared on LinkedIn, WhatsApp,
+or Slack, edit two lines in that page's front matter:
+
+```yaml
+description: "The one-sentence summary that appears under the link"
+image: "/photography/20251011_Grenen, Skagen, Denmark.jpg"
+```
+
+`image` is optional. Without it, pages fall back to `/assets/social-card.jpg`, a 1200x630
+crop of the profile portrait framed on the face.
+
+**Never point `image` at the raw profile portrait.** It is 1600x2400, and social platforms
+centre-crop to roughly 1.9:1, which on that photo takes a band from shoulders to belt and
+cuts the head off entirely. Any image used here must already be landscape, ideally 1200x630.
+
+To change the site-wide preview image, replace `assets/social-card.jpg` with a new 1200x630
+file of the same name. No code change needed.
+
+After changing either, paste the page URL into the LinkedIn Post Inspector to force LinkedIn
+to re-read it, otherwise it serves you its cached old version for up to a week.
 
 ## Page front matter
 
