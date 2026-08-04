@@ -1,0 +1,38 @@
+    .notfound-wrap {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 140px 52px 160px;
+      flex: 1;
+      text-align: center;
+    }
+    .notfound-wrap h1 {
+      font-size: 2.2em;
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .notfound-wrap p {
+      font-size: 14px;
+      line-height: 1.75;
+      color: #444;
+    }
+    .notfound-links {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+    }
+    .notfound-links a {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .notfound-links a:hover { color: var(--text); }
+
+    /* ══ RESPONSIVE (page) ══ */
+    @media (max-width: 768px) {
+      .notfound-wrap { padding: 90px 20px 120px; }
+    }
