@@ -1,1 +1,11 @@
+# Site settings
+title: Florian Preis
+description: Personal site of Florian Preis: side projects, photography, and occasional deep dives.
+url: https://preis.works
+
+# Pretty URLs (/photography/ instead of /photography.html)
 permalink: pretty
+
+# Keep build output tidy
+exclude:
+  - README.md
