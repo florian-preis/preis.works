@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }}</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23111'/><text x='50%25' y='23' text-anchor='middle' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-size='14' font-weight='700' fill='white' letter-spacing='0.5'>FP</text></svg>">
+  <style>
+{% include chrome.css %}
+{% if page.page_css %}{% include {{ page.page_css }} %}{% endif %}
+  </style>
+</head>
+<body>
+
+{% include nav.html %}
+{{ content }}
+{% include footer.html %}
+
+<script>
+{% include chrome.js %}
+{% if page.page_js %}{% include {{ page.page_js }} %}{% endif %}
+</script>
+</body>
+</html>
