@@ -101,12 +101,15 @@
     .pv-scroll { animation: pvStepBars 2.6s infinite; }
 
     /* knowhere: one square fades to filled, holds, fades back. */
+    /* Four squares share one 30s cycle, each lit during its own quarter, so a
+       reveal still happens every 7.5s but on a different square each time.
+       The reveal itself is unchanged: 0.45s in, 2.1s held, 0.9s out. */
     @keyframes pvReveal {
-      0%, 6%    { opacity: 0; }
-      16%, 44%  { opacity: 1; }
-      56%, 100% { opacity: 0; }
+      0%, 1.5%   { opacity: 0; }
+      4%, 11%    { opacity: 1; }
+      14%, 100%  { opacity: 0; }
     }
-    .pv-reveal { opacity: 0; animation: pvReveal 7.5s var(--ease) infinite; }
+    .pv-reveal { opacity: 0; animation: pvReveal 30s var(--ease) infinite; }
 
     /* gowiththeflo uses no CSS animation. The sphere turns by sweeping each
        meridian's rx via SMIL, the only way the foreshortening stays correct. */

@@ -1,5 +1,14 @@
     html { scrollbar-gutter: stable; }
 
+    /* While the full-size image downloads, the already-cached grid thumbnail
+       stands in. A slight blur hides the upscaling and makes the swap invisible. */
+    #lightboxImg {
+      transition: filter var(--m-base) var(--ease);
+    }
+    #lightboxImg.lb-loading {
+      filter: blur(12px);
+    }
+
 
     /* ══ PHOTO GRID ══ */
     :root { --gap: clamp(6px, 1.5vw, 20px); --gap-bottom: clamp(24px, 5vw, 64px); }

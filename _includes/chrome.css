@@ -21,13 +21,15 @@
       --m-base: 0.3s;
       --m-slow: 0.6s;
 
-      /* the footer canvas, taken from the project cards */
-      --footer-a: #04081F;
-      --footer-b: #0C1A4E;
-      --footer-c: #16307F;
+      /* The ink surface. Used by BOTH the footer and the mobile menu, so the
+         two are the same object seen in two places. Change it in one spot. */
+      --ink-surface:  #111111;
+      --ink-on:       rgba(255,255,255,0.74);
+      --ink-on-hi:    #ffffff;
+      --ink-grain:    0.20;
     }
 
-    html { scroll-behavior: smooth; overscroll-behavior: none; }
+    html { scroll-behavior: smooth; overscroll-behavior-x: none; }
 
     body {
       font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -88,16 +90,17 @@
       text-transform: uppercase;
       color: var(--text);
       text-decoration: none;
-      transition: color var(--m-fast) var(--ease);
     }
-    /* Each letter thickens in sequence on hover. Only possible because Inter is
-       a variable font: weight becomes something you can animate. */
-    .logo span {
-      display: inline-block;
+    /* A single, quiet thickening on hover. Inter being variable is what lets
+       weight move smoothly rather than snapping between cut weights. The logo
+       sits at the left of a space-between row, so the extra width grows into
+       empty space and nothing else on the bar moves. */
+    .logo {
       font-variation-settings: 'wght' 600;
-      transition: font-variation-settings var(--m-base) ease;
+      transition: color var(--m-fast) var(--ease),
+                  font-variation-settings var(--m-base) var(--ease);
     }
-    .logo:hover span { font-variation-settings: 'wght' 900; }
+    .logo:hover { font-variation-settings: 'wght' 700; }
     .logo:hover { color: var(--muted); }
     .nav-links { display: flex; gap: 36px; list-style: none; }
     .nav-links a {
@@ -138,27 +141,63 @@
     .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
     /* ══ MOBILE DRAWER ══ */
+    /* A full sheet in the same ink as the footer, so the menu cannot be
+       confused with the page behind it. It sits below the navbar in z-order,
+       and the navbar goes transparent while it is open, so the wordmark and
+       the close button stay put rather than being covered. */
     .mobile-menu {
-      display: none;
-      flex-direction: column;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: var(--nav-h);
+      position: fixed;
+      inset: 0;
       z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 26px;
+      background: var(--ink-surface);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--m-base) var(--ease);
     }
-    .mobile-menu.open { display: flex; }
+    /* The identical grain the footer uses. Same image, size, opacity, drift. */
+    .mobile-menu::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      opacity: var(--ink-grain);
+      animation: grainDrift 8s steps(10, end) infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .mobile-menu.open { opacity: 1; pointer-events: auto; }
     .mobile-link {
-      color: var(--muted);
+      position: relative;
+      z-index: 1;
+      color: rgba(255,255,255,0.55);
       text-decoration: none;
-      font-size: 14px;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border);
-      transition: color 0.15s;
+      font-size: 27px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      padding: 12px 0;
+      transition: color var(--m-fast) var(--ease);
     }
-    .mobile-link:last-child { border-bottom: none; }
     .mobile-link:hover,
-    .mobile-link.active { color: var(--text); }
+    .mobile-link.active { color: var(--ink-on-hi); }
+
+    /* While the sheet is open the bar carries no surface of its own and its
+       marks flip to white, including the pill state if the page is scrolled. */
+    html.menu-open .navbar,
+    html.menu-open .navbar.scrolled {
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    html.menu-open .logo { color: var(--ink-on-hi); }
+    html.menu-open .hamburger span { background: var(--ink-on-hi); }
 
     /* ══ FOOTER ══ */
     .site-footer {
@@ -169,7 +208,7 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
-      background: linear-gradient(103deg, var(--footer-a) 0%, var(--footer-b) 58%, var(--footer-c) 100%);
+      background: var(--ink-surface);
     }
     .site-footer::before {
       content: '';
@@ -179,7 +218,7 @@
       height: 200%;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
       background-size: 180px 180px;
-      opacity: 0.17;
+      opacity: var(--ink-grain);
       animation: grainDrift 8s steps(10, end) infinite;
       pointer-events: none;
       z-index: 0;
@@ -211,11 +250,11 @@
     .footer-copy, .footer-social {
       font-size: 11px;
       letter-spacing: 0.05em;
-      color: rgba(255,255,255,0.74);
+      color: var(--ink-on);
     }
     .footer-social { display: flex; gap: 18px; align-items: center; }
     .footer-social a {
-      color: rgba(255,255,255,0.74);
+      color: var(--ink-on);
       display: flex;
       align-items: center;
       line-height: 0;

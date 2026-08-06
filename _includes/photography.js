@@ -31,7 +31,7 @@ const PHOTOS = [
 {%- assign gallery = site.static_files | where_exp: "f", "f.path contains '/photography/'" -%}
 {%- for f in gallery -%}
 {%- if f.extname == '.jpg' or f.extname == '.jpeg' or f.extname == '.JPG' or f.extname == '.JPEG' or f.extname == '.png' %}
-  { src: "{{ f.path }}", thumb: "/photography/thumb/{{ f.basename }}.webp" },
+  { src: "{{ f.path }}", thumb: "/photography/thumb/{{ f.basename }}.webp", view: "/photography/view/{{ f.basename }}.webp" },
 {%- endif -%}
 {%- endfor %}
 ];
@@ -132,18 +132,63 @@ function lightboxNav(dir) {
   lbIndex = (lbIndex + dir + PHOTOS.length) % PHOTOS.length;
   updateLightbox();
 }
+/* Everything the browser has already downloaded, so we never re-request it. */
+const lbCache = new Set();
+
+function preloadNeighbours() {
+  // Only the two you can reach with one keypress or one swipe. Preloading more
+  // competes for bandwidth with the picture actually on screen.
+  [-1, 1].forEach(function (d) {
+    const n = PHOTOS[(lbIndex + d + PHOTOS.length) % PHOTOS.length];
+    const url = n.view || n.src;
+    if (lbCache.has(url)) return;
+    const im = new Image();
+    im.onload = function () { lbCache.add(url); };
+    im.src = url;
+  });
+}
+
 function updateLightbox() {
   const p = PHOTOS[lbIndex];
   const { caption, date } = parsePhotoFilename(p.src);
   const img = document.getElementById('lightboxImg');
-  img.src = p.src;
-  img.alt = caption;
+  const full = p.view || p.src;
+
   document.getElementById('lightboxCounter').textContent = (lbIndex + 1) + ' / ' + PHOTOS.length;
   document.getElementById('lightboxCaption').textContent = caption;
   document.getElementById('lightboxDate').textContent    = date;
-  // Re-align once image has loaded (handles portrait vs landscape)
-  img.onload = alignMeta;
+  img.alt = caption;
+
+  if (lbCache.has(full)) {
+    // Already downloaded, so this is instant. No placeholder needed.
+    img.classList.remove('lb-loading');
+    img.src = full;
+    img.onload = alignMeta;
+    if (img.complete) alignMeta();
+    preloadNeighbours();
+    return;
+  }
+
+  // Show the grid thumbnail straight away. It is already in the browser cache
+  // from the gallery, so the stage is never empty while the full image arrives.
+  img.classList.add('lb-loading');
+  img.src = p.thumb || full;
   if (img.complete) alignMeta();
+
+  const hi = new Image();
+  hi.onload = function () {
+    lbCache.add(full);
+    if (PHOTOS[lbIndex] !== p) return;   // you already moved on; do not yank the view
+    img.src = full;
+    img.classList.remove('lb-loading');
+    alignMeta();
+    preloadNeighbours();
+  };
+  hi.onerror = function () {
+    img.src = p.src;                     // fall back to the original
+    img.classList.remove('lb-loading');
+  };
+  hi.src = full;
 }
 
 // Re-align on window resize
