@@ -51,6 +51,17 @@ jobs:
       - name: Generate photo thumbnails
         run: python3 tools/build-thumbnails.py _site
 
+      - name: Drop the originals from the published site
+        # The thumbnail script reads from the repository, not from _site, so the
+        # derivatives already exist by this point. The full-size JPEGs are the bulk
+        # of the artifact and nothing on the site ever requests them: the grid
+        # loads thumbnails, the lightbox loads the 2000px WebP. Keeping them only
+        # makes every deploy larger and slower.
+        run: |
+          rm -f _site/photography/*.jpg _site/photography/*.jpeg _site/photography/*.JPG _site/photography/*.JPEG
+          echo "published site: $(du -sh _site | cut -f1)"
+          du -sh _site/photography/thumb _site/photography/view
+
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:
@@ -66,3 +77,7 @@ jobs:
       - name: Publish to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # Default is 10 minutes. Raised because a large artifact can be slow
+          # rather than genuinely stuck, and each retry costs a whole build.
+          timeout: 1200000
