@@ -7,183 +7,39 @@ page_css: projects.css
 ---
 <!-- ══ PROJECTS ══ -->
 <div class="projects-wrap">
-  <p class="projects-label">Projects</p>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="r4A" x1="0" y1="1" x2="0.35" y2="0"><stop offset="0" stop-color="#2E55C8"></stop><stop offset="0.17" stop-color="#4F4FC6"></stop><stop offset="0.31" stop-color="#7A4C9E"></stop><stop offset="0.53" stop-color="#101F63"></stop><stop offset="1" stop-color="#04081F"></stop></linearGradient>
+<radialGradient id="r4B" cx="0.38" cy="0.3" r="0.92"><stop offset="0" stop-color="#4F80FF"></stop><stop offset="0.15" stop-color="#6E66E6"></stop><stop offset="0.29" stop-color="#8E56A4"></stop><stop offset="0.5" stop-color="#1B3AA8"></stop><stop offset="1" stop-color="#050A26"></stop></radialGradient>
+<linearGradient id="r4C" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0" stop-color="#0B1A57"></stop><stop offset="0.4" stop-color="#2447C4"></stop><stop offset="0.68" stop-color="#5D4CBE"></stop><stop offset="0.88" stop-color="#8E5493"></stop><stop offset="1" stop-color="#6E3C7E"></stop></linearGradient>
+<radialGradient id="r4Vig" cx="0.5" cy="0.5" r="0.8"> <stop offset="0.45" stop-color="#000" stop-opacity="0"></stop><stop offset="1" stop-color="#000" stop-opacity="0.5"></stop> </radialGradient>
+<filter id="g4fine" x="0" y="0" width="100%" height="100%"> <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"></feTurbulence> </filter>
+<filter id="g4mid" x="0" y="0" width="100%" height="100%"> <feTurbulence type="fractalNoise" baseFrequency="0.34" numOctaves="3" stitchTiles="stitch"></feTurbulence> </filter>
+<filter id="g4coarse" x="0" y="0" width="100%" height="100%"> <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" stitchTiles="stitch"></feTurbulence> </filter></defs></svg>
 
-  <a class="project-card" href="/projects/cogniflow/" target="_blank">
+  <a class="project-card" href="/projects/cogniflow/">
     <div class="project-info">
-      <p class="project-tag">Reading Tool</p>
+      <span class="project-tag">Reading Tool</span>
       <h2 class="project-title">cogniflow</h2>
       <p class="project-desc">A focused reading environment that presents text word-by-word at a custom speed. Supports EPUB, PDF, and plain text and includes a personal library saved locally in your browser.</p>
-      <span class="project-link">Open &rarr;</span>
+      <span class="project-open">Open<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
-    <div class="project-preview" style="background:#000;">
-      <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-        <!-- background -->
-        <rect width="640" height="360" fill="#000"/>
-        <!-- navbar -->
-        <rect width="640" height="48" fill="#0a0a0a"/>
-        <rect y="48" width="640" height="1" fill="#1e1e1e"/>
-        <!-- logo -->
-        <text x="32" y="30" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="14" fill="#fff" letter-spacing="-0.02em" dominant-baseline="middle"><tspan font-weight="700">cogni</tspan><tspan font-weight="400">flow</tspan></text>
-        <!-- nav links right-aligned -->
-        <text x="608" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#555" text-anchor="end">About</text>
-        <text x="548" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#555" text-anchor="end">Library</text>
-        <text x="490" y="24" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" font-weight="500" text-anchor="end">Reader</text>
-        <!-- tab bar -->
-        <rect x="0" y="49" width="640" height="26" fill="#000"/>
-        <text x="32" y="66" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#aaa" letter-spacing="1.5">UPLOAD FILE</text>
-        <rect x="32" y="72" width="68" height="1.5" fill="#fff700"/>
-        <text x="116" y="66" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#444" letter-spacing="1.5">PASTE TEXT</text>
-        <rect x="0" y="75" width="640" height="1" fill="#1a1a1a"/>
-        <!-- main display area -->
-        <rect x="0" y="76" width="640" height="160" fill="#000"/>
-        <text x="320" y="168" font-family="Georgia,serif" font-size="46" fill="#ffffff" text-anchor="middle" font-weight="400" letter-spacing="-0.02em">Start reading</text>
-        <!-- controls bar -->
-        <rect x="0" y="236" width="640" height="1" fill="#1a1a1a"/>
-        <rect x="0" y="237" width="640" height="34" fill="#000"/>
-        <rect x="32" y="242" width="46" height="20" rx="10" fill="#fff"/>
-        <text x="55" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#000" text-anchor="middle" letter-spacing="1">PLAY</text>
-        <rect x="82" y="242" width="46" height="20" rx="10" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
-        <text x="105" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#555" text-anchor="middle" letter-spacing="1">PAUSE</text>
-        <rect x="132" y="242" width="46" height="20" rx="10" fill="#000" stroke="#2a2a2a" stroke-width="1"/>
-        <text x="155" y="256" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#555" text-anchor="middle" letter-spacing="1">RESET</text>
-        <rect x="192" y="250" width="420" height="1.5" rx="1" fill="#1a1a1a"/>
-        <text x="620" y="254" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#333" text-anchor="end">0%</text>
-        <!-- settings panel -->
-        <rect x="0" y="271" width="640" height="1" fill="#1a1a1a"/>
-        <rect x="0" y="272" width="640" height="88" fill="#000"/>
-        <rect x="214" y="272" width="1" height="88" fill="#1a1a1a"/>
-        <rect x="428" y="272" width="1" height="88" fill="#1a1a1a"/>
-        <!-- WPM -->
-        <text x="32" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">READING SPEED</text>
-        <rect x="32" y="306" width="148" height="1.5" rx="1" fill="#2a2a2a"/>
-        <circle cx="106" cy="307" r="6" fill="#fff700" stroke="#000" stroke-width="1.5"/>
-        <text x="190" y="311" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#fff" text-anchor="end">300 WPM</text>
-        <!-- Font picker -->
-        <text x="234" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">FONT</text>
-        <rect x="234" y="298" width="120" height="20" rx="10" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
-        <text x="294" y="312" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#999" text-anchor="middle">Serif</text>
-        <!-- Bionic toggle -->
-        <text x="448" y="290" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="6.5" fill="#444" letter-spacing="2">BIONIC READING</text>
-        <rect x="448" y="298" width="34" height="18" rx="9" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="1"/>
-        <circle cx="457" cy="307" r="7" fill="#fff"/>
-        <!-- vignette -->
-        <defs>
-          <radialGradient id="vig" cx="50%" cy="50%" r="70%">
-            <stop offset="55%" stop-color="#000" stop-opacity="0"/>
-            <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
-          </radialGradient>
-        </defs>
-        <rect width="640" height="360" fill="url(#vig)"/>
-      </svg>
-    </div>
+    <div class="project-preview"><svg class="ig" viewBox="0 0 1000 625" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="1000" height="625" fill="url(#r4A)"/><rect width="1000" height="625" filter="url(#g4coarse)" opacity="0.26" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4mid)" opacity="0.3" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4fine)" opacity="0.62" style="mix-blend-mode:overlay"/><rect width="1000" height="625" fill="url(#r4Vig)"/><g class="pv-scroll"><path d="M350 -40h300v7h-300z M350 -18h300v7h-300z M350 4h300v7h-300z M350 26h300v7h-300z M350 48h300v7h-300z M350 70h300v7h-300z M350 92h300v7h-300z M350 114h300v7h-300z M350 136h300v7h-300z M350 158h300v7h-300z M350 180h300v7h-300z M350 202h300v7h-300z M350 224h300v7h-300z M350 246h300v7h-300z M350 268h300v7h-300z M350 290h300v7h-300z M350 312h300v7h-300z M350 334h300v7h-300z M350 356h300v7h-300z M350 378h300v7h-300z M350 400h300v7h-300z M350 422h300v7h-300z M350 444h300v7h-300z M350 466h300v7h-300z M350 488h300v7h-300z M350 510h300v7h-300z M350 532h300v7h-300z M350 554h300v7h-300z M350 576h300v7h-300z M350 598h300v7h-300z M350 620h300v7h-300z M350 642h300v7h-300z M350 664h300v7h-300z M350 686h300v7h-300z M350 708h300v7h-300z" fill="#fff" opacity="0.26"/></g><path d="M350 309h300v13h-300z" fill="#fff"/></svg></div>
   </a>
-
-  <a class="project-card" href="/projects/travel-diary/" target="_blank">
+  <a class="project-card" href="/projects/travel-diary/">
     <div class="project-info">
-      <p class="project-tag">Travel Diary</p>
+      <span class="project-tag">Travel Diary</span>
       <h2 class="project-title">gowiththeflo</h2>
       <p class="project-desc">An interactive world map tracking every country I visited. Click any highlighted country to see trip notes, dates, and travel companions.</p>
-      <span class="project-link">Open &rarr;</span>
+      <span class="project-open">Open<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
-    <div class="project-preview" style="position:relative;overflow:hidden;">
-      <img src="../assets/travel-cover.jpg"
-           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;"/>
-      <!-- Subtle dark overlay so the UI text is legible -->
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.28);"></div>
-      <!-- Loader UI centred -->
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
-        <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:300;color:rgba(255,255,255,0.82);letter-spacing:8px;text-transform:uppercase;">Travel Diary</span>
-        <div style="margin-top:12px;width:224px;height:1.5px;background:rgba(255,255,255,0.18);border-radius:1px;overflow:hidden;">
-          <div style="width:60%;height:100%;background:rgba(255,255,255,0.70);border-radius:1px;"></div>
-        </div>
-        <span style="margin-top:6px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:6.5px;color:rgba(255,255,255,0.28);letter-spacing:3px;">60%</span>
-      </div>
-    </div>
+    <div class="project-preview"><svg class="ig" viewBox="0 0 1000 625" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="1000" height="625" fill="url(#r4B)"/><rect width="1000" height="625" filter="url(#g4coarse)" opacity="0.26" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4mid)" opacity="0.3" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4fine)" opacity="0.62" style="mix-blend-mode:overlay"/><rect width="1000" height="625" fill="url(#r4Vig)"/><g><ellipse cx="500" cy="80.2" rx="62.1" ry="12.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="104.2" rx="120.0" ry="24.0" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="142.3" rx="169.7" ry="33.9" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="192.0" rx="207.8" ry="41.6" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="249.9" rx="231.8" ry="46.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="312.0" rx="240.0" ry="48.0" fill="none" stroke="#fff" stroke-width="2.2" opacity="0.95"/><ellipse cx="500" cy="374.1" rx="231.8" ry="46.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="432.0" rx="207.8" ry="41.6" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="481.7" rx="169.7" ry="33.9" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="519.8" rx="120.0" ry="24.0" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="543.8" rx="62.1" ry="12.4" fill="none" stroke="#fff" stroke-width="1" opacity="0.26"/><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="2.2" opacity="0.95"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-0.00s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-3.17s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-6.33s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-9.50s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-12.67s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-15.83s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="2.2" opacity="0.95"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-19.00s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-22.17s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-25.33s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-28.50s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-31.67s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><ellipse cx="500" cy="312" rx="240" ry="240" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"><animate attributeName="rx" values="240;0;240" keyTimes="0;0.5;1" dur="38.0s" begin="-34.83s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/></ellipse><circle cx="500" cy="312" r="240" fill="none" stroke="#fff" stroke-width="1.4" opacity="0.85"/></g></svg></div>
   </a>
-
-  <a class="project-card" href="/projects/knowhere/" target="_blank">
+  <a class="project-card" href="/projects/knowhere/">
     <div class="project-info">
-      <p class="project-tag">Geography Quiz</p>
+      <span class="project-tag">Geography Quiz</span>
       <h2 class="project-title">knowhere</h2>
-      <p class="project-desc">A geography quiz that drills flags, capitals, and map locations across regions and difficulty levels. Tracks your scores, streaks, and mistakes so you can see exactly where you go wrong.</p>
-      <span class="project-link">Open &rarr;</span>
+      <p class="project-desc">A geography quiz that drills flags, capitals, and map locations across regions and difficulty levels. Tracks your scores, streaks, and mistakes so you can see where you improve.</p>
+      <span class="project-open">Open<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
-    <div class="project-preview" style="background:#F7F3EE;overflow:hidden;position:relative;">
-      <svg viewBox="0 0 640 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;">
-        <defs>
-          <filter id="kw-card-shadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.07"/>
-          </filter>
-        </defs>
-
-        <!-- Background -->
-        <rect width="640" height="340" fill="#F7F3EE"/>
-
-        <!-- ── TITLE ── -->
-        <!-- Measured: total block 265px centred at 320 → starts at 187
-             "know" 187→326, gap 18px, "here" 344→453 -->
-        <text x="187" y="92" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="58" font-weight="300" fill="#1A1A1A" letter-spacing="-2">know</text>
-        <text x="344" y="92" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="58" font-weight="300" fill="#1A1A1A" letter-spacing="-2">here</text>
-        <!-- underline sits only under "here" -->
-        <line x1="344" y1="99" x2="453" y2="99" stroke="#1A1A1A" stroke-width="1.5"/>
-
-        <!-- Subtitle -->
-        <text x="320" y="122" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="13" font-weight="400" fill="#A39E99" text-anchor="middle" letter-spacing="0.2">Train your geography</text>
-
-        <!-- ── THREE MODE CARDS ── -->
-        <!-- Card centres: 152, 320, 488  width=148, height=136, gap=20 -->
-
-        <!-- CARD 1: Flags -->
-        <rect x="78" y="148" width="148" height="136" rx="14" fill="#FFFFFF" stroke="rgba(0,0,0,0.08)" stroke-width="1" filter="url(#kw-card-shadow)"/>
-        <!-- Exact icon path from source: flag icon -->
-        <!-- Scale the 24×24 viewBox icon to ~42×42, centred at 152,196 -->
-        <g transform="translate(152,194) scale(1.75) translate(-12,-12)"
-           stroke="#A39E99" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="7" y1="3" x2="7" y2="21"/>
-          <path d="M7 4 Q11 3 13 5 Q15 7 17 6 L17 13 Q15 14 13 12 Q11 10 7 11"/>
-        </g>
-        <text x="152" y="247" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="500" fill="#A39E99" text-anchor="middle" letter-spacing="0.6">MODE 1</text>
-        <text x="152" y="265" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="14" font-weight="500" fill="#1A1A1A" text-anchor="middle" letter-spacing="-0.2">Flags</text>
-
-        <!-- CARD 2: Capitals -->
-        <rect x="246" y="148" width="148" height="136" rx="14" fill="#FFFFFF" stroke="rgba(0,0,0,0.08)" stroke-width="1" filter="url(#kw-card-shadow)"/>
-        <!-- Exact icon path from source: building/capitol icon -->
-        <g transform="translate(320,194) scale(1.75) translate(-12,-12)"
-           stroke="#A39E99" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 10 Q12 5 16 10"/>
-          <rect x="5" y="10" width="14" height="8"/>
-          <line x1="8"  y1="10" x2="8"  y2="18"/>
-          <line x1="12" y1="10" x2="12" y2="18"/>
-          <line x1="16" y1="10" x2="16" y2="18"/>
-          <line x1="2"  y1="19" x2="22" y2="19"/>
-        </g>
-        <text x="320" y="247" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="500" fill="#A39E99" text-anchor="middle" letter-spacing="0.6">MODE 2</text>
-        <text x="320" y="265" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="14" font-weight="500" fill="#1A1A1A" text-anchor="middle" letter-spacing="-0.2">Capitals</text>
-
-        <!-- CARD 3: Locations -->
-        <rect x="414" y="148" width="148" height="136" rx="14" fill="#FFFFFF" stroke="rgba(0,0,0,0.08)" stroke-width="1" filter="url(#kw-card-shadow)"/>
-        <!-- Exact icon path from source: pin icon -->
-        <g transform="translate(488,194) scale(1.75) translate(-12,-12)"
-           stroke="#A39E99" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="3.5"/>
-          <line x1="12" y1="11.5" x2="12" y2="21"/>
-        </g>
-        <text x="488" y="247" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="500" fill="#A39E99" text-anchor="middle" letter-spacing="0.6">MODE 3</text>
-        <text x="488" y="265" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="14" font-weight="500" fill="#1A1A1A" text-anchor="middle" letter-spacing="-0.2">Locations</text>
-
-        <!-- ── STATS ROW ── -->
-        <text x="188" y="311" font-family="DM Mono,monospace" font-size="22" font-weight="300" fill="#1A1A1A" text-anchor="middle" letter-spacing="-1">12</text>
-        <text x="188" y="328" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="400" fill="#A39E99" text-anchor="middle" letter-spacing="0.4">ROUNDS</text>
-        <text x="320" y="311" font-family="DM Mono,monospace" font-size="22" font-weight="300" fill="#1A1A1A" text-anchor="middle" letter-spacing="-1">87%</text>
-        <text x="320" y="328" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="400" fill="#A39E99" text-anchor="middle" letter-spacing="0.4">BEST</text>
-        <text x="452" y="311" font-family="DM Mono,monospace" font-size="22" font-weight="300" fill="#1A1A1A" text-anchor="middle" letter-spacing="-1">9</text>
-        <text x="452" y="328" font-family="DM Sans,Helvetica Neue,sans-serif" font-size="9" font-weight="400" fill="#A39E99" text-anchor="middle" letter-spacing="0.4">STREAK</text>
-
-      </svg>
-    </div>
+    <div class="project-preview"><svg class="ig" viewBox="0 0 1000 625" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="1000" height="625" fill="url(#r4C)"/><rect width="1000" height="625" filter="url(#g4coarse)" opacity="0.26" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4mid)" opacity="0.3" style="mix-blend-mode:overlay"/><rect width="1000" height="625" filter="url(#g4fine)" opacity="0.62" style="mix-blend-mode:overlay"/><rect width="1000" height="625" fill="url(#r4Vig)"/><path d="M287 99h196v196h-196z M517 99h196v196h-196z M287 329h196v196h-196z M517 329h196v196h-196z" fill="none" stroke="#fff" stroke-width="1.4" opacity="0.5"/><path class="pv-reveal" d="M287 329h196v196h-196z" fill="#fff"/></svg></div>
   </a>
-
-  <!-- Add future project cards here -->
-
-</div><!-- /.projects-wrap -->
+</div>
