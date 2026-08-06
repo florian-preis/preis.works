@@ -22,6 +22,8 @@ from PIL import Image, ImageOps
 SOURCE_DIR = "photography"
 THUMB_WIDTH = 600
 THUMB_QUALITY = 78
+VIEW_WIDTH = 2000
+VIEW_QUALITY = 82
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
 
 
@@ -31,7 +33,9 @@ def main(destination):
                  f"Run this from the repository root.")
 
     output_dir = os.path.join(destination, SOURCE_DIR, "thumb")
+    view_dir = os.path.join(destination, SOURCE_DIR, "view")
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(view_dir, exist_ok=True)
 
     sources = []
     skipped = []
@@ -44,17 +48,27 @@ def main(destination):
     written = 0
     total_in = 0
     total_out = 0
+    total_view = 0
 
     for name in sources:
         stem = os.path.splitext(name)[0]
         source_path = os.path.join(SOURCE_DIR, name)
         target_path = os.path.join(output_dir, stem + ".webp")
+        view_path = os.path.join(view_dir, stem + ".webp")
         try:
             with Image.open(source_path) as im:
                 im = ImageOps.exif_transpose(im).convert("RGB")
+                # grid thumbnail
                 height = round(im.height * THUMB_WIDTH / im.width)
                 im.resize((THUMB_WIDTH, height), Image.LANCZOS).save(
                     target_path, "WEBP", quality=THUMB_QUALITY, method=5
+                )
+                # lightbox image: big enough for any screen, roughly half the
+                # bytes of the original, which is what makes arrowing fast
+                vw = min(VIEW_WIDTH, im.width)
+                vh = round(im.height * vw / im.width)
+                im.resize((vw, vh), Image.LANCZOS).save(
+                    view_path, "WEBP", quality=VIEW_QUALITY, method=5
                 )
         except Exception as error:
             sys.exit(f"ERROR while processing '{name}': {error}")
@@ -62,6 +76,7 @@ def main(destination):
         written += 1
         total_in += os.path.getsize(source_path)
         total_out += os.path.getsize(target_path)
+        total_view += os.path.getsize(view_path)
 
     # Guard rails. If these fail we stop the build rather than publish a gallery
     # of broken images. A failed build leaves the previous site live.
@@ -73,9 +88,11 @@ def main(destination):
                  f"thumbnails written. Refusing to publish a partial gallery.")
 
     saving = (1 - total_out / total_in) * 100 if total_in else 0
-    print(f"thumbnails written : {written}")
+    view_saving = (1 - total_view / total_in) * 100 if total_in else 0
+    print(f"images processed   : {written}")
     print(f"originals          : {total_in / 1e6:.1f} MB")
-    print(f"thumbnails         : {total_out / 1e6:.2f} MB  ({saving:.0f}% smaller)")
+    print(f"grid thumbnails    : {total_out / 1e6:.2f} MB  ({saving:.0f}% smaller)")
+    print(f"lightbox images    : {total_view / 1e6:.2f} MB  ({view_saving:.0f}% smaller)")
     if skipped:
         print(f"non-image files skipped: {len(skipped)} ({', '.join(skipped[:5])})")
 
