@@ -29,7 +29,17 @@
       --ink-grain:    0.20;
     }
 
-    html { scroll-behavior: smooth; overscroll-behavior-x: none; }
+    html {
+      scroll-behavior: smooth;
+      overscroll-behavior-x: none;
+      /* Always reserve the scrollbar's width, even when there is no scrollbar.
+         Locking page scroll for the mobile menu removes the scrollbar, and on
+         platforms where scrollbars occupy layout width that widens the viewport
+         by ~15px. The fixed navbar sizes to the viewport, so its right edge and
+         the close button would slide sideways mid-transition. Reserving the
+         gutter keeps the viewport width constant, so nothing moves. */
+      scrollbar-gutter: stable;
+    }
 
     body {
       font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif;
