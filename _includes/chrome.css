@@ -14,12 +14,23 @@
       --nav-h: 68px;
       --max-w: 1500px;
       --ham-stroke: 1.5px; /* hamburger & X line thickness */
+
+      /* motion: three intents, one curve */
+      --ease:   cubic-bezier(0.22, 0.61, 0.36, 1);
+      --m-fast: 0.18s;
+      --m-base: 0.3s;
+      --m-slow: 0.6s;
+
+      /* the footer canvas, taken from the project cards */
+      --footer-a: #04081F;
+      --footer-b: #0C1A4E;
+      --footer-c: #16307F;
     }
 
     html { scroll-behavior: smooth; overscroll-behavior: none; }
 
     body {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-family: Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -71,14 +82,22 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.07);
     }
     .logo {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.13em;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--text);
       text-decoration: none;
-      transition: color 0.2s;
+      transition: color var(--m-fast) var(--ease);
     }
+    /* Each letter thickens in sequence on hover. Only possible because Inter is
+       a variable font: weight becomes something you can animate. */
+    .logo span {
+      display: inline-block;
+      font-variation-settings: 'wght' 600;
+      transition: font-variation-settings var(--m-base) ease;
+    }
+    .logo:hover span { font-variation-settings: 'wght' 900; }
     .logo:hover { color: var(--muted); }
     .nav-links { display: flex; gap: 36px; list-style: none; }
     .nav-links a {
@@ -150,7 +169,7 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
-      background: #d0cdc9;
+      background: linear-gradient(103deg, var(--footer-a) 0%, var(--footer-b) 58%, var(--footer-c) 100%);
     }
     .site-footer::before {
       content: '';
@@ -160,7 +179,7 @@
       height: 200%;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
       background-size: 180px 180px;
-      opacity: 0.10;
+      opacity: 0.17;
       animation: grainDrift 8s steps(10, end) infinite;
       pointer-events: none;
       z-index: 0;
@@ -191,12 +210,12 @@
     }
     .footer-copy, .footer-social {
       font-size: 11px;
-      letter-spacing: 0.04em;
-      color: #333;
+      letter-spacing: 0.05em;
+      color: rgba(255,255,255,0.74);
     }
     .footer-social { display: flex; gap: 18px; align-items: center; }
     .footer-social a {
-      color: #333;
+      color: rgba(255,255,255,0.74);
       display: flex;
       align-items: center;
       line-height: 0;
