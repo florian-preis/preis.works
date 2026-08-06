@@ -185,7 +185,9 @@ function updateLightbox() {
     preloadNeighbours();
   };
   hi.onerror = function () {
-    img.src = p.src;                     // fall back to the original
+    // Originals are no longer published, so degrade to the thumbnail: a soft
+    // picture rather than a broken one.
+    img.src = p.thumb || p.src;
     img.classList.remove('lb-loading');
   };
   hi.src = full;
