@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+
+// Composed positions on the desk (left %, top %, width %, tilt). Cards beyond these fall back to a loose grid.
+const spots = [
+  { l: 5, t: 10, w: 29, r: -3 },
+  { l: 37, t: 30, w: 29, r: 2 },
+  { l: 69, t: 6, w: 26, r: -1.5 },
+  { l: 70, t: 56, w: 22, r: 2.5 },
+  { l: 8, t: 60, w: 24, r: 1.5 },
+];
+---
+<Base title="Projects" active="projects" description="Small things built for fun: a word-by-word speed reader, an interactive map of every country visited, and a geography quiz.">
+  <main class="desk-page">
+    <div class="desk wrap" style={`--rows:${Math.ceil(projects.length / 3)}`}>
+      {projects.map((p, i) => {
+        const s = spots[i];
+        const style = s ? `--l:${s.l}%;--t:${s.t}%;--w:${s.w}%;--r:${s.r}deg` : `--r:${i % 2 ? 1.5 : -1.5}deg`;
+        return (
+          <a class={`card glass-card ${s ? 'placed' : ''}`} href={`/projects/${p.id}/`} style={style}>
+            <div class="shot">
+              {p.data.image
+                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" />
+                : <span class="hand">{p.data.name}</span>}
+            </div>
+            <div class="label">
+              <span class="hand name">{p.data.name}</span>
+              <span class="meta">{p.data.category}</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </main>
+</Base>
+
+<style>
+  .desk-page {
+    background-color: var(--paper);
+    background-image: radial-gradient(circle, #d6d5d0 1px, transparent 1.2px);
+    background-size: 24px 24px;
+    margin-top: calc(-1 * var(--nav-h));
+    padding-top: calc(var(--nav-h) + 24px);
+  }
+  .desk { position: relative; height: 46rem; }
+  .glass-card {
+    display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 18px;
+    background: rgba(250, 250, 248, 0.55);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 24px rgba(43, 43, 41, 0.06);
+    transform: rotate(var(--r));
+    transition: transform var(--slow) var(--ease), box-shadow var(--slow) var(--ease);
+  }
+  .glass-card:hover, .glass-card:focus-visible { transform: rotate(0deg) translateY(-6px); box-shadow: 0 18px 40px rgba(43, 43, 41, 0.1); }
+  .placed { position: absolute; left: var(--l); top: var(--t); width: var(--w); }
+  .shot { aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: rgba(233, 232, 228, 0.8); display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 28px; }
+  .shot :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .label { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 2px 4px 4px; }
+  .name { font-size: 21px; }
+  .meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* Tablet: two columns, still askew */
+  @media (max-width: 1100px) {
+    .desk { height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 32px; padding: 24px 0 48px; }
+    .placed { position: static; width: auto; }
+  }
+  /* Phone: one column, alternating tilt */
+  @media (max-width: 700px) {
+    .desk { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 16px 6% 32px; }
+    .name { font-size: 19px; }
+  }
+</style>

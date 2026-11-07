@@ -1,0 +1,103 @@
+---
+// The navigation pill. Sticky on every page.
+// mode="sticky": links sit on the page at the top; the glass pill fades in once you scroll.
+// mode="veil" (Home): hidden over the veil; the pill arrives as the veil scrolls away.
+import { nav } from '../data/site';
+interface Props { active: string; mode: 'sticky' | 'veil'; }
+const { active, mode } = Astro.props;
+---
+<header class="nav-wrap" data-mode={mode}>
+  <div class="nav-pill wrap">
+    <span class="nav-bg glass" aria-hidden="true"></span>
+    <a class="nav-home" href="/" aria-label="Florian Preis, home">
+      <img src="/brand/name.svg" alt="" width="142" height="17">
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      {nav.map((item) => (
+        <a href={item.href} class={item.key === active ? 'current' : 'link-muted'} aria-current={item.key === active ? 'page' : undefined}>{item.label}</a>
+      ))}
+    </nav>
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-sheet">
+      <span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-sheet glass" id="nav-sheet" hidden>
+    <nav aria-label="Main, mobile">
+      {nav.map((item) => (
+        <a href={item.href} class={item.key === active ? 'current' : ''} aria-current={item.key === active ? 'page' : undefined}>{item.label}</a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav-wrap { position: sticky; top: 0; z-index: 50; padding-top: 16px; }
+  .nav-wrap[data-mode='veil'] { position: fixed; left: 0; right: 0; }
+  .nav-pill {
+    position: relative; isolation: isolate;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 12px 28px;
+  }
+  .nav-bg { position: absolute; inset: 0; z-index: -1; border-radius: 999px; opacity: 0; transition: opacity var(--base) var(--ease); }
+  .nav-wrap.scrolled .nav-bg { opacity: 1; }
+  .nav-home { display: flex; align-items: center; min-height: 32px; }
+  .nav-home img { height: 17px; width: auto; }
+  .nav-links { display: flex; gap: 32px; font-size: 13px; }
+  .nav-links .current { font-weight: 600; }
+
+  /* Veil mode: absent over the veil, arrives once the veil scrolls away */
+  .nav-wrap[data-mode='veil'] { opacity: 0; transform: translateY(-10px); visibility: hidden; transition: opacity var(--base) var(--ease), transform var(--base) var(--ease), visibility 0s linear var(--base); }
+  .nav-wrap[data-mode='veil'].arrived { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+  .nav-wrap[data-mode='veil'] .nav-bg { opacity: 1; }
+
+  .nav-toggle { display: none; width: 44px; height: 44px; margin-right: -14px; border: 0; background: transparent; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 6px; }
+  .nav-toggle span { display: block; width: 22px; height: 1.5px; background: currentColor; transition: transform var(--fast) var(--ease); }
+  .nav-toggle[aria-expanded='true'] span:first-child { transform: translateY(3.75px) rotate(45deg); }
+  .nav-toggle[aria-expanded='true'] span:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+  .nav-sheet { position: fixed; inset: 0; z-index: -1; display: flex; align-items: center; padding: 0 calc(var(--gutter) + 20px); border-radius: 0; background: rgba(243, 242, 239, 0.86); }
+  .nav-sheet[hidden] { display: none; }
+  .nav-sheet nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-sheet a { font-size: 27px; font-weight: 300; letter-spacing: -0.02em; padding: 8px 0; color: var(--muted); }
+  .nav-sheet a.current { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 700px) {
+    .nav-pill { padding: 6px 20px; }
+    .nav-links { display: none; }
+    .nav-toggle { display: flex; }
+    .nav-home img { height: 15px; }
+  }
+</style>
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('.nav-wrap')!;
+  const mode = wrap.dataset.mode;
+  const veil = document.getElementById('veil');
+
+  // Pill state: one passive scroll listener, work batched into a single frame
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    if (mode === 'veil' && veil) {
+      const r = veil.getBoundingClientRect();
+      wrap.classList.toggle('arrived', r.bottom < window.innerHeight * 0.45);
+    } else {
+      wrap.classList.toggle('scrolled', window.scrollY > 8);
+    }
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  update();
+
+  // Mobile menu sheet
+  const toggle = wrap.querySelector<HTMLButtonElement>('.nav-toggle')!;
+  const sheet = wrap.querySelector<HTMLElement>('.nav-sheet')!;
+  const setOpen = (open: boolean) => {
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    sheet.hidden = !open;
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open && mode === 'veil') wrap.classList.add('arrived');
+  };
+  toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+  sheet.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+</script>

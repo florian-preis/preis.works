@@ -1,0 +1,142 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { photos } from '../data/photos';
+
+// Two sizes per photo, generated at build time: a small grid thumbnail and a large lightbox image
+const items = await Promise.all(
+  photos.map(async (p) => {
+    const thumb = await getImage({ src: p.image, width: 600, format: 'webp', quality: 72 });
+    const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
+    return { caption: p.caption, date: p.date, thumb: thumb.src, view: view.src, w: p.image.width, h: p.image.height };
+  })
+);
+---
+<Base title="Photography" active="photography" description="A personal photography archive: street, landscape, and travel work from Copenhagen, East Africa, Southeast Asia, and beyond.">
+  <main class="photography">
+
+    <!-- Toolbar: scrolls away with the page -->
+    <div class="tools wrap" id="tools">
+      <div class="loc-slot" aria-live="polite">
+        <span class="loc" data-slot="0"></span>
+        <span class="loc" data-slot="1"></span>
+      </div>
+      <div class="switch">
+        <button type="button" class="switch-label is-on" data-view="grid">Grid</button>
+        <button type="button" class="switch-track" role="switch" aria-checked="false" aria-label="Index view"><span class="knob"></span></button>
+        <button type="button" class="switch-label" data-view="index">Index</button>
+      </div>
+    </div>
+
+    <!-- Location chip under the nav, once the toolbar is out of view -->
+    <div class="float" aria-hidden="true">
+      <div class="float-inner wrap">
+        <span class="loc chip glass" data-slot="0"></span>
+        <span class="loc chip glass" data-slot="1"></span>
+      </div>
+    </div>
+
+    <div class="grid wrap" id="grid">
+      {items.map((p, i) => (
+        <a class="tile" href={p.view} data-i={i} aria-label={`${p.caption}, ${p.date}`}>
+          <img src={p.thumb} alt={p.caption} width="600" height="400" loading={i < 10 ? 'eager' : 'lazy'} decoding="async">
+        </a>
+      ))}
+    </div>
+
+    <div class="index wrap" id="index" hidden>
+      {items.map((p, i) => (
+        <a class="index-row" href={p.view} data-i={i}>
+          <span class="name">{p.caption}</span>
+          <span class="meta">{p.date}</span>
+        </a>
+      ))}
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+      <button class="lb-close" type="button" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <button class="lb-nav lb-prev" type="button" aria-label="Previous photo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <figure class="lb-figure">
+        <div class="lb-frame">
+          <img class="lb-img" alt="">
+          <figcaption class="lb-caption">
+            <span><span class="lb-place"></span><span class="lb-date"></span></span>
+            <span class="lb-count"></span>
+          </figcaption>
+        </div>
+      </figure>
+      <button class="lb-nav lb-next" type="button" aria-label="Next photo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <script type="application/json" id="photo-data" set:html={JSON.stringify(items)} />
+  </main>
+</Base>
+
+<style>
+  .photography { padding-bottom: 24px; }
+
+  .tools { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 0 12px; }
+  .loc-slot { position: relative; flex: 1; min-width: 0; height: 44px; font-size: 13px; }
+  .loc {
+    position: absolute; left: 0; top: 50%; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none;
+    opacity: 0; transform: translateY(calc(-50% + 6px)); filter: blur(3px);
+    transition: opacity var(--base) var(--ease), transform var(--base) var(--ease), filter var(--base) var(--ease);
+  }
+  .loc.on { opacity: 1; transform: translateY(-50%); filter: blur(0); }
+
+  .switch { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .switch-label { min-height: 44px; padding: 0 2px; border: 0; background: transparent; cursor: pointer; color: var(--muted); transition: color var(--fast) ease; }
+  .switch-label.is-on { color: var(--text); font-weight: 500; }
+  .switch-track { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+  .switch-track::before { content: ''; position: absolute; left: 4px; top: 12px; width: 36px; height: 20px; border-radius: 999px; background: #dedddb; transition: background var(--base) ease; }
+  .switch-track .knob { position: absolute; left: 6px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: transform var(--base) var(--ease); }
+  .switch-track[aria-checked='true']::before { background: #9c9b96; }
+  .switch-track[aria-checked='true'] .knob { transform: translateX(16px); }
+
+  .float { position: sticky; top: calc(var(--nav-h) + 12px); z-index: 40; height: 0; }
+  .float-inner { position: relative; height: 40px; opacity: 0; visibility: hidden; transition: opacity var(--fast) ease, visibility 0s linear var(--fast); }
+  .float-inner.active { opacity: 1; visibility: visible; transition-delay: 0s; }
+  .chip { padding: 9px 16px; border-radius: 999px; font-size: 13px; max-width: calc(100% - 24px); }
+
+  .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(6px, 1.4vw, 18px); }
+  .tile { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--panel); }
+  .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--slow) cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .tile:hover img { transform: scale(1.05); }
+  /* Reveal: only when JavaScript runs, so the grid is never blank without it */
+  :global(.js) .tile { opacity: 0; transform: translateY(14px); transition: opacity 0.55s ease, transform 0.55s ease; }
+  :global(.js) .tile.shown { opacity: 1; transform: none; }
+  @media (max-width: 1100px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 700px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+  .index { padding-top: 8px; }
+
+  .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
+  .lightbox[hidden] { display: none; }
+  .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
+  /* The frame shrinks to the photo, so the caption lines up with the photo's edges */
+  .lb-frame { display: flex; flex-direction: column; gap: 14px; width: fit-content; }
+  .lb-img { width: auto; height: auto; max-width: calc(100vw - 160px); max-height: calc(100vh - 160px); max-height: calc(100dvh - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
+  .lb-img.loading { filter: blur(12px); }
+  .lb-caption { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; font-size: 12px; line-height: 1.5; width: 0; min-width: 100%; }
+  .lb-caption > span:first-child { display: flex; flex-direction: column; }
+  .lb-date, .lb-count { color: var(--muted); }
+  .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lb-close:hover, .lb-nav:hover { color: var(--text); }
+  .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
+  @media (max-width: 700px) {
+    .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }
+    .lb-nav { display: none; }
+    .lb-img { max-width: calc(100vw - 24px); }
+  }
+</style>
+
+<script>
+  import '../scripts/photography';
+</script>

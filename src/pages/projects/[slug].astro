@@ -1,0 +1,107 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry, all } }));
+}
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+const p = entry.data;
+// "Why I made it" is the text under the frontmatter; the section hides itself while empty
+const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length > 0;
+---
+<Base title={p.name} active="projects" description={p.summary}>
+  <main class="project wrap">
+    <!-- Index: about a quarter of the width on desktop, a swipeable strip on phones -->
+    <aside class="project-index" aria-label="Projects">
+      <a class="back link-muted" href="/projects/">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        <span>All projects</span>
+      </a>
+      <nav class="rows">
+        {all.map((x) => (
+          <a class="index-row" href={`/projects/${x.id}/`} aria-current={x.id === entry.id ? 'page' : undefined}>
+            <span class="name">{x.data.name}</span>
+            <span class="meta">{x.data.category}</span>
+          </a>
+        ))}
+      </nav>
+    </aside>
+
+    <article class="project-body">
+      <div class="hero">
+        {p.image
+          ? <Image src={p.image} alt={`${p.name}, screen`} widths={[640, 1280, 1920]} sizes="(max-width: 700px) 100vw, 70vw" />
+          : <span class="hand placeholder">{p.name}</span>}
+      </div>
+
+      <header class="head">
+        <h1 class="hand">{p.name}</h1>
+        <span class="meta">{p.category}{p.year && `, ${p.year}`}</span>
+      </header>
+
+      <div class="text">
+        <section>
+          <h2>What it is</h2>
+          <p>{p.summary}</p>
+        </section>
+        {hasWhy && (
+          <section>
+            <h2>Why I made it</h2>
+            <div class="why"><Content /></div>
+          </section>
+        )}
+      </div>
+
+      {p.app && (
+        <div>
+          <a class="open" href={p.app}>Open {p.name}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      )}
+    </article>
+  </main>
+</Base>
+
+<style>
+  .project { display: flex; flex-wrap: wrap; gap: 64px; align-items: flex-start; padding-top: 40px; }
+  .project-index { flex: 0 0 clamp(240px, 24%, 340px); position: sticky; top: calc(var(--nav-h) + 24px); }
+  .back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; margin-bottom: 8px; }
+  .rows { display: flex; flex-direction: column; }
+
+  .project-body { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+  .hero { aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; }
+  .hero :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .placeholder { font-size: 40px; color: var(--faint); }
+  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .head h1 { margin: 0; font-size: 40px; }
+  .meta { font-size: 13px; color: var(--muted); }
+  .text { display: flex; flex-wrap: wrap; gap: 40px; }
+  .text section { flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px; }
+  .text h2 { margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .text p, .why :global(p) { margin: 0; line-height: 1.75; }
+  .open { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 22px; border: 1px solid var(--text); border-radius: 999px; font-size: 14px; transition: background var(--fast) ease, color var(--fast) ease; }
+  .open:hover { background: var(--text); color: var(--paper); }
+  .open svg { transition: transform var(--base) var(--ease); }
+  .open:hover svg { transform: translateX(3px); }
+
+  /* Phone: the index becomes a strip of names under the nav */
+  @media (max-width: 700px) {
+    .project { gap: 24px; padding-top: 8px; }
+    .project-index { flex: 1 1 100%; position: sticky; top: var(--nav-h); z-index: 30; margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter); background: rgba(243, 242, 239, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .project-index::-webkit-scrollbar { display: none; }
+    .back span { display: none; }
+    .back { margin: 0; flex: none; width: 36px; }
+    .rows { flex-direction: row; gap: 22px; white-space: nowrap; }
+    .rows :global(.index-row) { display: block; border: 0; padding: 12px 0 10px; min-height: 0; background: none; color: var(--muted); }
+    .rows :global(.index-row .meta) { display: none; }
+    .rows :global(.index-row[aria-current='page']) { color: var(--text); box-shadow: inset 0 -1px 0 var(--text); }
+    .head h1 { font-size: 30px; }
+    .hero { aspect-ratio: 4 / 3; }
+    .open { width: 100%; justify-content: center; min-height: 48px; }
+  }
+</style>

@@ -1,10 +1,8 @@
-# Builds the site and publishes it to GitHub Pages.
+# Builds the site with Astro and publishes it to GitHub Pages.
 #
-# This replaces GitHub's own automatic Jekyll build. We need our own because the
-# photo thumbnails are generated during the build, which GitHub's version cannot do.
-#
-# If this workflow fails, nothing is published and the previous version of the
-# site stays live. A failed build never takes the site down.
+# Runs only for the main branch, so work on other branches (like "redesign")
+# never touches the live site. If a build fails, nothing is published and the
+# previous version stays live.
 
 name: Build and deploy
 
@@ -19,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-v3
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -29,43 +27,23 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          ruby-version: '3.3'
-          bundler-cache: true
+          node-version: 22
+          cache: npm
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Install
+        run: npm ci
 
-      - name: Install Pillow
-        run: pip install --quiet Pillow
-
-      - name: Build the site with Jekyll
-        run: bundle exec jekyll build
-        env:
-          JEKYLL_ENV: production
-
-      - name: Generate photo thumbnails
-        run: python3 tools/build-thumbnails.py _site
-
-      - name: Drop the originals from the published site
-        # The thumbnail script reads from the repository, not from _site, so the
-        # derivatives already exist by this point. The full-size JPEGs are the bulk
-        # of the artifact and nothing on the site ever requests them: the grid
-        # loads thumbnails, the lightbox loads the 2000px WebP. Keeping them only
-        # makes every deploy larger and slower.
-        run: |
-          rm -f _site/photography/*.jpg _site/photography/*.jpeg _site/photography/*.JPG _site/photography/*.JPEG
-          echo "published site: $(du -sh _site | cut -f1)"
-          du -sh _site/photography/thumb _site/photography/view
+      - name: Build
+        # Also generates the veil images and every photo size from photography/
+        run: npm run build
 
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist
 
   deploy:
     needs: build
@@ -78,6 +56,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         with:
-          # Default is 10 minutes. Raised because a large artifact can be slow
-          # rather than genuinely stuck, and each retry costs a whole build.
           timeout: 1200000

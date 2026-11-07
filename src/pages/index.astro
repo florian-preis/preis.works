@@ -1,0 +1,142 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import veil from '../../content/veil.json';
+import { Content as About } from '../../content/about.md';
+import portrait from '../assets/portrait.jpg';
+import { site } from '../data/site';
+
+// Slideshow timing for any number of photos: each holds for `secondsPerPhoto`, with a 2 s crossfade
+const n = veil.slides.length;
+const hold = veil.secondsPerPhoto;
+const total = n * hold;
+const pct = (s: number) => ((s / total) * 100).toFixed(3) + '%';
+const keyframes = `
+@keyframes veilFade{0%{opacity:0}${pct(2)}{opacity:1}${pct(hold)}{opacity:1}${pct(hold + 2)}{opacity:0}100%{opacity:0}}
+@keyframes kbIn{0%{transform:scale(1)}${pct(hold + 2)}{transform:scale(1.07)}100%{transform:scale(1.07)}}
+@keyframes kbLeft{0%{transform:scale(1.08) translateX(1.5%)}${pct(hold + 2)}{transform:scale(1.08) translateX(-1.5%)}100%{transform:scale(1.08) translateX(-1.5%)}}
+@keyframes kbRight{0%{transform:scale(1.08) translateX(-1.5%)}${pct(hold + 2)}{transform:scale(1.08) translateX(1.5%)}100%{transform:scale(1.08) translateX(1.5%)}}`;
+const slides = veil.slides.map((s, i) => ({
+  id: String(i + 1).padStart(2, '0'),
+  focus: s.focus,
+  move: s.move,
+  delay: `${i * hold - 2}s`,
+}));
+---
+<Base active="about" navMode="veil">
+  <style slot="head" set:html={keyframes} is:inline></style>
+
+  <!-- Veil: a fogged window over a slow slideshow, the name wiped clear with a finger -->
+  <section class="veil" id="veil" data-tone={veil.tone} style={`--veil-total:${total}s`} aria-labelledby="veil-name">
+    <h1 id="veil-name" class="visually-hidden">Florian Preis</h1>
+
+    <div class="layer fog" aria-hidden="true">
+      {slides.map((s, i) => (
+        <div class="slide" style={`animation-delay:${s.delay}`}>
+          <img class={`drift ${s.move}`} style={`animation-delay:${s.delay};object-position:${s.focus}`} src={`/veil/${s.id}-fog.webp`} alt="" loading={i < 2 ? 'eager' : 'lazy'} decoding="async">
+        </div>
+      ))}
+    </div>
+    <div class="haze" aria-hidden="true"></div>
+    <svg class="condensation" aria-hidden="true">
+      <filter id="condensation"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+      <rect width="100%" height="100%" filter="url(#condensation)"/>
+    </svg>
+
+    <div class="layer clear" aria-hidden="true">
+      {slides.map((s, i) => (
+        <div class="slide" style={`animation-delay:${s.delay}`}>
+          <img class={`drift ${s.move}`} style={`animation-delay:${s.delay};object-position:${s.focus}`} src={`/veil/${s.id}.webp`} alt="" loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async">
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <main class="about wrap">
+    <Image class="portrait" src={portrait} alt="Florian Preis" widths={[320, 640]} sizes="(max-width: 700px) 60vw, 320px" />
+    <div class="about-text">
+      <About />
+      <ul class="contact">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+          <button type="button" class="reveal-phone" data-codes={site.phoneCodes.join(',')}>Show phone number</button>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M7 10v7M7 7v.01M11 17v-4a2 2 0 014 0v4M11 10v7"/></svg>
+          <a href={site.linkedin} target="_blank" rel="noopener">florianpreis</a>
+        </li>
+      </ul>
+    </div>
+  </main>
+</Base>
+
+<style>
+  /* ── Veil ── */
+  .veil { position: relative; height: 100vh; height: 100svh; min-height: 520px; overflow: hidden; background: #9a9994; --p: 0; }
+  .layer { position: absolute; inset: 0; }
+  .fog { inset: -40px; }
+  .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; animation: veilFade var(--veil-total) linear infinite; }
+  .drift { width: 100%; height: 100%; object-fit: cover; animation: kbIn var(--veil-total) linear infinite; will-change: transform; }
+  .drift.left { animation-name: kbLeft; }
+  .drift.right { animation-name: kbRight; }
+  .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
+  .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
+  /* The sharp photo shows only through the handwritten name, and fogs over as you scroll away */
+  .clear {
+    -webkit-mask: url('/brand/name-mask.png') center / min(82vw, 1050px) auto no-repeat;
+    mask: url('/brand/name-mask.png') center / min(82vw, 1050px) auto no-repeat;
+    opacity: clamp(0, calc(1 - var(--p) * 2), 1);
+  }
+  .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
+  .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
+  .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .drift { animation: none !important; }
+    .slide:first-child { opacity: 1; }
+  }
+
+  /* ── About ── */
+  .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 144px; }
+  .portrait { flex: 1 1 260px; max-width: 320px; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: top; }
+  .about-text { flex: 999 1 400px; min-width: 0; max-width: 62ch; line-height: 1.75; }
+  .about-text :global(p) { margin: 0 0 18px; }
+  .contact { list-style: none; margin: 32px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+  .contact li { display: flex; align-items: center; gap: 14px; min-height: 28px; }
+  .contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .reveal-phone { padding: 0; border: 0; background: transparent; cursor: pointer; color: var(--muted); text-decoration: underline; text-decoration-color: #cfcec9; text-underline-offset: 3px; }
+  .reveal-phone:hover { color: var(--text); }
+  @media (max-width: 700px) {
+    .about { gap: 32px; padding-top: 112px; }
+    .portrait { max-width: 220px; }
+  }
+</style>
+
+<script>
+  // Fog returns over the name as the veil scrolls away
+  const veil = document.getElementById('veil')!;
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const h = veil.offsetHeight;
+    const p = Math.min(Math.max(window.scrollY / h, 0), 1);
+    veil.style.setProperty('--p', p.toFixed(3));
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking && window.scrollY < veil.offsetHeight * 1.2) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+
+  // Phone number: assembled only on request
+  document.querySelectorAll<HTMLButtonElement>('.reveal-phone').forEach((btn) => btn.addEventListener('click', () => {
+    const d = btn.dataset.codes!.split(',').map((c) => String.fromCharCode(Number(c))).join('');
+    const a = document.createElement('a');
+    a.href = `tel:+${d}`;
+    a.textContent = `+${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 6)} ${d.slice(6, 8)} ${d.slice(8)}`;
+    btn.replaceWith(a);
+    a.focus();
+  }));
+</script>

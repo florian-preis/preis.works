@@ -1,0 +1,8 @@
+# Installed packages and build output: recreated on every build, never committed
+node_modules/
+dist/
+.astro/
+# Veil images are generated from photography/ by scripts/build-veil.mjs
+public/veil/
+.DS_Store
+Thumbs.db

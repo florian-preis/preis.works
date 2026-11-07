@@ -1,0 +1,51 @@
+---
+// The frame around every page: head tags, nav, footer.
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  active?: 'about' | 'photography' | 'projects' | '';
+  navMode?: 'sticky' | 'veil';
+  noindex?: boolean;
+}
+const { title, description = site.description, active = '', navMode = 'sticky', noindex = false } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/assets/social-card.jpg', Astro.site);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script is:inline>document.documentElement.classList.add('js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{fullTitle}</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={canonical}>
+  {noindex && <meta name="robots" content="noindex">}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content={site.name}>
+  <meta property="og:title" content={fullTitle}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={canonical}>
+  <meta property="og:image" content={ogImage}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Portrait of Florian Preis">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#f3f2ef">
+  <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+  <link rel="preload" href="/fonts/FlorianHand-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <slot name="head" />
+</head>
+<body>
+  <Nav active={active} mode={navMode} />
+  <slot />
+  <Footer />
+</body>
+</html>
