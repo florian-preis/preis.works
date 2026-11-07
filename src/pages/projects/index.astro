@@ -14,7 +14,7 @@ const spots = [
   { l: 8, t: 60, w: 24, r: 1.5 },
 ];
 ---
-<Base title="Projects" active="projects" description="Small things built for fun: a word-by-word speed reader, an interactive map of every country visited, and a geography quiz.">
+<Base title="Projects" active="projects" description="Small things built for fun: a photo zine maker, a geography quiz, an interactive travel diary, and a word-by-word reader.">
   <main class="desk-page">
     <div class="desk wrap" style={`--rows:${Math.ceil(projects.length / 3)}`}>
       {projects.map((p, i) => {
@@ -24,7 +24,7 @@ const spots = [
           <a class={`card glass-card ${s ? 'placed' : ''}`} href={`/projects/${p.id}/`} style={style}>
             <div class="shot">
               {p.data.image
-                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" />
+                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" style={`object-position:${p.data.focus}`} />
                 : <span class="hand">{p.data.name}</span>}
             </div>
             <div class="label">
@@ -58,8 +58,8 @@ const spots = [
   }
   .glass-card:hover, .glass-card:focus-visible { transform: rotate(0deg) translateY(-6px); box-shadow: 0 18px 40px rgba(43, 43, 41, 0.1); }
   .placed { position: absolute; left: var(--l); top: var(--t); width: var(--w); }
-  .shot { aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: rgba(233, 232, 228, 0.8); display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 28px; }
-  .shot :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .shot { aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden; background: rgba(233, 232, 228, 0.8); display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 28px; }
+  .shot :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .label { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 2px 4px 4px; }
   .name { font-size: 21px; }
   .meta { font-size: 12px; color: var(--muted); white-space: nowrap; }

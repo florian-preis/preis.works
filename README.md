@@ -12,9 +12,9 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 | `content/about.md` | The about text on the home page | Changing your introduction |
 | `content/veil.json` | Home page veil settings: colour or black and white, seconds per photo, photos to leave out, crop points for phones | Changing the veil |
 | `content/projects/` | One file per project: name, category, description, "Why I made it", year, picture | Editing or adding a project |
-| `content/projects/images/` | Project pictures (mockups or screenshots) | Swapping a project picture |
+| `content/projects/images/<name>/` | Project pictures: `mockup.jpg` (card and top of the page) and `screen-1.jpg` to `screen-5.jpg` (screens at the bottom) | Swapping a project picture |
 | `content/travel/` | gowiththeflo, the travel diary: trips, visited countries, country facts | Adding a trip or a country |
-| `public/projects/<name>/app/` | The project apps themselves (one HTML file each; gowiththeflo is the exception, see below) | Updating an app |
+| `public/projects/<name>/app/` | The project apps themselves (plain HTML, no build step; knowhere also keeps its own scripts, map, flags, and fonts in its folder; gowiththeflo is the exception, see below) | Updating an app |
 | `public/` | Files served as they are: fonts, logo, favicon, social card, CNAME | Rarely |
 | `src/` | Site code: pages, layout, nav, styles, scripts | Design or behaviour changes |
 | `src/data/site.ts` | Name, email, LinkedIn, Instagram, nav labels | Changing contact details |

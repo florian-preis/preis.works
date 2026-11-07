@@ -14,6 +14,10 @@ const projects = defineCollection({
       app: z.string().optional(),
       year: z.string().optional(),
       image: image().optional(),
+      // Which part of the picture stays in view when it is cropped, as CSS object-position (x% y%)
+      focus: z.string().default('50% 50%'),
+      // Screens shown at the bottom of the project page, in order
+      screens: z.array(z.object({ src: image(), alt: z.string() })).default([]),
       draft: z.boolean().default(false),
     }),
 });

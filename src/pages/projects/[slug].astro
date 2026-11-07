@@ -11,9 +11,11 @@ const { entry, all } = Astro.props;
 const { Content } = await render(entry);
 const p = entry.data;
 // "Why I made it" is the text under the frontmatter; the section hides itself while empty
+// Search engines show the first sentence of "What it is"
+const metaDescription = p.summary.split(/(?<=\.)\s+/)[0];
 const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length > 0;
 ---
-<Base title={p.name} active="projects" description={p.summary}>
+<Base title={p.name} active="projects" description={metaDescription}>
   <main class="project wrap">
     <!-- Index: about a quarter of the width on desktop, a swipeable strip on phones -->
     <aside class="project-index" aria-label="Projects">
@@ -34,7 +36,7 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
     <article class="project-body">
       <div class="hero">
         {p.image
-          ? <Image src={p.image} alt={`${p.name}, screen`} widths={[640, 1280, 1920]} sizes="(max-width: 700px) 100vw, 70vw" />
+          ? <Image src={p.image} alt={p.name} widths={[640, 1280, 1568]} sizes="(max-width: 700px) 100vw, 70vw" style={`object-position:${p.focus}`} loading="eager" />
           : <span class="hand placeholder">{p.name}</span>}
       </div>
 
@@ -63,6 +65,29 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
           </a>
         </div>
       )}
+
+      {p.screens.length > 0 && (
+        <section class="screens" aria-label={`${p.name} screens`}>
+          <div class="screens-head">
+            <h2>Screens</h2>
+            <div class="screens-nav">
+              <button type="button" class="screens-btn" data-dir="-1" aria-label="Previous screens" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <button type="button" class="screens-btn" data-dir="1" aria-label="Next screens">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <ul class="screens-track" tabindex="0">
+            {p.screens.map((sc) => (
+              <li class="screen">
+                <Image src={sc.src} alt={sc.alt} widths={[480, 800, 1200]} sizes="(max-width: 700px) 84vw, (max-width: 1100px) 46vw, 340px" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </article>
   </main>
 </Base>
@@ -74,8 +99,8 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
   .rows { display: flex; flex-direction: column; }
 
   .project-body { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
-  .hero { aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; }
-  .hero :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .hero { aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; }
+  .hero :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .placeholder { font-size: 40px; color: var(--faint); }
   .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 16px; }
   .head h1 { margin: 0; font-size: 40px; }
@@ -84,10 +109,28 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
   .text section { flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px; }
   .text h2 { margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
   .text p, .why :global(p) { margin: 0; line-height: 1.75; }
+  .why :global(p + p) { margin-top: 14px; }
   .open { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 22px; border: 1px solid var(--text); border-radius: 999px; font-size: 14px; transition: background var(--fast) ease, color var(--fast) ease; }
   .open:hover { background: var(--text); color: var(--paper); }
   .open svg { transition: transform var(--base) var(--ease); }
   .open:hover svg { transform: translateX(3px); }
+
+  /* Screens: three in view, the rest a scroll or a click away. Not clickable themselves */
+  .screens { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; --per: 3; --gap: 16px; }
+  .screens-head { display: flex; justify-content: space-between; align-items: center; }
+  .screens-head h2 { margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .screens-nav { display: flex; gap: 4px; margin-right: -12px; }
+  .screens-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--text); cursor: pointer; transition: opacity var(--fast) ease, background var(--fast) ease; }
+  .screens-btn:hover:not(:disabled) { background: var(--hover); }
+  .screens-btn:disabled { opacity: 0.3; cursor: default; }
+  .screens-btn[hidden] { display: none; }
+  .screens-track { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .screens-track::-webkit-scrollbar { display: none; }
+  .screen { position: relative; flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); scroll-snap-align: start; aspect-ratio: 1900 / 1188; border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .screen :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* A hairline edge, so light screens don't melt into the paper */
+  .screen::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 43, 41, 0.1); pointer-events: none; }
+  @media (max-width: 1100px) { .screens { --per: 2; } }
 
   /* Phone: the index becomes a strip of names under the nav */
   @media (max-width: 700px) {
@@ -101,7 +144,37 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
     .rows :global(.index-row .meta) { display: none; }
     .rows :global(.index-row[aria-current='page']) { color: var(--text); box-shadow: inset 0 -1px 0 var(--text); }
     .head h1 { font-size: 30px; }
-    .hero { aspect-ratio: 4 / 3; }
     .open { width: 100%; justify-content: center; min-height: 48px; }
+    /* One screen at a time with the next peeking in, swiped across the full width */
+    .screens { --gap: 10px; }
+    .screens-nav { display: none; }
+    .screens-track { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+    .screen { flex-basis: 84%; }
   }
 </style>
+
+<script>
+  // Screens: the arrows move one screen at a time and fade out at either end
+  document.querySelectorAll<HTMLElement>('.screens').forEach((box) => {
+    const track = box.querySelector<HTMLElement>('.screens-track')!;
+    const [prev, next] = box.querySelectorAll<HTMLButtonElement>('.screens-btn');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const step = () => {
+      const first = track.firstElementChild as HTMLElement | null;
+      return first ? first.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0') : track.clientWidth;
+    };
+    const update = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= max - 2;
+      // Nothing to scroll (all screens fit): hide the arrows altogether
+      prev.hidden = next.hidden = max <= 2;
+    };
+    [prev, next].forEach((b) => b.addEventListener('click', () => {
+      track.scrollBy({ left: Number(b.dataset.dir) * step(), behavior: still ? 'auto' : 'smooth' });
+    }));
+    track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+</script>
