@@ -17,7 +17,8 @@ const pool = await Promise.all(
     .filter((p) => !veil.exclude.includes(p.file))
     .map(async (p) => {
       const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
-      return { v: view.src, f: `/veil/${fogName(p.file)}`, o: focus[p.file] ?? '50% 50%' };
+      // l = landscape. Wide screens only show landscape photos, so little is lost to cropping.
+      return { v: view.src, f: `/veil/${fogName(p.file)}`, o: focus[p.file] ?? '50% 50%', l: p.image.width >= p.image.height ? 1 : 0 };
     })
 );
 const hold = veil.secondsPerPhoto;
@@ -46,7 +47,10 @@ const hold = veil.secondsPerPhoto;
       // Runs while the page is still loading, so the first random photo is in place before anything paints.
       (function () {
         var cfg = JSON.parse(document.getElementById('veil-pool').textContent);
-        var pool = cfg.pool.slice();
+        // Wide screens: landscape photos only. Tall screens (phones): landscape and portrait.
+        var tall = window.matchMedia('(orientation: portrait)').matches;
+        var pool = cfg.pool.filter(function (p) { return tall || p.l; });
+        if (!pool.length) pool = cfg.pool.slice();
         for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
         var veil = document.getElementById('veil');
         var fogSlides = veil.querySelectorAll('.fog .slide');
@@ -114,9 +118,10 @@ const hold = veil.secondsPerPhoto;
   .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity var(--fade) linear; }
   .slide.on { opacity: 1; }
   .drift { width: 100%; height: 100%; object-fit: cover; transform: scale(1); }
-  /* One standard movement for every photo: a slow, even zoom */
-  .drift.go { animation: veilZoom var(--drift) linear forwards; }
-  @keyframes veilZoom { from { transform: scale(1); } to { transform: scale(1.06); } }
+  /* One standard movement for every photo: it settles in from a slight zoom while it fades in,
+     then holds still. Motion happens once, with intent, instead of a barely visible drift. */
+  .drift.go { animation: veilSettle 4.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  @keyframes veilSettle { from { transform: scale(1.12); } to { transform: scale(1); } }
   .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
   .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
   /* The sharp photo shows only through the handwritten name, and fogs over as you scroll away */

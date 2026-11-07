@@ -27,7 +27,7 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 
 **Write "Why I made it" for a project.** Open the project's file in `content/projects/` and write below the second `---` line. While it is empty, the section stays hidden.
 
-**Add a project.** Copy one of the files in `content/projects/`, rename it (the filename becomes the address, e.g. `photobook.md` → `/projects/photobook/`), and fill in the fields. If it has an app, put it in `public/projects/<name>/app/index.html` and set `app:` to that address. Set `draft: true` to keep a project off the site while you work on it.
+**Add a project.** Copy one of the files in `content/projects/`, rename it (the filename becomes the address, e.g. `photobook.md` → `/projects/photobook/`), and fill in the fields. `order` sets the position: 1 is shown first, so give the newest project 1 and move the others down. If it has an app, put it in `public/projects/<name>/app/index.html` and set `app:` to that address. Set `draft: true` to keep a project off the site while you work on it.
 
 **Change contact details.** Edit `src/data/site.ts`.
 
