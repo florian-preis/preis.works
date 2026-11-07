@@ -10,7 +10,7 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 |---|---|---|
 | `photography/` | Every photo on the Photography page | Adding or removing a photo |
 | `content/about.md` | The about text on the home page | Changing your introduction |
-| `content/veil.json` | Which photos run in the home page veil, their order, crop, and movement, plus colour or black and white | Changing the veil |
+| `content/veil.json` | Home page veil settings: colour or black and white, seconds per photo, photos to leave out, crop points for phones | Changing the veil |
 | `content/projects/` | One file per project: name, category, description, "Why I made it", year, picture | Editing or adding a project |
 | `content/projects/images/` | Project pictures (mockups or screenshots) | Swapping a project picture |
 | `public/projects/<name>/app/` | The project apps themselves (one HTML file each) | Updating an app |
@@ -23,7 +23,7 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 
 **Add a photo.** Put the file in `photography/`, named `YYYYMMDD_Caption.jpg`, for example `20260219_Staircase at Marina Bay Sands, Singapore.jpg`. The date and caption on the site come from the filename. Sizes for the grid and the lightbox are generated automatically when the site builds.
 
-**Change the veil.** Edit `content/veil.json`. Each slide names a file from `photography/`. `focus` keeps the subject in frame on phones (`"30% 50%"` means 30% from the left, halfway down). `move` is `in`, `left`, or `right`. Set `tone` to `muted` or `mono`.
+**Change the veil.** The veil shows every photo in `photography/`, in a random order on each visit. In `content/veil.json`, set `tone` to `muted` or `mono`, list filenames under `exclude` to leave photos out, and add a filename with a crop point under `focus` (e.g. `"20250310_Sossusvlei, Namibia.jpg": "30% 50%"`, 30% from the left, halfway down) to keep a subject in frame on phones.
 
 **Write "Why I made it" for a project.** Open the project's file in `content/projects/` and write below the second `---` line. While it is empty, the section stays hidden.
 

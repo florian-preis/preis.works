@@ -5,8 +5,6 @@ const data: Item[] = JSON.parse(document.getElementById('photo-data')!.textConte
 
 const grid = document.getElementById('grid')!;
 const index = document.getElementById('index')!;
-const tools = document.getElementById('tools')!;
-const floatInner = document.querySelector<HTMLElement>('.float-inner')!;
 
 /* ── Reveal in batches as tiles arrive, never queued behind the whole list ── */
 const tiles = Array.from(grid.querySelectorAll<HTMLElement>('.tile'));
@@ -21,7 +19,7 @@ const reveal = new IntersectionObserver((entries) => {
 }, { rootMargin: '0px 0px -4% 0px', threshold: 0.04 });
 tiles.forEach((t) => reveal.observe(t));
 
-/* ── Hover location: two slots crossfade; toolbar text at the top, glass chip once scrolled ── */
+/* ── Hover location: two slots crossfade in the toolbar at the top of the page ── */
 const slots = [
   Array.from(document.querySelectorAll<HTMLElement>('.loc[data-slot="0"]')),
   Array.from(document.querySelectorAll<HTMLElement>('.loc[data-slot="1"]')),
@@ -46,11 +44,6 @@ tiles.forEach((t) => {
   t.addEventListener('focus', () => showLocation(data[i].caption));
 });
 grid.addEventListener('mouseleave', hideLocation);
-
-// The chip only exists once the toolbar's own location text has left the screen
-new IntersectionObserver(([e]) => {
-  floatInner.classList.toggle('active', !e.isIntersecting && e.boundingClientRect.top < 0);
-}, { rootMargin: '-72px 0px 0px 0px' }).observe(tools);
 
 /* ── Grid / index switch ── */
 const track = document.querySelector<HTMLButtonElement>('.switch-track')!;

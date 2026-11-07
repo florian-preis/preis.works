@@ -1,55 +1,87 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import veil from '../../content/veil.json';
 import { Content as About } from '../../content/about.md';
 import portrait from '../assets/portrait.jpg';
 import { site } from '../data/site';
+import { photos } from '../data/photos';
+import { fogName } from '../data/veil-names.mjs';
 
-// Slideshow timing for any number of photos: each holds for `secondsPerPhoto`, with a 2 s crossfade
-const n = veil.slides.length;
+// Every photo can appear in the veil. The sharp layer reuses the lightbox size (same file as on
+// the Photography page), and the fogged layer uses a tiny pre-blurred image. The browser only ever
+// loads the photo on screen and the next one.
+const focus = veil.focus as Record<string, string>;
+const pool = await Promise.all(
+  photos
+    .filter((p) => !veil.exclude.includes(p.file))
+    .map(async (p) => {
+      const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
+      return { v: view.src, f: `/veil/${fogName(p.file)}`, o: focus[p.file] ?? '50% 50%' };
+    })
+);
 const hold = veil.secondsPerPhoto;
-const total = n * hold;
-const pct = (s: number) => ((s / total) * 100).toFixed(3) + '%';
-const keyframes = `
-@keyframes veilFade{0%{opacity:0}${pct(2)}{opacity:1}${pct(hold)}{opacity:1}${pct(hold + 2)}{opacity:0}100%{opacity:0}}
-@keyframes kbIn{0%{transform:scale(1)}${pct(hold + 2)}{transform:scale(1.07)}100%{transform:scale(1.07)}}
-@keyframes kbLeft{0%{transform:scale(1.08) translateX(1.5%)}${pct(hold + 2)}{transform:scale(1.08) translateX(-1.5%)}100%{transform:scale(1.08) translateX(-1.5%)}}
-@keyframes kbRight{0%{transform:scale(1.08) translateX(-1.5%)}${pct(hold + 2)}{transform:scale(1.08) translateX(1.5%)}100%{transform:scale(1.08) translateX(1.5%)}}`;
-const slides = veil.slides.map((s, i) => ({
-  id: String(i + 1).padStart(2, '0'),
-  focus: s.focus,
-  move: s.move,
-  delay: `${i * hold - 2}s`,
-}));
 ---
 <Base active="about" navMode="veil">
-  <style slot="head" set:html={keyframes} is:inline></style>
-
   <!-- Veil: a fogged window over a slow slideshow, the name wiped clear with a finger -->
-  <section class="veil" id="veil" data-tone={veil.tone} style={`--veil-total:${total}s`} aria-labelledby="veil-name">
+  <section class="veil" id="veil" data-tone={veil.tone} style={`--fade:2s;--drift:${hold + 2}s`} aria-labelledby="veil-name">
     <h1 id="veil-name" class="visually-hidden">Florian Preis</h1>
 
     <div class="layer fog" aria-hidden="true">
-      {slides.map((s, i) => (
-        <div class="slide" style={`animation-delay:${s.delay}`}>
-          <img class={`drift ${s.move}`} style={`animation-delay:${s.delay};object-position:${s.focus}`} src={`/veil/${s.id}-fog.webp`} alt="" loading={i < 2 ? 'eager' : 'lazy'} decoding="async">
-        </div>
-      ))}
+      <div class="slide"><img class="drift" alt=""></div>
+      <div class="slide"><img class="drift" alt=""></div>
     </div>
     <div class="haze" aria-hidden="true"></div>
     <svg class="condensation" aria-hidden="true">
       <filter id="condensation"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
       <rect width="100%" height="100%" filter="url(#condensation)"/>
     </svg>
-
     <div class="layer clear" aria-hidden="true">
-      {slides.map((s, i) => (
-        <div class="slide" style={`animation-delay:${s.delay}`}>
-          <img class={`drift ${s.move}`} style={`animation-delay:${s.delay};object-position:${s.focus}`} src={`/veil/${s.id}.webp`} alt="" loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async">
-        </div>
-      ))}
+      <div class="slide"><img class="drift" alt=""></div>
+      <div class="slide"><img class="drift" alt=""></div>
     </div>
+
+    <script is:inline type="application/json" id="veil-pool" set:html={JSON.stringify({ hold, pool })}></script>
+    <script is:inline>
+      // Runs while the page is still loading, so the first random photo is in place before anything paints.
+      (function () {
+        var cfg = JSON.parse(document.getElementById('veil-pool').textContent);
+        var pool = cfg.pool.slice();
+        for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+        var veil = document.getElementById('veil');
+        var fogSlides = veil.querySelectorAll('.fog .slide');
+        var clearSlides = veil.querySelectorAll('.clear .slide');
+        var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var k = 0, slot = 0, timer = null, visible = true;
+
+        function put(s, p) {
+          [fogSlides[s], clearSlides[s]].forEach(function (el, layer) {
+            var img = el.firstElementChild;
+            img.src = layer === 0 ? p.f : p.v;
+            img.style.objectPosition = p.o;
+            img.classList.remove('go'); void img.offsetWidth; img.classList.add('go');
+          });
+        }
+        function show(s) {
+          [fogSlides, clearSlides].forEach(function (set) { set[s].classList.add('on'); set[1 - s].classList.remove('on'); });
+        }
+        function preload(p) { var a = new Image(); a.src = p.f; var b = new Image(); b.src = p.v; return b; }
+
+        put(0, pool[0]); show(0);
+        if (still || pool.length < 2) return;
+        var next = preload(pool[1]);
+
+        function advance() {
+          if (!visible || document.hidden) return;
+          k = (k + 1) % pool.length; slot = 1 - slot;
+          var go = function () { put(slot, pool[k]); show(slot); next = preload(pool[(k + 1) % pool.length]); };
+          next.complete ? go() : (next.onload = go, next.onerror = go);
+        }
+        timer = setInterval(advance, cfg.hold * 1000);
+        // Pause while the veil is off screen
+        new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }).observe(veil);
+      })();
+    </script>
   </section>
 
   <main class="about wrap">
@@ -79,25 +111,31 @@ const slides = veil.slides.map((s, i) => ({
   .veil { position: relative; height: 100vh; height: 100svh; min-height: 520px; overflow: hidden; background: #9a9994; --p: 0; }
   .layer { position: absolute; inset: 0; }
   .fog { inset: -40px; }
-  .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; animation: veilFade var(--veil-total) linear infinite; }
-  .drift { width: 100%; height: 100%; object-fit: cover; animation: kbIn var(--veil-total) linear infinite; will-change: transform; }
-  .drift.left { animation-name: kbLeft; }
-  .drift.right { animation-name: kbRight; }
+  .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity var(--fade) linear; }
+  .slide.on { opacity: 1; }
+  .drift { width: 100%; height: 100%; object-fit: cover; transform: scale(1); }
+  /* One standard movement for every photo: a slow, even zoom */
+  .drift.go { animation: veilZoom var(--drift) linear forwards; }
+  @keyframes veilZoom { from { transform: scale(1); } to { transform: scale(1.06); } }
   .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
   .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
   /* The sharp photo shows only through the handwritten name, and fogs over as you scroll away */
   .clear {
-    -webkit-mask: url('/brand/name-mask.png') center / min(82vw, 1050px) auto no-repeat;
-    mask: url('/brand/name-mask.png') center / min(82vw, 1050px) auto no-repeat;
+    -webkit-mask: url('/brand/name-mask.png') center / min(84vw, 1080px) auto no-repeat;
+    mask: url('/brand/name-mask.png') center / min(84vw, 1080px) auto no-repeat;
     opacity: clamp(0, calc(1 - var(--p) * 2), 1);
+  }
+  /* Tall screens: the name on two lines, larger */
+  @media (orientation: portrait) {
+    .clear {
+      -webkit-mask: url('/brand/name-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
+      mask: url('/brand/name-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
+    }
   }
   .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
   .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
-  @media (prefers-reduced-motion: reduce) {
-    .slide, .drift { animation: none !important; }
-    .slide:first-child { opacity: 1; }
-  }
+  @media (prefers-reduced-motion: reduce) { .drift.go { animation: none; } .slide { transition: none; } }
 
   /* ── About ── */
   .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 144px; }
@@ -121,8 +159,7 @@ const slides = veil.slides.map((s, i) => ({
   let ticking = false;
   const update = () => {
     ticking = false;
-    const h = veil.offsetHeight;
-    const p = Math.min(Math.max(window.scrollY / h, 0), 1);
+    const p = Math.min(Math.max(window.scrollY / veil.offsetHeight, 0), 1);
     veil.style.setProperty('--p', p.toFixed(3));
   };
   window.addEventListener('scroll', () => {
