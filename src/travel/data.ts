@@ -13,7 +13,10 @@ const flagUrls = import.meta.glob<string>('../../node_modules/flag-icons/flags/4
   eager: true,
 });
 
-const today = new Date().toISOString().slice(0, 10);
+// The build date, fixed by astro.config.mjs while the build starts in Node. Reading the clock
+// here instead would break on prerenderers that freeze it (Cloudflare's workerd reads 1970).
+declare const __BUILD_DATE__: string;
+const today = __BUILD_DATE__;
 const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
 
 export async function loadTravelData(): Promise<TravelData> {
