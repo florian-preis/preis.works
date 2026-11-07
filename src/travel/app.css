@@ -4,9 +4,9 @@
    country names only. */
 
 .tf {
-  --water: #dadfde;
+  --water: #74b4e8;
   --ink-soft: rgba(43, 43, 41, 0.62);
-  --card: rgba(246, 245, 242, 0.86);
+  --card: rgba(240, 240, 237, 0.68);
   --card-border: rgba(255, 255, 255, 0.65);
   --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.03);
   --inset: clamp(12px, 2vw, 24px);
@@ -53,8 +53,8 @@
 /* ── Glass surfaces ──────────────────────────────────────────────────── */
 .tf-panel, .tf-drawer-card, .tf-chip, .tf-pop {
   background: var(--card);
-  -webkit-backdrop-filter: blur(20px) saturate(1.1);
-  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  backdrop-filter: blur(24px) saturate(1.35);
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
 }
@@ -94,7 +94,8 @@
   font-size: 13px; color: var(--text); cursor: pointer;
   transition: background var(--fast) ease, color var(--fast) ease;
 }
-.tf-pill:hover, .tf-pill[aria-expanded='true'] { background: var(--text); color: var(--paper); }
+.tf-pill:hover { background: rgba(255, 255, 255, 0.5); }
+.tf-pill[aria-expanded='true'] { background: rgba(255, 255, 255, 0.82); font-weight: 500; }
 .tf-zoom { display: flex; gap: 4px; }
 .tf-zoom button, .tf-icon-btn {
   width: 36px; height: 36px; padding: 0; border-radius: 999px;
@@ -118,6 +119,15 @@
   transition: opacity 0.15s ease;
 }
 .tf-chip.is-on { opacity: 1; }
+/* Country names next to the plane: just the name, handwritten, no container */
+.tf-label {
+  position: fixed; left: 0; top: 0; z-index: 50;
+  font-family: 'Florian Hand', sans-serif; font-size: 18px; line-height: 1; white-space: nowrap;
+  color: var(--text); pointer-events: none; opacity: 0;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.5);
+  transition: opacity 0.15s ease;
+}
+.tf-label.is-on { opacity: 1; }
 .tf-dist { font-variant-numeric: tabular-nums; }
 
 /* ── Drawer ──────────────────────────────────────────────────────────── */
@@ -150,7 +160,7 @@
 .tf-close { flex: none; }
 .tf-d-flagline { display: flex; align-items: center; gap: 12px; }
 .tf-flag { width: 30px; height: auto; aspect-ratio: 4 / 3; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); flex: none; }
-.tf-d-name { margin: 0; font-size: 36px; font-weight: 400; line-height: 1.05; overflow-wrap: anywhere; }
+.tf-d-name { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.015em; overflow-wrap: anywhere; }
 .tf-d-title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
 .tf-d-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .tf-d-body {
@@ -159,11 +169,16 @@
   scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 .tf-section-label { margin: 22px 0 10px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.tf-diary-label { margin-top: 30px; margin-bottom: 0; }
+.tf-diary-label + .tf-trip { padding-top: 10px; }
+.tf-diary-label + .tf-empty { margin-top: 10px; }
 
 /* Trips inside a country, and the single-trip view */
 .tf-trip { padding: 20px 0 22px; border-bottom: 1px solid var(--line-soft); }
 .tf-trip:last-of-type { border-bottom: 0; }
-.tf-trip h3 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.tf-trip h3 { margin: 0; font-size: 22px; font-weight: 400; line-height: 1.15; }
+.tf-trip-title { font-size: 22px; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+.tf-row-trip { font-size: 19px; line-height: 1.2; }
 .tf-trip h3 a { transition: color var(--fast) ease; }
 .tf-trip h3 a:hover { color: var(--muted); }
 .tf-meta { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
@@ -234,7 +249,7 @@
   }
   .tf-d-head { padding: 14px 8px 12px 18px; }
   .tf-d-body { padding: 4px 18px 28px; }
-  .tf-d-name { font-size: 30px; }
+  .tf-d-name { font-size: 20px; }
 }
 @media (hover: none), (pointer: coarse) { .tf-zoom { display: none; } }
 
@@ -242,3 +257,5 @@
   .tf-drawer-card { transition: none !important; }
 }
 .tf-row-name .tf-flag { width: 20px; border-radius: 2px; }
+.tf-credit { display: block; margin-top: 6px; color: var(--muted); }
+.tf-credit a { text-decoration: underline; text-underline-offset: 2px; }

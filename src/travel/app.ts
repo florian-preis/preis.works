@@ -24,9 +24,10 @@ const nameOf = (c: string) => data.ref[c]?.n ?? c;
 // ── Look ────────────────────────────────────────────────────────────────
 const PAPER = '#f3f2ef';
 const INK = '#2b2b29';
-const WATER = '#dadfde';    // also baked into the relief tiles (scripts/travel/build-relief.py)
-const FOG = 0.88;          // opacity of the fog over countries not yet visited
-const FOG_PEEK = 0.62;     // ...thinned while hovering, as if wiping the glass
+const WATER = '#74b4e8';    // also baked into the relief tiles (scripts/travel/build-map.py)
+const FOG_COLOR = '#f2f2f0'; // light neutral grey
+const FOG = 0.7;           // see-through: the land shows faintly under countries not yet visited
+const FOG_PEEK = 0.45;     // ...thinned while hovering, as if wiping the glass
 const HOME_PINS = [
   { name: 'Copenhagen', lngLat: [12.5682, 55.6761] as [number, number] },
   { name: 'Ortenberg', lngLat: [7.972, 48.445] as [number, number] },
@@ -72,7 +73,7 @@ const map = new MapLibre({
   pitchWithRotate: false,
   touchPitch: false,
   fadeDuration: 0,
-  attributionControl: { compact: true, customAttribution: 'Map data: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>' },
+  attributionControl: false, // Natural Earth is public domain; credited in the counter's "i" instead
   transformConstrain: (lngLat, zoom) => {
     const lat = Math.max(-LAT_LIMIT + 14, Math.min(LAT_LIMIT, lngLat.lat));
     lngLat.lat = lat;
@@ -95,37 +96,11 @@ map.keyboard.disableRotation();
 let allShapes: GeoJSON.FeatureCollection | null = null;
 const shapes = fetch(data.topo).then((r) => r.json()).then((topo) => (allShapes = feature(topo, topo.objects.countries) as unknown as GeoJSON.FeatureCollection));
 
-// Very small countries get a dot, so they can be found and clicked at world scale
-function microstates(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
-  const out: GeoJSON.Feature[] = [];
-  for (const f of fc.features) {
-    const iso = f.properties!.iso as string;
-    if (!data.ref[iso]) continue;
-    let minX = 180, minY = 90, maxX = -180, maxY = -90, bestArea = -1, best: number[][] | null = null;
-    const polys = f.geometry.type === 'MultiPolygon' ? (f.geometry as GeoJSON.MultiPolygon).coordinates : [(f.geometry as GeoJSON.Polygon).coordinates];
-    for (const p of polys) {
-      for (const [x, y] of p[0]) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
-      const ring = p[0];
-      let a = 0;
-      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
-      if (Math.abs(a) > bestArea) { bestArea = Math.abs(a); best = ring; }
-    }
-    const span = Math.max(maxX - minX, maxY - minY);
-    if (span < 1.2 && best) {
-      const cx = best.reduce((s, p) => s + p[0], 0) / best.length;
-      const cy = best.reduce((s, p) => s + p[1], 0) / best.length;
-      out.push({ type: 'Feature', properties: { iso }, geometry: { type: 'Point', coordinates: [cx, cy] } });
-    }
-  }
-  return { type: 'FeatureCollection', features: out };
-}
-
 const visitedList = ['literal', data.visited] as const;
 let ready = false;
 
 Promise.all([shapes, new Promise<void>((r) => (map.loaded() ? r() : map.once('load', () => r())))]).then(([fc]) => {
   map.addSource('countries', { type: 'geojson', data: fc, promoteId: 'iso', tolerance: 0.3 });
-  map.addSource('micro', { type: 'geojson', data: microstates(fc), promoteId: 'iso' });
   map.addSource('pins', { type: 'geojson', data: { type: 'FeatureCollection', features: HOME_PINS.map((p) => ({ type: 'Feature', properties: { name: p.name }, geometry: { type: 'Point', coordinates: p.lngLat } })) } });
   map.addSource('measure', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
@@ -134,12 +109,9 @@ Promise.all([shapes, new Promise<void>((r) => (map.loaded() ? r() : map.once('lo
 
   // Fog over the world; visited countries start fogged too and clear once the map is ready
   map.addLayer({ id: 'fog', type: 'fill', source: 'countries', filter: ['!', isVisited],
-    paint: { 'fill-color': PAPER, 'fill-opacity': ['case', hovered, FOG_PEEK, FOG], 'fill-antialias': false } });
+    paint: { 'fill-color': FOG_COLOR, 'fill-opacity': ['case', hovered, FOG_PEEK, FOG], 'fill-antialias': false } });
   map.addLayer({ id: 'fog-lift', type: 'fill', source: 'countries', filter: isVisited,
-    paint: { 'fill-color': PAPER, 'fill-opacity': FOG, 'fill-opacity-transition': { duration: 0, delay: 0 }, 'fill-antialias': false } });
-  // Feathered edge: the fog spills softly over the border of every unvisited country
-  map.addLayer({ id: 'fog-edge', type: 'line', source: 'countries', filter: ['!', isVisited],
-    paint: { 'line-color': PAPER, 'line-opacity': 0.6, 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 1.5, 4, 3.5, 7, 6], 'line-blur': ['interpolate', ['linear'], ['zoom'], 1, 1.5, 4, 3.5, 7, 6] } });
+    paint: { 'fill-color': FOG_COLOR, 'fill-opacity': FOG, 'fill-opacity-transition': { duration: 0, delay: 0 }, 'fill-antialias': false } });
   // Borders: hairlines, a touch darker around visited countries
   map.addLayer({ id: 'borders', type: 'line', source: 'countries',
     paint: { 'line-color': ['case', isVisited, 'rgba(43,43,41,0.2)', 'rgba(255,255,255,0.7)'], 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 0.35, 5, 0.8] } });
@@ -147,14 +119,6 @@ Promise.all([shapes, new Promise<void>((r) => (map.loaded() ? r() : map.once('lo
     paint: { 'line-color': INK, 'line-width': 1, 'line-opacity': ['case', hovered, 0.55, 0] } });
   map.addLayer({ id: 'selected', type: 'line', source: 'countries', filter: ['==', ['get', 'iso'], ''],
     paint: { 'line-color': INK, 'line-width': 1.6 } });
-  map.addLayer({ id: 'micro', type: 'circle', source: 'micro', maxzoom: 6,
-    paint: {
-      'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, ['case', isVisited, 2.6, 1.8], 5, ['case', isVisited, 4, 3]],
-      'circle-color': ['case', isVisited, '#8c917f', PAPER],
-      'circle-opacity': ['case', isVisited, 1, ['boolean', ['feature-state', 'hover'], false], 1, 0.75],
-      'circle-stroke-color': ['case', isVisited, PAPER, 'rgba(43,43,41,0.18)'],
-      'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 1.6, 0.8],
-    } });
   map.addLayer({ id: 'pins', type: 'circle', source: 'pins',
     paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 2.6, 6, 4], 'circle-color': INK, 'circle-stroke-color': PAPER, 'circle-stroke-width': 1.4 } });
   map.addLayer({ id: 'measure-line', type: 'line', source: 'measure', filter: ['==', ['geometry-type'], 'LineString'],
@@ -176,7 +140,6 @@ Promise.all([shapes, new Promise<void>((r) => (map.loaded() ? r() : map.once('lo
 });
 
 // ── Hover, click, and the tooltip ───────────────────────────────────────
-const HIT_LAYERS = ['pins', 'micro', 'fog', 'fog-lift'];
 let hoverId: { source: string; id: string } | null = null;
 function setHover(next: { source: string; id: string } | null) {
   if (hoverId && (!next || hoverId.id !== next.id || hoverId.source !== next.source)) map.setFeatureState(hoverId, { hover: false });
@@ -185,16 +148,22 @@ function setHover(next: { source: string; id: string } | null) {
 }
 function pick(point: { x: number; y: number }): MapGeoJSONFeature | undefined {
   if (!ready) return;
-  const pad = 6;
-  const near = map.queryRenderedFeatures([[point.x - pad, point.y - pad], [point.x + pad, point.y + pad]], { layers: ['pins', 'micro'] });
-  if (near.length) return near[0];
-  return map.queryRenderedFeatures([point.x, point.y], { layers: ['fog', 'fog-lift'] })[0];
+  const box = (pad: number): [[number, number], [number, number]] => [[point.x - pad, point.y - pad], [point.x + pad, point.y + pad]];
+  const pin = map.queryRenderedFeatures(box(6), { layers: ['pins'] });
+  if (pin.length) return pin[0];
+  const exact = map.queryRenderedFeatures([point.x, point.y], { layers: ['fog', 'fog-lift'] })[0];
+  if (exact) return exact;
+  // Small islands and microstates: accept a click a few pixels off, nearest first
+  for (const pad of [4, 8, 12]) {
+    const near = map.queryRenderedFeatures(box(pad), { layers: ['fog', 'fog-lift'] });
+    if (near.length) return near[0];
+  }
 }
 function showTip(text: string, x: number, y: number) {
   tip.textContent = text;
   tip.classList.add('is-on');
   const w = tip.offsetWidth;
-  tip.style.transform = `translate(${Math.min(x + 18, innerWidth - w - 10)}px, ${Math.max(y - 16, 8)}px)`;
+  tip.style.transform = `translate(${Math.min(x + 16, innerWidth - w - 10)}px, ${Math.max(y - 9, 8)}px)`;
 }
 function hideTip() { tip.classList.remove('is-on'); }
 
@@ -204,7 +173,7 @@ map.on('mousemove', (e) => {
   if (!f) { setHover(null); hideTip(); return; }
   if (f.layer.id === 'pins') { setHover(null); showTip(f.properties.name, e.originalEvent.clientX, e.originalEvent.clientY); return; }
   const iso = f.properties.iso as string;
-  setHover({ source: f.layer.id === 'micro' ? 'micro' : 'countries', id: iso });
+  setHover({ source: 'countries', id: iso });
   if (data.ref[iso]) showTip(nameOf(iso), e.originalEvent.clientX, e.originalEvent.clientY); else hideTip();
 });
 mapEl.addEventListener('mouseleave', () => { setHover(null); hideTip(); });
@@ -451,7 +420,7 @@ function tripArticle(t: TripOut, current?: string) {
   const others = t.countries.filter((c) => c !== current);
   const meta = [formatPeriod(t.start, t.end), t.with ? `with ${esc(t.with)}` : ''].filter(Boolean).join(' · ');
   return `<article class="tf-trip">
-    <h3><a href="#trip/${esc(t.id)}">${esc(t.title)}</a></h3>
+    <h3 class="hand"><a href="#trip/${esc(t.id)}">${esc(t.title)}</a></h3>
     <p class="tf-meta">${meta}</p>
     ${others.length ? `<ul class="tf-places" aria-label="Also on this trip">${others.map(placeChip).join('')}</ul>` : ''}
     <div class="tf-story">${t.html}</div>
@@ -473,15 +442,15 @@ function wireBody() {
 
 function renderCountry(code: string) {
   const r = data.ref[code];
-  setHeader(`<div class="tf-d-flagline">${flagImg(code)}<h2 class="tf-d-name hand" id="tf-d-title">${esc(r.n)}</h2></div><p class="tf-d-status">${statusLine(code)}</p>`);
+  setHeader(`<div class="tf-d-flagline">${flagImg(code)}<h2 class="tf-d-name" id="tf-d-title">${esc(r.n)}</h2></div><p class="tf-d-status">${statusLine(code)}</p>`);
+  // Country facts first, then the diary entries for that country
   const trips = tripsByCountry.get(code) ?? [];
-  let body = '';
+  let body = factsBlock(code);
   if (visited.has(code)) {
-    body += trips.length
-      ? `<section aria-label="Diary">${trips.map((t) => tripArticle(t, code)).join('')}</section>`
-      : `<p class="tf-empty">No diary entry yet.</p>`;
+    body += `<section aria-label="Diary"><h2 class="tf-section-label tf-diary-label">Diary</h2>${trips.length
+      ? trips.map((t) => tripArticle(t, code)).join('')
+      : `<p class="tf-empty">No diary entry yet.</p>`}</section>`;
   }
-  body += factsBlock(code);
   dBody.innerHTML = body;
   wireBody();
   diaryBtn.setAttribute('aria-expanded', 'false');
@@ -491,7 +460,7 @@ function renderCountry(code: string) {
 }
 
 function renderTrip(t: TripOut) {
-  setHeader(`<h2 class="tf-d-title" id="tf-d-title">${esc(t.title)}</h2><p class="tf-d-status">${[formatPeriod(t.start, t.end), t.with ? `with ${esc(t.with)}` : ''].filter(Boolean).join(' · ')}</p>`);
+  setHeader(`<h2 class="tf-d-title tf-trip-title hand" id="tf-d-title">${esc(t.title)}</h2><p class="tf-d-status">${[formatPeriod(t.start, t.end), t.with ? `with ${esc(t.with)}` : ''].filter(Boolean).join(' · ')}</p>`);
   dBody.innerHTML = `<article class="tf-trip"><ul class="tf-places" aria-label="Countries">${t.countries.map(placeChip).join('')}</ul><div class="tf-story">${t.html}</div></article>`;
   wireBody();
   diaryBtn.setAttribute('aria-expanded', 'false');
@@ -515,7 +484,7 @@ function renderDiary(tab: 'trips' | 'countries') {
     for (const t of data.trips) {
       const y = t.start.slice(0, 4);
       if (y !== year) { html += `${year ? '</div>' : ''}<h3 class="tf-year">${y}</h3><div class="tf-rows">`; year = y; }
-      html += `<a class="tf-row" href="#trip/${esc(t.id)}"><span class="tf-row-main"><span class="tf-row-name">${esc(t.title)}</span><span class="tf-row-sub">${t.countries.map(nameOf).map(esc).join(', ')}</span></span><span class="tf-row-meta">${monthShort(t.start)}</span></a>`;
+      html += `<a class="tf-row" href="#trip/${esc(t.id)}"><span class="tf-row-main"><span class="tf-row-name tf-row-trip hand">${esc(t.title)}</span><span class="tf-row-sub">${t.countries.map(nameOf).map(esc).join(', ')}</span></span><span class="tf-row-meta">${monthShort(t.start)}</span></a>`;
     }
     dBody.innerHTML = html ? html + '</div>' : '<p class="tf-empty">No trips written up yet.</p>';
   } else {

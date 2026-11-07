@@ -3,7 +3,8 @@
     python3 scripts/travel/build-map.py <shaded-relief.jpg>
 
 Inputs (all public domain, from Natural Earth, naturalearthdata.com):
-  - Natural Earth I shaded relief, 10800 x 5400 equirectangular image
+  - Natural Earth I shaded relief, 10800 x 5400 equirectangular image (used only for
+    its land-cover colours: the shading is blurred away for a flat look)
     (the 1:50m "Natural Earth I with Shaded Relief" raster, e.g. as shipped in the
     basemap-data Python package: mpl_toolkits/basemap_data/shadedrelief.jpg)
   - ne_50m_admin_0_countries.geojson and ne_50m_lakes.geojson, downloaded by this
@@ -28,9 +29,17 @@ TILES = os.path.join(ROOT, 'public', 'projects', 'travel-diary', 'map', 'relief'
 TOPO = os.path.join(ROOT, 'src', 'travel', 'countries.topo.json')
 NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/'
 W, H = 10800, 5400
-WATER = np.array([0xDA, 0xDF, 0xDE], np.float32) / 255
-SATURATION = 0.38   # how much of the original terrain colour survives (0 = grey)
+WATER = np.array([0x74, 0xB4, 0xE8], np.float32) / 255   # clear blue
 
+# Flat, cleanly rendered look: the relief image is blurred to remove its shading,
+# then each pixel is sorted into a few land-cover classes, each with one flat colour.
+PALETTE = np.array([
+    [0xCF, 0xE8, 0xB5],   # 0 open land, grass
+    [0xA9, 0xD8, 0x96],   # 1 forest, humid
+    [0xF0, 0xEB, 0xD6],   # 2 dry land, desert
+    [0xDD, 0xEB, 0xC8],   # 3 mountains in green regions
+    [0xFF, 0xFF, 0xFF],   # 4 ice
+], np.float32) / 255
 
 def download(name):
     os.makedirs(WORK, exist_ok=True)
@@ -79,15 +88,31 @@ def countries():
 
 
 # ── Relief tiles ────────────────────────────────────────────────────────────
-def recolour(rgb, sat=SATURATION, light=0.10, warm=(0.93, 0.91, 0.86)):
+def flatten(rgb):
     a = rgb.astype(np.float32) / 255.0
-    L = 0.299 * a[..., 0] + 0.587 * a[..., 1] + 0.114 * a[..., 2]
-    shade = L - ndimage.uniform_filter(L, 9)          # fine relief detail
-    grey = L[..., None]
-    col = grey + (a - grey) * sat                     # mute the colours
-    col = col * (1 - light) + light                   # lift towards paper
-    col = col * np.array(warm)[None, None, :] / max(warm)
-    return np.clip(col + shade[..., None] * 0.9, 0, 1)
+    L0 = a.mean(-1)
+    # Mountains: where the relief shading is busy (high local contrast)
+    m1, m2 = ndimage.uniform_filter(L0, 15), ndimage.uniform_filter(L0 * L0, 15)
+    rough = ndimage.gaussian_filter(np.sqrt(np.maximum(m2 - m1 * m1, 0)), 4)
+    del m1, m2
+    smooth = np.stack([ndimage.gaussian_filter(a[..., c], 6) for c in range(3)], -1)
+    r, g, b = smooth[..., 0], smooth[..., 1], smooth[..., 2]
+    L = (r + g + b) / 3
+    green = g - (r + b) / 2
+    cls = np.zeros(L.shape, np.int8)                 # 0 open land
+    cls[green > 0.07] = 1                            # forest, humid
+    cls[(r - g > 0) & (green < 0.03)] = 2            # dry land, desert
+    # Mountains in otherwise green regions (the Alps, the Apennines) read as pale green,
+    # not as desert: judge them by the colour of the wider region around them
+    small = a[::8, ::8]
+    region = np.stack([ndimage.gaussian_filter(small[..., c], 5) for c in range(3)], -1)
+    regional_green = region[..., 1] - (region[..., 0] + region[..., 2]) / 2
+    regional_green = np.array(Image.fromarray(regional_green.astype(np.float32)).resize((L.shape[1], L.shape[0]), Image.BILINEAR))
+    cls[(rough > 0.1) & (regional_green > 0.03) & (cls == 2)] = 3
+    cls[L > 0.86] = 4                                # ice
+    cls = ndimage.median_filter(cls, 7)              # tidy the patches
+    flat = PALETTE[cls]
+    return np.stack([ndimage.gaussian_filter(flat[..., c], 0.8) for c in range(3)], -1)  # soft edges
 
 
 def mask(features, scale=2):
@@ -104,7 +129,7 @@ def mask(features, scale=2):
 def tiles(relief_path, fc):
     lakes = [f for f in download('ne_50m_lakes.geojson')['features'] if (f['properties'].get('scalerank') or 0) <= 5]
     m = mask(fc['features']) * (1 - mask(lakes))
-    rgb = recolour(np.array(Image.open(relief_path).convert('RGB').resize((W, H), Image.LANCZOS)))
+    rgb = flatten(np.array(Image.open(relief_path).convert('RGB').resize((W, H), Image.LANCZOS)))
     comp = Image.fromarray((np.clip(rgb * m[..., None] + WATER * (1 - m[..., None]), 0, 1) * 255).astype(np.uint8))
     pyramid = [np.array(comp, np.float32)]
     while pyramid[-1].shape[1] > 1400:

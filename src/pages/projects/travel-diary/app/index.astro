@@ -50,6 +50,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
     <p class="tf-count-label">countries visited</p>
     <div id="tf-count-pop" class="tf-pop" role="note" hidden>
       The {data.total} are the 193 UN member states plus Kosovo, Palestine, Taiwan, and Vatican City. Territories such as Hong Kong appear on the map but don't change the count.
+      <span class="tf-credit">Map data: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>.</span>
     </div>
     <div class="tf-actions">
       <button class="tf-pill" type="button" id="tf-open-diary">Diary</button>
@@ -81,7 +82,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
   </aside>
 
   <div id="map" class="tf-map" aria-label="World map. Countries Florian has visited are clear, the rest sit under fog."></div>
-  <div id="tf-tip" class="tf-chip" role="tooltip" aria-hidden="true"></div>
+  <div id="tf-tip" class="tf-label" role="tooltip" aria-hidden="true"></div>
   <div id="tf-dist" class="tf-chip tf-dist" aria-live="polite"></div>
   <div id="tf-plane" class="tf-plane" aria-hidden="true">
     <svg viewBox="0 0 32 32"><path d="M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z"/></svg>
