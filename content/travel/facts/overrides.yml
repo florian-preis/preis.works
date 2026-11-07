@@ -1,0 +1,15 @@
+# Hand-kept figures for places the World Bank and UNDP don't cover, and corrections.
+# A value here wins over country-facts.json. Each value needs its year and source,
+# and the drawer shows them. The monthly update lists entries older than two years.
+#
+# Fields: population, gdp, gdpPerCapita (with currency), hdi, hdiRank (with "of").
+#
+# Taiwan and Vatican City: carried over from the old app's 2024 dataset (GDP in euros).
+# Replace with current figures when convenient, e.g. from Taiwan's statistics office (DGBAS).
+
+TW:
+  population: { value: 23516442, year: 2024, source: Legacy dataset }
+  gdpPerCapita: { value: 35513, year: 2024, currency: EUR, source: Legacy dataset }
+  gdp: { value: 760200000000, year: 2024, currency: EUR, source: Legacy dataset }
+VA:
+  population: { value: 800, year: 2024, source: Legacy dataset }

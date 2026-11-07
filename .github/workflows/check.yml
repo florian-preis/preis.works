@@ -1,0 +1,32 @@
+# Builds the site for every pull request (new trips, country facts updates) so a
+# mistake shows up as a failed check before anything is merged. Publishes nothing.
+# (Pull requests opened by the monthly facts update are an exception: GitHub does
+# not start checks for them. The updater tests its own output instead.)
+
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (includes the travel content checks)
+        run: npm run build

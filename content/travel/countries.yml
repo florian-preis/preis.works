@@ -1,0 +1,68 @@
+# Every country and territory you have visited. The map and the counter read this list.
+# Add a line when you visit somewhere new (the trip interview skill does this for you).
+# Codes are ISO 3166-1 alpha-2 (DE = Germany); Kosovo is XK.
+# Territories (such as Hong Kong) light up on the map but don't change the count,
+# see reference.yml.
+
+AL: {}    # Albania
+AU: {}    # Australia
+AT: {}    # Austria
+BE: {}    # Belgium
+BO: {}    # Bolivia
+BA: {}    # Bosnia and Herzegovina
+BR: {}    # Brazil
+BG: {}    # Bulgaria
+CA: {}    # Canada
+CN: {}    # China
+CO: {}    # Colombia
+CR: {}    # Costa Rica
+HR: {}    # Croatia
+CU: {}    # Cuba
+CZ: {}    # Czechia
+DK: {}    # Denmark
+EG: {}    # Egypt
+FR: {}    # France
+DE: {}    # Germany
+GR: {}    # Greece
+HK: {}    # Hong Kong
+HU: {}    # Hungary
+IS: {}    # Iceland
+IN: {}    # India
+IE: {}    # Ireland
+IL: {}    # Israel
+IT: {}    # Italy
+JO: {}    # Jordan
+KE: {}    # Kenya
+XK: {}    # Kosovo
+LV: {}    # Latvia
+MY: {}    # Malaysia
+MX: {}    # Mexico
+ME: {}    # Montenegro
+MA: {}    # Morocco
+NA: {}    # Namibia
+NL: {}    # Netherlands
+NZ: {}    # New Zealand
+MK: {}    # North Macedonia
+NO: {}    # Norway
+PS: {}    # Palestine
+PA: {}    # Panama
+PE: {}    # Peru
+PH: {}    # Philippines
+PL: {}    # Poland
+PT: {}    # Portugal
+RO: {}    # Romania
+RS: {}    # Serbia
+SG: {}    # Singapore
+SK: {}    # Slovakia
+SI: {}    # Slovenia
+KR: {}    # South Korea
+ES: {}    # Spain
+SE: {}    # Sweden
+CH: {}    # Switzerland
+TR: {}    # Turkey
+UA: {}    # Ukraine
+AE: {}    # United Arab Emirates
+GB: {}    # United Kingdom
+US: {}    # United States
+VA: {}    # Vatican City
+VN: {}    # Vietnam
