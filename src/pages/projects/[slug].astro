@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 
 export async function getStaticPaths() {
@@ -10,10 +10,17 @@ export async function getStaticPaths() {
 const { entry, all } = Astro.props;
 const { Content } = await render(entry);
 const p = entry.data;
-// "Why I made it" is the text under the frontmatter; the section hides itself while empty
 // Search engines show the first sentence of "What it is"
 const metaDescription = p.summary.split(/(?<=\.)\s+/)[0];
+// "Why I made it" is the text under the frontmatter; the section hides itself while empty
 const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length > 0;
+// Full-size screens for the lightbox
+const views = await Promise.all(
+  p.screens.map(async (sc) => {
+    const v = await getImage({ src: sc.src, width: 1900, format: 'webp', quality: 85 });
+    return { src: v.src, alt: sc.alt, w: sc.src.width, h: sc.src.height };
+  })
+);
 ---
 <Base title={p.name} active="projects" description={metaDescription}>
   <main class="project wrap">
@@ -43,6 +50,11 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
       <header class="head">
         <h1 class="hand">{p.name}</h1>
         <span class="meta">{p.category}{p.year && `, ${p.year}`}</span>
+        {p.app && (
+          <a class="open" href={p.app}>Open app
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        )}
       </header>
 
       <div class="text">
@@ -58,14 +70,6 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
         )}
       </div>
 
-      {p.app && (
-        <div>
-          <a class="open" href={p.app}>Open {p.name}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-        </div>
-      )}
-
       {p.screens.length > 0 && (
         <section class="screens" aria-label={`${p.name} screens`}>
           <div class="screens-head">
@@ -80,13 +84,34 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
             </div>
           </div>
           <ul class="screens-track" tabindex="0">
-            {p.screens.map((sc) => (
+            {p.screens.map((sc, i) => (
               <li class="screen">
-                <Image src={sc.src} alt={sc.alt} widths={[480, 800, 1200]} sizes="(max-width: 700px) 84vw, (max-width: 1100px) 46vw, 340px" />
+                <button type="button" class="screen-open" data-i={i} aria-label={`View larger: ${sc.alt}`}>
+                  <Image src={sc.src} alt={sc.alt} widths={[480, 800, 1200]} sizes="(max-width: 700px) 84vw, (max-width: 1100px) 46vw, 340px" />
+                </button>
               </li>
             ))}
           </ul>
         </section>
+      )}
+
+      <!-- Lightbox: the same layout as on the Photography page, without a caption -->
+      {views.length > 0 && (
+        <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screen viewer" hidden>
+          <button class="lb-close" type="button" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <button class="lb-nav lb-prev" type="button" aria-label="Previous screen">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <figure class="lb-figure">
+            <img class="lb-img" alt="">
+          </figure>
+          <button class="lb-nav lb-next" type="button" aria-label="Next screen">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <script type="application/json" id="screen-data" set:html={JSON.stringify(views)} />
+        </div>
       )}
     </article>
   </main>
@@ -102,7 +127,9 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
   .hero { aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; }
   .hero :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .placeholder { font-size: 40px; color: var(--faint); }
-  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 16px; }
+  /* Title and year on one line, the Open app button right underneath */
+  .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 20px 16px; }
+  .head .open { grid-column: 1 / -1; justify-self: start; }
   .head h1 { margin: 0; font-size: 40px; }
   .meta { font-size: 13px; color: var(--muted); }
   .text { display: flex; flex-wrap: wrap; gap: 40px; }
@@ -127,10 +154,27 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
   .screens-track { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
   .screens-track::-webkit-scrollbar { display: none; }
   .screen { position: relative; flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); scroll-snap-align: start; aspect-ratio: 1900 / 1188; border-radius: 10px; overflow: hidden; background: var(--panel); }
-  .screen :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .screen-open { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+  .screen :global(img) { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform var(--slow) var(--ease); }
+  .screen-open:hover :global(img) { transform: scale(1.05); }
   /* A hairline edge, so light screens don't melt into the paper */
   .screen::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 43, 41, 0.1); pointer-events: none; }
   @media (max-width: 1100px) { .screens { --per: 2; } }
+
+  /* Lightbox, as on the Photography page */
+  .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
+  .lightbox[hidden] { display: none; }
+  .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
+  .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
+  @media (orientation: portrait) {
+    .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
+  }
+  .lb-img.loading { filter: blur(12px); }
+  /* A hairline edge, so light screens stand apart from the paper */
+  .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
+  .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lb-close:hover, .lb-nav:hover { color: var(--text); }
+  .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
 
   /* Phone: the index becomes a strip of names under the nav */
   @media (max-width: 700px) {
@@ -150,6 +194,8 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
     .screens-nav { display: none; }
     .screens-track { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
     .screen { flex-basis: 84%; }
+    .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }
+    .lb-nav { display: none; }
   }
 </style>
 
@@ -177,4 +223,63 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
     window.addEventListener('resize', update);
     update();
   });
+
+  // Lightbox: click a screen to see it large; arrows, keys, or a swipe move between screens
+  const lb = document.getElementById('lightbox');
+  if (lb) {
+    const data: { src: string; alt: string; w: number; h: number }[] = JSON.parse(document.getElementById('screen-data')!.textContent!);
+    const img = lb.querySelector<HTMLImageElement>('.lb-img')!;
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('.screen-open')];
+    const cache = new Set<string>();
+    let current = 0;
+    let lastFocus: HTMLElement | null = null;
+
+    const preload = () => [-1, 1].forEach((d) => {
+      const n = data[(current + d + data.length) % data.length];
+      if (!cache.has(n.src)) { new Image().src = n.src; cache.add(n.src); }
+    });
+    const render = () => {
+      const s = data[current];
+      img.alt = s.alt; img.width = s.w; img.height = s.h;
+      // The small screen from the page stands in, slightly blurred, while the large one loads
+      if (!cache.has(s.src)) {
+        const thumb = buttons[current]?.querySelector('img');
+        if (thumb?.currentSrc) img.src = thumb.currentSrc;
+        img.classList.add('loading');
+      }
+      const full = new Image();
+      full.onload = () => { if (data[current] === s) { img.src = s.src; img.classList.remove('loading'); } };
+      full.src = s.src; cache.add(s.src);
+      preload();
+    };
+    const open = (i: number) => {
+      current = i; lastFocus = document.activeElement as HTMLElement;
+      render(); lb.hidden = false;
+      document.documentElement.style.overflow = 'hidden';
+      lb.querySelector<HTMLButtonElement>('.lb-close')!.focus();
+    };
+    const close = () => {
+      lb.hidden = true; document.documentElement.style.overflow = '';
+      lastFocus?.focus();
+    };
+    const step = (d: number) => { current = (current + d + data.length) % data.length; render(); };
+
+    buttons.forEach((b) => b.addEventListener('click', () => open(Number(b.dataset.i))));
+    lb.querySelector('.lb-close')!.addEventListener('click', close);
+    lb.querySelector('.lb-prev')!.addEventListener('click', () => step(-1));
+    lb.querySelector('.lb-next')!.addEventListener('click', () => step(1));
+    document.addEventListener('keydown', (e) => {
+      if (lb.hidden) return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'ArrowRight') step(1);
+    });
+    let x0: number | null = null;
+    lb.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+    });
+  }
 </script>

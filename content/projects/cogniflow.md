@@ -24,6 +24,6 @@ screens:
     alt: Keyboard shortcuts
 ---
 
-I kept coming across word-by-word readers that promised better focus, and I noticed my own attention drifting on long articles, even ones I was really interested in. None of the existing tools quite clicked, in looks or in features, and Claude Code had just come out, so it felt like the perfect excuse to see what I could build.
+I noticed my attention drifting on long news and scientific articles, even ones I was really interested in. Claude Code had just come out, so I made this my first attempt at seeing what it could do, borrowing ideas from the speed readers I had come across over the years.
 
-In the rebuild I narrowed it to what it does best: reading a news article or an essay properly, sent straight from the browser, with every word lined up so your eyes can stay still. It was also the project that first showed me how far AI tools can take an idea, at work and outside of it.
+The latest update narrows it to what it does best: helping you stay with a long article or essay from the first line to the last. It was also the project that first showed me how far AI tools can take an idea, at work and outside of it.
