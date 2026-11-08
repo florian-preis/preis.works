@@ -12,7 +12,7 @@ focus: 50% 25%
 # Screens at the bottom of the page, in order. alt describes each one for screen readers
 screens:
   - src: ./images/knowhere/screen-1.jpg
-    alt: Home, with the daily round and the three modes
+    alt: Home, with the daily challenge and free play
   - src: ./images/knowhere/screen-2.jpg
     alt: A flag question
   - src: ./images/knowhere/screen-3.jpg
@@ -20,6 +20,8 @@ screens:
   - src: ./images/knowhere/screen-4.jpg
     alt: A map question
   - src: ./images/knowhere/screen-5.jpg
+    alt: The progress page, with a world map shaded by how well you know each country
+  - src: ./images/knowhere/screen-6.jpg
     alt: Settings for regions, difficulty, and answer style
 ---
 

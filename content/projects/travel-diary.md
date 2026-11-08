@@ -21,6 +21,8 @@ screens:
     alt: The diary, with all trips by year
   - src: ./images/travel-diary/screen-5.jpg
     alt: The list of visited countries
+  - src: ./images/travel-diary/screen-6.jpg
+    alt: The features overview
 ---
 
 The name is a play on the nickname I have used on Instagram for years. I wanted an interactive way to revisit all the places I have been, rather than keeping a diary or relying on someone else's app, and to host it on my own site so friends and family can follow along.
