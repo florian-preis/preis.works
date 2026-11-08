@@ -137,8 +137,8 @@ const items = await Promise.all(
     .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
   }
   .lb-img.loading { filter: blur(12px); }
-  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 12px; line-height: 1.5; }
-  .lb-count { padding-top: 18px; }
+  /* The counter stays on the date line: if the place runs over several lines, both move down together */
+  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; font-size: 12px; line-height: 1.5; }
   .lb-caption > span:first-child { display: flex; flex-direction: column; }
   .lb-date, .lb-count { color: var(--muted); }
   .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }

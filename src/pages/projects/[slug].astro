@@ -192,8 +192,8 @@ const views = await Promise.all(
   .lb-img.loading { filter: blur(12px); }
   /* A hairline edge, so light screens stand apart from the paper */
   .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
+  /* No date here, so the counter sits on the first line of the caption */
   .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 12px; line-height: 1.5; }
-  .lb-count { padding-top: 18px; }
   .lb-text { max-width: 760px; }
   .lb-count { color: var(--muted); white-space: nowrap; }
   .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
