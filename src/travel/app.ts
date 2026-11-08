@@ -488,7 +488,7 @@ function renderCountry(code: string) {
 
 function renderTrip(t: TripOut) {
   setHeader(`<h2 class="tf-d-title tf-trip-title hand" id="tf-d-title">${esc(t.title)}</h2><p class="tf-d-status">${[formatPeriod(t.start, t.end), t.with ? `with ${esc(t.with)}` : ''].filter(Boolean).join(' · ')}</p>`);
-  dBody.innerHTML = `<article class="tf-trip"><ul class="tf-places" aria-label="Countries">${t.countries.map(placeChip).join('')}</ul><div class="tf-story">${t.html}</div></article>`;
+  dBody.innerHTML = `<article class="tf-trip tf-trip-view"><ul class="tf-places" aria-label="Countries">${t.countries.map(placeChip).join('')}</ul><div class="tf-story">${t.html}</div></article>`;
   wireBody();
   diaryBtn.setAttribute('aria-expanded', 'false');
   openDrawer();
