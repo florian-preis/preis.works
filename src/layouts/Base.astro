@@ -14,7 +14,8 @@ interface Props {
   noindex?: boolean;
 }
 const { title, description = site.description, active = '', navMode = 'sticky', noindex = false } = Astro.props;
-const fullTitle = title ? `${title} | ${site.name}` : site.name;
+// Browser tab: the domain on Home, the page first and the domain after it everywhere else
+const fullTitle = title ? `${title} · preis.works` : 'preis.works';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL('/assets/social-card.jpg', Astro.site);
 ---

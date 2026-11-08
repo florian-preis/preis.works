@@ -884,7 +884,6 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 /* ── boot ────────────────────────────────────────────────── */
 migrate();
 applyTheme();
-$('copyright').textContent = `© ${new Date().getFullYear()} Florian Preis`;
 showScreen('home');
 loadMap().catch(() => {});
 document.addEventListener('visibilitychange', () => { if (!document.hidden && $('screen-home').classList.contains('active')) renderHome(); });

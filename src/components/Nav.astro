@@ -51,9 +51,10 @@ const { active, mode } = Astro.props;
   .nav-wrap[data-mode='veil'] .nav-bg { opacity: 1; }
 
   .nav-toggle { display: none; width: 44px; height: 44px; margin-right: -14px; border: 0; background: transparent; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 6px; }
-  .nav-toggle span { display: block; width: 22px; height: 1.5px; background: currentColor; transition: transform var(--fast) var(--ease); }
-  .nav-toggle[aria-expanded='true'] span:first-child { transform: translateY(3.75px) rotate(45deg); }
-  .nav-toggle[aria-expanded='true'] span:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+  /* Bars 2px thick, 6px apart: both land on whole pixels, so they render identically on every screen */
+  .nav-toggle span { display: block; width: 22px; height: 2px; border-radius: 1px; background: currentColor; transition: transform var(--fast) var(--ease); }
+  .nav-toggle[aria-expanded='true'] span:first-child { transform: translateY(4px) rotate(45deg); }
+  .nav-toggle[aria-expanded='true'] span:last-child { transform: translateY(-4px) rotate(-45deg); }
   .nav-sheet { position: fixed; inset: 0; z-index: -1; display: flex; align-items: center; padding: 0 calc(var(--gutter) + 20px); border-radius: 0; background: rgba(243, 242, 239, 0.86); }
   .nav-sheet[hidden] { display: none; }
   .nav-sheet nav { display: flex; flex-direction: column; gap: 4px; }

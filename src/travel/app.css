@@ -11,6 +11,7 @@
   --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.03);
   --inset: clamp(12px, 2vw, 24px);
   --drawer-w: min(440px, calc(100vw - 2 * var(--inset)));
+  --foot-h: 22px;
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -59,10 +60,21 @@
   box-shadow: var(--card-shadow);
 }
 
+/* ── Footer: the same quiet line in every preis.works app ───────────── */
+.tf-foot {
+  position: absolute; z-index: 10;
+  left: calc(var(--inset) + 4px); right: calc(var(--inset) + 4px); bottom: calc(6px + env(safe-area-inset-bottom));
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  font-size: 11px; line-height: 1.4; color: var(--ink-soft); pointer-events: none;
+}
+.tf-foot nav { display: flex; gap: 16px; }
+.tf-foot a { color: inherit; pointer-events: auto; transition: color var(--fast) ease; }
+.tf-foot a:hover { color: var(--text); }
+
 /* ── Panel (bottom left) ─────────────────────────────────────────────── */
 .tf-panel {
   position: absolute; z-index: 10;
-  left: var(--inset); bottom: calc(var(--inset) + env(safe-area-inset-bottom));
+  left: var(--inset); bottom: calc(var(--inset) + var(--foot-h) + env(safe-area-inset-bottom));
   width: 232px; padding: 16px 16px 14px 18px;
   border-radius: 18px;
 }
@@ -110,7 +122,7 @@
 .tf-fine-only { display: none; }
 .tf.is-fine .tf-fine-only { display: block; }
 
-/* ── Chips: country names on hover, measured distances ───────────────── */
+/* ── Labels: country names on hover, measured distances ──────────────── */
 .tf-chip {
   position: fixed; left: 0; top: 0; z-index: 50;
   padding: 7px 14px; border-radius: 999px;
@@ -119,12 +131,11 @@
   transition: opacity 0.15s ease;
 }
 .tf-chip.is-on { opacity: 1; }
-/* Country names next to the plane: just the name, handwritten, no container */
+/* Country names next to the plane and measured distances: handwritten, no container, no glow */
 .tf-label {
   position: fixed; left: 0; top: 0; z-index: 50;
   font-family: 'Florian Hand', sans-serif; font-size: 18px; line-height: 1; white-space: nowrap;
   color: var(--text); pointer-events: none; opacity: 0;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.5);
   transition: opacity 0.15s ease;
 }
 .tf-label.is-on { opacity: 1; }

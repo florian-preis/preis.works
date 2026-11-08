@@ -31,9 +31,9 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
   <meta property="og:url" content={canonical}>
   <meta property="og:image" content={ogImage}>
   <meta name="theme-color" content="#f3f2ef">
-  <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
-  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/projects/travel-diary/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/projects/travel-diary/favicon-32.png">
+  <link rel="apple-touch-icon" href="/projects/travel-diary/apple-touch-icon.png">
   <link rel="preload" href={topoUrl} as="fetch" crossorigin>
   <link rel="modulepreload" href={workerUrl}>
   <link rel="preload" href="/fonts/FlorianHand-Regular.woff2" as="font" type="font/woff2" crossorigin>
@@ -66,6 +66,8 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
     <p class="tf-hint tf-fine-only">Right-click two places to measure the distance</p>
   </section>
 
+  <footer class="tf-foot"><span>© 2026 Florian Preis</span><nav aria-label="Links"><a href="/projects/travel-diary/">About</a><a href="/">preis.works</a></nav></footer>
+
   <aside id="tf-drawer" class="tf-drawer" aria-hidden="true">
     <div class="tf-drawer-card" role="dialog" aria-labelledby="tf-d-title">
       <header class="tf-d-head">
@@ -83,7 +85,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
 
   <div id="map" class="tf-map" aria-label="World map. Countries Florian has visited are clear, the rest sit under fog."></div>
   <div id="tf-tip" class="tf-label" role="tooltip" aria-hidden="true"></div>
-  <div id="tf-dist" class="tf-chip tf-dist" aria-live="polite"></div>
+  <div id="tf-dist" class="tf-label tf-dist" aria-live="polite"></div>
   <div id="tf-plane" class="tf-plane" aria-hidden="true">
     <svg viewBox="0 0 32 32"><path d="M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z"/></svg>
   </div>

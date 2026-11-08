@@ -99,7 +99,7 @@ const hold = veil.secondsPerPhoto;
         </li>
         <li>
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
-          <button type="button" class="reveal-phone" data-codes={site.phoneCodes.join(',')}>Show phone number</button>
+          <span class="phone" data-codes={site.phoneCodes.join(',')}></span>
         </li>
         <li>
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M7 10v7M7 7v.01M11 17v-4a2 2 0 014 0v4M11 10v7"/></svg>
@@ -124,17 +124,17 @@ const hold = veil.secondsPerPhoto;
   @keyframes veilSettle { from { transform: scale(1.12); } to { transform: scale(1); } }
   .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
   .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
-  /* The sharp photo shows only through the handwritten name, and fogs over as you scroll away */
+  /* The sharp photo shows only through the handwritten name and the smiley under it, and fogs over as you scroll away */
   .clear {
-    -webkit-mask: url('/brand/name-mask.png') center / min(84vw, 1080px) auto no-repeat;
-    mask: url('/brand/name-mask.png') center / min(84vw, 1080px) auto no-repeat;
+    -webkit-mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
+    mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     opacity: clamp(0, calc(1 - var(--p) * 2), 1);
   }
-  /* Tall screens: the name on two lines, larger */
+  /* Tall screens: first name, last name, and the smiley on three lines, larger */
   @media (orientation: portrait) {
     .clear {
-      -webkit-mask: url('/brand/name-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
-      mask: url('/brand/name-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
+      -webkit-mask: url('/brand/name-smiley-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
+      mask: url('/brand/name-smiley-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
     }
   }
   .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
@@ -144,14 +144,13 @@ const hold = veil.secondsPerPhoto;
 
   /* ── About ── */
   .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 144px; }
-  .portrait { flex: 1 1 260px; max-width: 320px; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: top; }
+  .portrait { flex: 1 1 260px; max-width: 320px; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: top; border-radius: 16px; }
   .about-text { flex: 999 1 400px; min-width: 0; max-width: 62ch; line-height: 1.75; }
   .about-text :global(p) { margin: 0 0 18px; }
   .contact { list-style: none; margin: 32px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
   .contact li { display: flex; align-items: center; gap: 14px; min-height: 28px; }
   .contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  .reveal-phone { padding: 0; border: 0; background: transparent; cursor: pointer; color: var(--muted); text-decoration: underline; text-decoration-color: #cfcec9; text-underline-offset: 3px; }
-  .reveal-phone:hover { color: var(--text); }
+  .phone { min-width: 9em; }
   @media (max-width: 700px) {
     .about { gap: 32px; padding-top: 112px; }
     .portrait { max-width: 220px; }
@@ -172,13 +171,20 @@ const hold = veil.secondsPerPhoto;
   }, { passive: true });
   update();
 
-  // Phone number: assembled only on request
-  document.querySelectorAll<HTMLButtonElement>('.reveal-phone').forEach((btn) => btn.addEventListener('click', () => {
-    const d = btn.dataset.codes!.split(',').map((c) => String.fromCharCode(Number(c))).join('');
-    const a = document.createElement('a');
-    a.href = `tel:+${d}`;
-    a.textContent = `+${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 6)} ${d.slice(6, 8)} ${d.slice(8)}`;
-    btn.replaceWith(a);
-    a.focus();
-  }));
+  // Phone number: never in the page source. It is stored as character codes and only written
+  // into the page after the first sign of a person (scrolling, a touch, the mouse, or a key).
+  // Most scrapers don't run scripts, and the few that do rarely scroll or move a mouse.
+  const phone = document.querySelector<HTMLElement>('.phone');
+  if (phone) {
+    const human = ['scroll', 'wheel', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
+    const show = () => {
+      human.forEach((t) => window.removeEventListener(t, show));
+      const d = phone.dataset.codes!.split(',').map((c) => String.fromCharCode(Number(c))).join('');
+      const a = document.createElement('a');
+      a.href = `tel:+${d}`;
+      a.textContent = `+${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 6)} ${d.slice(6, 8)} ${d.slice(8)}`;
+      phone.replaceChildren(a);
+    };
+    human.forEach((t) => window.addEventListener(t, show, { passive: true }));
+  }
 </script>

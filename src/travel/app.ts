@@ -212,7 +212,7 @@ const plane = (() => {
 })();
 
 // ── Measuring air distance (right-click two places, desktop only) ───────
-const measure: { a: [number, number] | null; pending: boolean; done: boolean; mid: [number, number] | null } = { a: null, pending: false, done: false, mid: null };
+const measure: { a: [number, number] | null; pending: boolean; done: boolean; line: [number, number][] | null } = { a: null, pending: false, done: false, line: null };
 function greatCircle(a: [number, number], b: [number, number], steps = 96): [number, number][] {
   const toR = Math.PI / 180;
   const [l1, p1] = [a[0] * toR, a[1] * toR], [l2, p2] = [b[0] * toR, b[1] * toR];
@@ -242,14 +242,30 @@ function km(a: [number, number], b: [number, number]) {
 }
 const measureSource = () => map.getSource('measure') as GeoJSONSource | undefined;
 function clearMeasure() {
-  measure.a = null; measure.pending = false; measure.done = false; measure.mid = null;
+  measure.a = null; measure.pending = false; measure.done = false; measure.line = null;
   measureSource()?.setData({ type: 'FeatureCollection', features: [] });
   distChip.classList.remove('is-on');
 }
+// The distance sits at the apex of the arc: the point furthest from the straight line between
+// the two places, on screen. The label goes just beyond it, on the outside of the curve.
 function placeDistChip() {
-  if (!measure.mid) return;
-  const p = map.project(measure.mid);
-  distChip.style.transform = `translate(${p.x - distChip.offsetWidth / 2}px, ${p.y - distChip.offsetHeight - 10}px)`;
+  const line = measure.line;
+  if (!line) return;
+  const pts = line.map((c) => map.project(c));
+  const a = pts[0], b = pts[pts.length - 1];
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  let apex = pts[Math.floor(pts.length / 2)], best = -1, side = 0;
+  for (const p of pts) {
+    const d = ((p.x - a.x) * dy - (p.y - a.y) * dx) / len; // signed distance from the chord
+    if (Math.abs(d) > best) { best = Math.abs(d); apex = p; side = Math.sign(d); }
+  }
+  // Unit normal pointing away from the chord; a nearly straight line gets its label above
+  let nx = dy / len * side, ny = -dx / len * side;
+  if (best < 4) { nx = 0; ny = -1; }
+  const w = distChip.offsetWidth, h = distChip.offsetHeight, gap = 10;
+  const cx = apex.x + nx * (gap + h / 2) + nx * Math.abs(nx) * (w / 2 - h / 2);
+  const cy = apex.y + ny * (gap + h / 2);
+  distChip.style.transform = `translate(${cx - w / 2}px, ${cy - h / 2}px)`;
 }
 map.on('move', placeDistChip);
 map.getCanvasContainer().addEventListener('contextmenu', (e) => {
@@ -266,7 +282,7 @@ map.getCanvasContainer().addEventListener('contextmenu', (e) => {
   }
   const a = measure.a!;
   const line = greatCircle(a, pt);
-  measure.pending = false; measure.done = true; measure.mid = line[Math.floor(line.length / 2)];
+  measure.pending = false; measure.done = true; measure.line = line;
   measureSource()?.setData({ type: 'FeatureCollection', features: [
     { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } },
     { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: a } },

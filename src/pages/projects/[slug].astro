@@ -28,7 +28,7 @@ const views = await Promise.all(
     <aside class="project-index" aria-label="Projects">
       <a class="back link-muted" href="/projects/">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-        <span>All projects</span>
+        <span class="back-long">All projects</span><span class="back-short">Back</span>
       </a>
       <nav class="rows">
         {all.map((x) => (
@@ -87,7 +87,7 @@ const views = await Promise.all(
             {p.screens.map((sc, i) => (
               <li class="screen">
                 <button type="button" class="screen-open" data-i={i} aria-label={`View larger: ${sc.alt}`}>
-                  <Image src={sc.src} alt={sc.alt} widths={[480, 800, 1200]} sizes="(max-width: 700px) 84vw, (max-width: 1100px) 46vw, 340px" />
+                  <Image src={sc.src} alt={sc.alt} widths={[480, 800, 1200]} sizes="(max-width: 700px) 84vw, (max-width: 1100px) 60vw, 400px" />
                 </button>
               </li>
             ))}
@@ -121,16 +121,20 @@ const views = await Promise.all(
   .project { display: flex; flex-wrap: wrap; gap: 64px; align-items: flex-start; padding-top: 40px; }
   .project-index { flex: 0 0 clamp(240px, 24%, 340px); position: sticky; top: calc(var(--nav-h) + 24px); }
   .back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; margin-bottom: 8px; }
+  .back-short { display: none; }
   .rows { display: flex; flex-direction: column; }
 
   .project-body { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
   .hero { aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; background: var(--panel); display: flex; align-items: center; justify-content: center; }
   .hero :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .placeholder { font-size: 40px; color: var(--faint); }
-  /* Title and year on one line, the Open app button right underneath */
-  .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 20px 16px; }
-  .head .open { grid-column: 1 / -1; justify-self: start; }
-  .head h1 { margin: 0; font-size: 40px; }
+  /* Computers: title, Open app, and category on one line, the button a fixed distance after the title.
+     All three are centred on the middle of the handwriting's lowercase letters (not its line box,
+     which the font's tall ascent and deep descent push off-centre), so they read as one line */
+  .head { display: flex; align-items: center; gap: 16px; }
+  .head h1 { margin: 0; font-size: 40px; flex: none; transform: translateY(var(--hand-shift)); --hand-shift: 0.1em; }
+  .head .open { order: 1; margin-left: 20px; }
+  .head .meta { order: 2; margin-left: auto; }
   .meta { font-size: 13px; color: var(--muted); }
   .text { display: flex; flex-wrap: wrap; gap: 40px; }
   .text section { flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px; }
@@ -142,8 +146,8 @@ const views = await Promise.all(
   .open svg { transition: transform var(--base) var(--ease); }
   .open:hover svg { transform: translateX(3px); }
 
-  /* Screens: three in view, the rest a scroll or a click away. Not clickable themselves */
-  .screens { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; --per: 3; --gap: 16px; }
+  /* Screens: two and a half in view, so it's clear there are more to scroll to */
+  .screens { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; --per: 2.5; --gap: 16px; }
   .screens-head { display: flex; justify-content: space-between; align-items: center; }
   .screens-head h2 { margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
   .screens-nav { display: flex; gap: 4px; margin-right: -12px; }
@@ -159,7 +163,7 @@ const views = await Promise.all(
   .screen-open:hover :global(img) { transform: scale(1.05); }
   /* A hairline edge, so light screens don't melt into the paper */
   .screen::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 43, 41, 0.1); pointer-events: none; }
-  @media (max-width: 1100px) { .screens { --per: 2; } }
+  @media (max-width: 1100px) { .screens { --per: 1.5; } }
 
   /* Lightbox, as on the Photography page */
   .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
@@ -176,18 +180,18 @@ const views = await Promise.all(
   .lb-close:hover, .lb-nav:hover { color: var(--text); }
   .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
 
-  /* Phone: the index becomes a strip of names under the nav */
+  /* Phone: no project list, just a way back to all projects above the picture. It scrolls away with the page */
   @media (max-width: 700px) {
-    .project { gap: 24px; padding-top: 8px; }
-    .project-index { flex: 1 1 100%; position: sticky; top: var(--nav-h); z-index: 30; margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter); background: rgba(243, 242, 239, 0.92); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-    .project-index::-webkit-scrollbar { display: none; }
-    .back span { display: none; }
-    .back { margin: 0; flex: none; width: 36px; }
-    .rows { flex-direction: row; gap: 22px; white-space: nowrap; }
-    .rows :global(.index-row) { display: block; border: 0; padding: 12px 0 10px; min-height: 0; background: none; color: var(--muted); }
-    .rows :global(.index-row .meta) { display: none; }
-    .rows :global(.index-row[aria-current='page']) { color: var(--text); box-shadow: inset 0 -1px 0 var(--text); }
-    .head h1 { font-size: 30px; }
+    .project { gap: 16px; padding-top: 8px; }
+    .project-index { flex: 1 1 100%; position: static; }
+    .rows { display: none; }
+    .back { margin: 0 0 0 -2px; }
+    .back-long { display: none; }
+    .back-short { display: inline; }
+    .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 20px 16px; }
+    .head h1 { font-size: 30px; transform: none; }
+    .head .open { order: 0; grid-column: 1 / -1; grid-row: 2; margin-left: 0; }
+    .head .meta { order: 0; margin-left: 0; }
     .open { width: 100%; justify-content: center; min-height: 48px; }
     /* One screen at a time with the next peeking in, swiped across the full width */
     .screens { --gap: 10px; }
