@@ -48,7 +48,17 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
 </head>
 <body>
   <Nav active={active} mode={navMode} />
-  <slot />
-  <Footer />
+  {Astro.slots.has('lead') ? (
+    <>
+      <!-- Home: the veil leads; the rest of the page, footer included, is one block at least a screen tall -->
+      <slot name="lead" />
+      <div class="after-lead"><slot /><Footer /></div>
+    </>
+  ) : (
+    <>
+      <slot />
+      <Footer />
+    </>
+  )}
 </body>
 </html>

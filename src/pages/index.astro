@@ -25,7 +25,7 @@ const hold = veil.secondsPerPhoto;
 ---
 <Base active="about" navMode="veil">
   <!-- Veil: a fogged window over a slow slideshow, the name wiped clear with a finger -->
-  <section class="veil" id="veil" data-tone={veil.tone} style={`--fade:2s;--drift:${hold + 2}s`} aria-labelledby="veil-name">
+  <section slot="lead" class="veil" id="veil" data-tone={veil.tone} style={`--fade:2s;--drift:${hold + 2}s`} aria-labelledby="veil-name">
     <h1 id="veil-name" class="visually-hidden">Florian Preis</h1>
 
     <div class="layer fog" aria-hidden="true">
@@ -128,7 +128,7 @@ const hold = veil.secondsPerPhoto;
   .clear {
     -webkit-mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
-    opacity: clamp(0, calc(1 - var(--p) * 2), 1);
+    opacity: clamp(0, calc(1 - var(--p)), 1);
   }
   /* Tall screens: first name, last name, and the smiley on three lines, larger */
   @media (orientation: portrait) {
@@ -142,8 +142,18 @@ const hold = veil.secondsPerPhoto;
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
   @media (prefers-reduced-motion: reduce) { .drift.go { animation: none; } .slide { transition: none; } }
 
+  /* ── Two resting places: the veil, and everything after it ──
+     The block after the veil is at least as tall as the largest screen height (100vh is the
+     height with the phone's browser bars hidden), so you can always scroll the veil fully out
+     of view. Scrolling snaps to one place or the other; inside the block you scroll freely. */
+  :global(html:has(#veil)) { scroll-snap-type: y mandatory; }
+  .veil { scroll-snap-align: start; }
+  :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; scroll-snap-align: start; }
+
   /* ── About ── */
-  .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 144px; }
+  /* Top space: once the page snaps past the veil, the menu sits in it (72 px tall), so the portrait
+     starts 48 px below the menu on computers and 32 px below it on phones */
+  .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 120px; }
   .portrait { flex: 1 1 260px; max-width: 320px; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: top; border-radius: 16px; }
   .about-text { flex: 999 1 400px; min-width: 0; max-width: 62ch; line-height: 1.75; }
   .about-text :global(p) { margin: 0 0 18px; }
@@ -152,22 +162,28 @@ const hold = veil.secondsPerPhoto;
   .contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .phone { min-width: 9em; }
   @media (max-width: 700px) {
-    .about { gap: 32px; padding-top: 112px; }
+    .about { gap: 32px; padding-top: 104px; }
     .portrait { max-width: 220px; }
   }
 </style>
 
 <script>
-  // Fog returns over the name as the veil scrolls away
+  // Fog returns over the name within the first quarter of the veil (at most 240 px of scrolling),
+  // so it clears quickly on tall phone screens too. The menu arrives once the name is mostly
+  // fogged and then stays for the rest of the visit; it only starts hidden again on a fresh load.
   const veil = document.getElementById('veil')!;
+  const nav = document.querySelector<HTMLElement>('.nav-wrap');
+  const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
   let ticking = false;
+  let arrived = false;
   const update = () => {
     ticking = false;
-    const p = Math.min(Math.max(window.scrollY / veil.offsetHeight, 0), 1);
+    const p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
     veil.style.setProperty('--p', p.toFixed(3));
+    if (!arrived && p >= 0.6) { arrived = true; nav?.classList.add('arrived'); }
   };
   window.addEventListener('scroll', () => {
-    if (!ticking && window.scrollY < veil.offsetHeight * 1.2) { ticking = true; requestAnimationFrame(update); }
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
   update();
 
