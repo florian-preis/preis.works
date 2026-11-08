@@ -658,20 +658,25 @@ const bestRun = () => getHist().filter(e => e.kind === 'marathon').reduce((m, e)
 /* ── home ────────────────────────────────────────────────── */
 function renderDailyCard() {
   const st = dailyState(), el = $('daily-card');
-  const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-  const dots = st && st.marks ? `<div class="dots">${Array.from({ length: 10 }, (_, i) => `<span class="dot ${st.marks[i] === 1 ? 'ok' : st.marks[i] === 0 ? 'no' : ''}"></span>`).join('')}</div>` : '';
+  const now = new Date();
+  const date = `${now.toLocaleDateString('en-GB', { weekday: 'long' })}, ${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`;
+  // Streak and share of correct answers across every daily played
+  const ds = dailyStreak();
+  const dh = getHist().filter(e => e.kind === 'daily');
+  const tot = dh.reduce((n, e) => n + (e.total || 0), 0), cor = dh.reduce((n, e) => n + (e.correct || 0), 0);
+  const stats = `<div class="daily-stats"><span><b>${ds}</b> day streak</span>${tot ? `<span><b>${Math.round(cor / tot * 100)}%</b> correct</span>` : ''}</div>`;
   if (st && st.done) {
     const end = new Date(); end.setHours(24, 0, 0, 0);
     const mins = Math.max(1, Math.round((end - Date.now()) / 6e4));
-    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily</div><div class="daily-title">${st.marks.filter(Boolean).length}/10 in ${fmt(st.secs)}</div>${dots}<div class="daily-sub" style="margin-top:6px">Next one in ${Math.floor(mins / 60)}h ${mins % 60}m</div></div>
-      <button class="btn-line" id="daily-share">${ICON.share}Share</button>`;
+    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily · ${date}</div><div class="daily-title">${st.marks.filter(Boolean).length}/10 in ${fmt(st.secs)}</div><div class="daily-sub">Next daily challenge in ${Math.floor(mins / 60)}h ${mins % 60}m</div></div>
+      <div class="daily-side"><button class="btn-play" id="daily-share">${ICON.share}Share</button>${stats}</div>`;
     $('daily-share').addEventListener('click', shareDaily);
     el.onclick = e => { if (!e.target.closest('button')) showDailyEnd(); };
     el.style.cursor = 'pointer';
   } else {
-    const ds = dailyStreak();
-    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily${ds ? ` · streak ${ds}` : ''}</div><div class="daily-title">${date}</div>${dots || '<div class="daily-sub">Same 10 for everyone today</div>'}</div>
-      <button class="btn-ink" id="daily-play">${st ? 'Resume' : 'Play'}</button>`;
+    const answered = st && st.marks ? st.marks.filter(m => m === 0 || m === 1).length : 0;
+    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily · ${date}</div><div class="daily-title">Daily challenge</div><div class="daily-sub">${answered ? `${answered} of 10 answered, pick up where you left off` : '10 mixed questions, the same for everyone, one attempt'}</div></div>
+      <div class="daily-side"><button class="btn-play" id="daily-play">${st ? 'Resume' : 'Play'}</button>${stats}</div>`;
     $('daily-play').addEventListener('click', () => startSession('daily'));
     el.onclick = null; el.style.cursor = '';
   }
@@ -685,17 +690,17 @@ function renderHome() {
   renderDailyCard();
   document.querySelectorAll('#play-seg button').forEach(b => { const on = b.dataset.play === S.play; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
   MODES.forEach(m => {
-    let n = 0; ALL.forEach(c => { if (level(P[m][c.id]) >= 2) n++; });
-    document.querySelector(`[data-known="${m}"]`).textContent = `${n}/${TOTAL}`;
+    const lv = [0, 0, 0, 0]; ALL.forEach(c => lv[level(P[m][c.id])]++);
+    document.querySelector(`[data-known="${m}"]`).textContent = `${lv[2] + lv[3]} of ${TOTAL} known`;
+    document.querySelector(`[data-bar="${m}"]`).innerHTML = [3, 2, 1].map(i => lv[i] ? `<span style="width:${lv[i] / TOTAL * 100}%;background:${LCOL[i]}"></span>` : '').join('');
   });
   $('setline').innerHTML = settingsLine();
   const learn = learningItems().length;
   const pb = $('practise-btn');
   pb.classList.toggle('hidden', !learn);
   pb.innerHTML = `${ICON.loop}Practise mistakes <span class="count">${learn}</span>`;
-  $('hs-day').textContent = dayStreak();
-  $('hs-run').textContent = bestRun();
-  $('hs-rounds').textContent = getHist().filter(e => e.kind !== 'marathon').length;
+  const run = bestRun(), rounds = getHist().filter(e => e.kind === 'round').length;
+  $('fp-stats').innerHTML = run || rounds ? [run ? `Best run <b>${run}</b>` : '', rounds ? `<b>${rounds}</b> rounds` : ''].filter(Boolean).join(' · ') : '';
 }
 
 /* ── progress ────────────────────────────────────────────── */

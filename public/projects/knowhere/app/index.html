@@ -27,7 +27,7 @@
   --ink:#1A1A1A;--ink-2:#6B6560;--ink-3:#8E8882;
   --ok:#2B7A50;--ok-bg:#EAF5EE;--no:#B5443A;--no-bg:#FAEDEB;
   --ocean:#EFE9E1;--land:#DAD2C6;--land-line:#F7F3EE;--hl:#1A1A1A;
-  --m0:#E2DACF;--m1:#C9B69C;--m2:#97806A;--m3:#43392F;
+  --m0:#EFE6DC;--m1:#F6CBA6;--m2:#EC9658;--m3:#D95A1B;--accent:#D95A1B;--accent-ink:#FFFFFF;
   --r:14px;--rs:9px;--nav-h:60px;
   --font:'DM Sans',system-ui,-apple-system,sans-serif;--mono:'DM Mono',ui-monospace,Menlo,monospace;
   --ease:cubic-bezier(.22,.61,.36,1);
@@ -38,7 +38,7 @@ html.night{
   --ink:#E8E4DF;--ink-2:#A09A94;--ink-3:#77726C;
   --ok:#4CB37B;--ok-bg:#12261A;--no:#E06A5E;--no-bg:#2C1311;
   --ocean:#181716;--land:#2F2C29;--land-line:#111110;--hl:#EDE8E2;
-  --m0:#2F2C29;--m1:#53483B;--m2:#8E785C;--m3:#DCCBB2;
+  --m0:#2F2C29;--m1:#5A3A26;--m2:#A2592C;--m3:#F08A4B;--accent:#F08A4B;--accent-ink:#1A1A1A;
   color-scheme:dark;
 }
 html,body{height:100%;background:var(--bg)}
@@ -346,6 +346,61 @@ html.night .seg button.on{background:#34322F;box-shadow:none}
   .chip{height:48px;font-size:15px}
   .credits{font-size:12px}
 }
+/* HOME: the daily challenge on stage, free play underneath. Same structure on every screen size */
+#screen-home .hw{gap:22px}
+#screen-home .daily{flex-direction:column;align-items:stretch;gap:18px;padding:20px 20px 18px 22px;border-radius:20px}
+#screen-home .daily-title{font-size:26px;font-weight:400;letter-spacing:-.6px;margin-top:6px}
+#screen-home .daily-sub{font-size:13px;margin-top:4px}
+.daily-side{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.btn-play{background:var(--accent);color:var(--accent-ink);border:none;border-radius:12px;height:50px;padding:0 28px;font-size:16px;font-weight:500;cursor:pointer;transition:filter .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-play:hover{filter:brightness(1.06)}
+.btn-play svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.daily-stats{display:flex;justify-content:center;gap:16px;font-size:12px;color:var(--ink-2)}
+.daily-stats b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.fp-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#screen-home .seg{width:auto}
+#screen-home .seg button{flex:none;padding:0 14px;height:32px;font-size:12px}
+#screen-home .hmg{grid-template-columns:1fr;gap:8px}
+#screen-home .hmc{display:grid;grid-template-columns:1fr auto;grid-template-areas:"top play" "bar play" "meta play";align-items:center;gap:6px 16px;padding:14px 14px 14px 18px;text-align:left}
+#screen-home .hmc:hover{transform:none}
+.hmc-top{grid-area:top;display:flex;align-items:center;gap:10px}
+#screen-home .hmc-top svg{order:-1;width:18px;height:18px}
+#screen-home .hmc-name{font-size:15px}
+.hmc-bar{grid-area:bar;display:flex;height:5px;border-radius:3px;overflow:hidden;gap:2px;background:var(--surface-2)}
+.hmc-bar span{display:block;height:100%}
+.hmc-foot{display:contents}
+#screen-home .hmc-meta{grid-area:meta;font-family:var(--font);font-size:12px;color:var(--ink-2)}
+.hmc-play{grid-area:play;background:var(--accent);color:var(--accent-ink);border-radius:10px;height:40px;padding:0 18px;font-size:14px;font-weight:500;display:inline-flex;align-items:center}
+.fp-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#screen-home .setline{align-self:auto;margin-left:-8px}
+.fp-stats{font-size:12px;color:var(--ink-3)}
+.fp-stats b{font-family:var(--mono);font-weight:500;color:var(--ink-2)}
+@media (min-width:768px){
+  #screen-home .hw{max-width:920px;gap:30px}
+  #screen-home .logo-know,#screen-home .logo-here{font-size:64px;letter-spacing:-3px}
+  #screen-home .daily{display:grid;grid-template-columns:1fr auto;align-items:center;gap:32px;padding:34px 38px;border-radius:28px}
+  #screen-home .daily-title{font-size:44px;letter-spacing:-1.6px;margin-top:10px}
+  #screen-home .daily-sub{font-size:15px;margin-top:8px}
+  .daily-side{align-items:center;gap:14px}
+  #screen-home .daily .btn-play{height:64px;padding:0 48px;font-size:18px;border-radius:16px}
+  .daily-stats{font-size:13px;gap:18px}
+  #screen-home .seg button{height:36px;padding:0 16px;font-size:13px}
+  #screen-home .hmg{grid-template-columns:repeat(3,1fr);gap:14px}
+  #screen-home .hmc{grid-template-columns:1fr auto;grid-template-areas:"top top" "bar bar" "meta play";gap:14px 12px;padding:22px 20px 18px 22px;border-radius:18px}
+  #screen-home .hmc-top{justify-content:space-between}
+  #screen-home .hmc-top svg{order:0;width:22px;height:22px}
+  #screen-home .hmc-name{font-size:18px}
+  .hmc-bar{height:6px}
+  #screen-home .hmc-meta{font-size:13px}
+  .hmc-play{height:38px;padding:0 18px}
+  .fp-stats,#screen-home .setline{font-size:13px}
+}
+@media (min-width:768px) and (max-height:760px){
+  #screen-home .hw{gap:20px;padding-top:24px}
+  #screen-home .logo-know,#screen-home .logo-here{font-size:48px}
+  #screen-home .daily{padding:24px 32px}
+  #screen-home .daily-title{font-size:34px;margin-top:6px}
+}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 @media (min-width:700px) and (max-height:699px),(min-width:700px) and (max-width:767px){.hw{gap:26px}}
 </style>
@@ -371,31 +426,32 @@ html.night .seg button.on{background:#34322F;box-shadow:none}
       <div class="logo-anim" id="home-logo" aria-label="knowhere"><span class="logo-know">know</span><span class="logo-gap"> </span><span class="logo-here">here</span></div>
       <div class="daily" id="daily-card"></div>
       <div class="play-block">
-        <div class="seg" id="play-seg" role="radiogroup" aria-label="Game type">
-          <button data-play="round" role="radio">Round of 10</button>
-          <button data-play="marathon" role="radio">Marathon</button>
+        <div class="fp-head">
+          <span class="eyebrow">Free play</span>
+          <div class="seg" id="play-seg" role="radiogroup" aria-label="Game type">
+            <button data-play="round" role="radio">Round of 10</button>
+            <button data-play="marathon" role="radio">Marathon</button>
+          </div>
         </div>
         <div class="hmg">
           <button class="hmc" data-mode="flags">
-            <svg viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="21"/><path d="M6 4.5c2.5-1.2 4.5-.6 6.5.4s4 1.4 6-.2v8c-2 1.6-4 1.2-6 .2s-4-1.6-6.5-.4"/></svg>
-            <span class="hmc-name">Flags</span><span class="hmc-meta" data-known="flags"></span>
+            <span class="hmc-top"><span class="hmc-name">Flags</span><svg viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="21"/><path d="M6 4.5c2.5-1.2 4.5-.6 6.5.4s4 1.4 6-.2v8c-2 1.6-4 1.2-6 .2s-4-1.6-6.5-.4"/></svg></span>
+            <span class="hmc-bar" data-bar="flags" aria-hidden="true"></span>
+            <span class="hmc-foot"><span class="hmc-meta" data-known="flags"></span><span class="hmc-play">Play</span></span>
           </button>
           <button class="hmc" data-mode="capitals">
-            <svg viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="10.5" x2="6" y2="17"/><line x1="10" y1="10.5" x2="10" y2="17"/><line x1="14" y1="10.5" x2="14" y2="17"/><line x1="18" y1="10.5" x2="18" y2="17"/></svg>
-            <span class="hmc-name">Capitals</span><span class="hmc-meta" data-known="capitals"></span>
+            <span class="hmc-top"><span class="hmc-name">Capitals</span><svg viewBox="0 0 24 24"><path d="M3 9.5 12 4l9 5.5"/><line x1="4" y1="20" x2="20" y2="20"/><line x1="6" y1="10.5" x2="6" y2="17"/><line x1="10" y1="10.5" x2="10" y2="17"/><line x1="14" y1="10.5" x2="14" y2="17"/><line x1="18" y1="10.5" x2="18" y2="17"/></svg></span>
+            <span class="hmc-bar" data-bar="capitals" aria-hidden="true"></span>
+            <span class="hmc-foot"><span class="hmc-meta" data-known="capitals"></span><span class="hmc-play">Play</span></span>
           </button>
           <button class="hmc" data-mode="locations">
-            <svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
-            <span class="hmc-name">Locations</span><span class="hmc-meta" data-known="locations"></span>
+            <span class="hmc-top"><span class="hmc-name">Locations</span><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+            <span class="hmc-bar" data-bar="locations" aria-hidden="true"></span>
+            <span class="hmc-foot"><span class="hmc-meta" data-known="locations"></span><span class="hmc-play">Play</span></span>
           </button>
         </div>
-        <button class="setline" id="setline"></button>
+        <div class="fp-foot"><button class="setline" id="setline"></button><span class="fp-stats" id="fp-stats"></span></div>
         <button class="practise hidden" id="practise-btn"></button>
-      </div>
-      <div class="hsr" id="hstats">
-        <div><div class="hs-num" id="hs-day">0</div><div class="hs-lbl">Day streak</div></div>
-        <div><div class="hs-num" id="hs-run">0</div><div class="hs-lbl">Best run</div></div>
-        <div><div class="hs-num" id="hs-rounds">0</div><div class="hs-lbl">Rounds</div></div>
       </div>
     </div>
     <footer class="foot"><span>© 2026 Florian Preis</span><nav aria-label="Links"><a href="/projects/knowhere/">About</a><a href="/">preis.works</a></nav></footer>

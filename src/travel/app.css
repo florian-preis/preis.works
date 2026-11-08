@@ -77,8 +77,23 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
   font-size: 11px; line-height: var(--foot-h); color: var(--ink-soft); pointer-events: none;
 }
 .tf-foot nav { display: flex; gap: 16px; }
-.tf-foot a { color: inherit; pointer-events: auto; transition: color var(--fast) ease; }
-.tf-foot a:hover { color: var(--text); }
+.tf-foot a, .tf-foot button { color: inherit; pointer-events: auto; transition: color var(--fast) ease; font: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.tf-foot a:hover, .tf-foot button:hover { color: var(--text); }
+
+/* ── Features overlay ───────────────────────────────────────────────── */
+.tf-feat { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: var(--inset); background: rgba(243, 242, 239, 0.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.tf-feat[hidden] { display: none; }
+.tf-feat-card { width: min(560px, 100%); max-height: calc(100dvh - 2 * var(--inset)); overflow: auto; padding: 18px 18px 22px 24px; border-radius: 22px;
+  background: rgba(247, 246, 243, 0.92); border: 1px solid var(--card-border); box-shadow: var(--card-shadow); }
+.tf-feat-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.tf-feat-head h2 { margin: 0; font-size: 15px; font-weight: 500; }
+.tf-feat dl { margin: 0; display: grid; grid-template-columns: minmax(150px, auto) 1fr; gap: 12px 22px; font-size: 14px; line-height: 1.45; }
+.tf-feat dt { color: var(--text); }
+.tf-feat dd { margin: 0; color: var(--muted); }
+.tf-feat kbd { font: 500 12px var(--font, inherit); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; background: #fff; color: var(--muted); }
+.tf-touch-inline { display: inline; } .tf-fine-inline, .tf-fine-row { display: none; }
+.tf.is-fine .tf-touch-inline { display: none; } .tf.is-fine .tf-fine-inline { display: inline; } .tf.is-fine .tf-fine-row { display: block; }
+@media (max-width: 520px) { .tf-feat dl { grid-template-columns: 1fr; gap: 2px; } .tf-feat dd { margin-bottom: 10px; } }
 
 /* ── Panel (bottom left) ─────────────────────────────────────────────── */
 .tf-panel {
@@ -91,16 +106,18 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
 .tf-count-num { font-size: 34px; font-weight: 300; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .tf-count-of { font-size: 14px; color: var(--muted); }
 .tf-info {
+  /* The standard "info" icon (Lucide, MIT): a ring with the letter drawn centred in it */
   margin-left: auto; align-self: center;
-  width: 22px; height: 22px; border-radius: 999px; padding: 0;
-  border: 1px solid var(--line); background: transparent;
-  font-size: 11px; color: var(--muted); cursor: pointer;
+  width: 20px; height: 20px; border-radius: 999px; padding: 0; border: 0; background: transparent;
+  color: var(--ink-soft); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
-  transition: color var(--fast) ease, border-color var(--fast) ease;
+  transition: color var(--fast) ease, background var(--fast) ease;
   position: relative;
 }
-.tf-info::after { content: ''; position: absolute; inset: -11px; } /* 44 px touch target */
-.tf-info:hover, .tf-info[aria-expanded='true'] { color: var(--text); border-color: var(--faint); }
+.tf-info svg { width: 18px; height: 18px; display: block; }
+.tf .tf-info svg circle, .tf .tf-info svg path { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.tf-info::after { content: ''; position: absolute; inset: -12px; } /* 44 px touch target */
+.tf-info:hover, .tf-info[aria-expanded='true'] { color: var(--text); background: rgba(255, 255, 255, 0.55); }
 .tf-count-label { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .tf-pop {
   margin: 10px 0 2px; padding: 10px 12px; border-radius: 12px;
@@ -223,7 +240,7 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
 .tf-facts dt { color: var(--muted); padding-right: 18px; display: flex; align-items: center; gap: 6px; }
 .tf-facts dd { text-align: right; font-variant-numeric: tabular-nums; }
 .tf-facts .tf-na { color: var(--faint); }
-.tf-facts .tf-info { margin-left: 0; width: 18px; height: 18px; font-size: 10px; }
+.tf-facts .tf-info { margin-left: 2px; vertical-align: -5px; }
 .tf-facts .tf-pop { grid-column: 1 / -1; margin: 0 0 10px; }
 .tf-source { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 

@@ -339,9 +339,20 @@ $('tf-close').addEventListener('click', () => go(''));
 diaryBtn.addEventListener('click', () => go(location.hash.startsWith('#diary') ? '' : '#diary'));
 backBtn.addEventListener('click', () => history.back());
 
+// Features overlay: opened from the footer, closed with Esc, the close button, or a click outside the card
+const feat = $('tf-feat'), featOpen = $('tf-feat-open');
+const setFeat = (open: boolean) => {
+  feat.hidden = !open; featOpen.setAttribute('aria-expanded', String(open));
+  if (open) $('tf-feat-close').focus(); else featOpen.focus({ preventScroll: true });
+};
+featOpen.addEventListener('click', () => setFeat(true));
+$('tf-feat-close').addEventListener('click', () => setFeat(false));
+feat.addEventListener('click', (e) => { if (e.target === feat) setFeat(false); });
+
 addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (measure.pending || measure.done) clearMeasure();
+  if (!feat.hidden) setFeat(false);
+  else if (measure.pending || measure.done) clearMeasure();
   else if (drawerOpen()) go('');
 });
 
@@ -446,7 +457,7 @@ const placeChip = (c: string) => `<li><button class="tf-place" type="button" dat
 
 function factsBlock(code: string) {
   const f = formatFacts(unpackFacts(data.facts[code], data.sources), data.ref[code]?.cap);
-  const rows = f.rows.map((r) => `<dt>${r.label}${r.info ? ` <button class="tf-info" type="button" aria-expanded="false" aria-controls="tf-hdi-pop" aria-label="About the Human Development Index">i</button>` : ''}</dt><dd>${r.value ?? '<span class="tf-na">Not available</span>'}</dd>${r.info ? `<div id="tf-hdi-pop" class="tf-pop" hidden>${r.info}</div>` : ''}`).join('');
+  const rows = f.rows.map((r) => `<dt>${r.label}${r.info ? ` <button class="tf-info" type="button" aria-expanded="false" aria-controls="tf-hdi-pop" aria-label="About the Human Development Index"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>` : ''}</dt><dd>${r.value ?? '<span class="tf-na">Not available</span>'}</dd>${r.info ? `<div id="tf-hdi-pop" class="tf-pop" hidden>${r.info}</div>` : ''}`).join('');
   return `<section aria-label="Country facts"><h2 class="tf-section-label">Country facts</h2><dl class="tf-facts">${rows}</dl>${f.source ? `<p class="tf-source">${f.source}</p>` : ''}</section>`;
 }
 

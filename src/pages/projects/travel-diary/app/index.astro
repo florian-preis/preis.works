@@ -45,7 +45,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
     <div class="tf-count">
       <span class="tf-count-num">{data.count}</span>
       <span class="tf-count-of">/ {data.total}</span>
-      <button class="tf-info" type="button" aria-expanded="false" aria-controls="tf-count-pop" aria-label="How the countries are counted">i</button>
+      <button class="tf-info" type="button" aria-expanded="false" aria-controls="tf-count-pop" aria-label="How the countries are counted"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button>
     </div>
     <p class="tf-count-label">countries visited</p>
     <div id="tf-count-pop" class="tf-pop" role="note" hidden>
@@ -63,10 +63,9 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
         </button>
       </div>
     </div>
-    <p class="tf-hint tf-fine-only">Right-click two places to measure the distance</p>
   </section>
 
-  <footer class="tf-foot"><span>© 2026 Florian Preis</span><nav aria-label="Links"><a href="/projects/travel-diary/">About</a><a href="/">preis.works</a></nav></footer>
+  <footer class="tf-foot"><span>© 2026 Florian Preis</span><nav aria-label="Links"><button type="button" id="tf-feat-open" aria-haspopup="dialog" aria-controls="tf-feat">Features</button><a href="/projects/travel-diary/">About</a><a href="/">preis.works</a></nav></footer>
 
   <aside id="tf-drawer" class="tf-drawer" aria-hidden="true">
     <div class="tf-drawer-card" role="dialog" aria-labelledby="tf-d-title">
@@ -82,6 +81,28 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
       <div class="tf-d-body" id="tf-d-body"></div>
     </div>
   </aside>
+
+  <!-- Features: everything the app can do, in one place (like cogniflow's shortcuts) -->
+  <div id="tf-feat" class="tf-feat" role="dialog" aria-modal="true" aria-labelledby="tf-feat-title" hidden>
+    <div class="tf-feat-card">
+      <div class="tf-feat-head">
+        <h2 id="tf-feat-title">Features</h2>
+        <button class="tf-icon-btn" type="button" id="tf-feat-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <dl>
+        <dt><span class="tf-fine-inline">Click</span><span class="tf-touch-inline">Tap</span> a country</dt><dd>Key facts and the stories from my trips there</dd>
+        <dt class="tf-fine-row">Hover over a country</dt><dd class="tf-fine-row">Its name, and the fog thins</dd>
+        <dt class="tf-fine-row">Right-click two places</dt><dd class="tf-fine-row">The air distance between them</dd>
+        <dt>Diary</dt><dd>All trips by year, and a list of every country visited</dd>
+        <dt><span class="tf-fine-inline">Scroll, or + and −</span><span class="tf-touch-inline">Pinch and drag</span></dt><dd>Zoom and move around the map</dd>
+        <dt>The "i" buttons</dt><dd>How countries are counted, and what the Human Development Index is</dd>
+        <dt>Copy the address</dt><dd>Every country and every trip has its own link to share</dd>
+        <dt class="tf-fine-row"><kbd>Esc</kbd></dt><dd class="tf-fine-row">Close the drawer, or clear a distance</dd>
+      </dl>
+    </div>
+  </div>
 
   <div id="map" class="tf-map" aria-label="World map. Countries Florian has visited are clear, the rest sit under fog."></div>
   <div id="tf-tip" class="tf-label" role="tooltip" aria-hidden="true"></div>
