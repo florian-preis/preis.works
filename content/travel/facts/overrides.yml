@@ -4,12 +4,24 @@
 #
 # Fields: population, gdp, gdpPerCapita (with currency), hdi, hdiRank (with "of").
 #
-# Taiwan and Vatican City: carried over from the old app's 2024 dataset (GDP in euros).
-# Replace with current figures when convenient, e.g. from Taiwan's statistics office (DGBAS).
+# Updated 8 November 2026. Review once a year, or when the monthly report flags them.
+#
+# Taiwan
+# - Population: Ministry of the Interior, household registration, end of December 2025
+# - GDP per person: DGBAS (Taiwan's statistics office), 2025 estimate of 30 January 2026
+# - GDP: DGBAS GDP per person x mid-year 2025 population (about 23.35 million), rounded.
+#   DGBAS publishes the total in NT$ (NT$28,715 billion, revised 29 May 2026)
+# - Human development: DGBAS's own calculation with the UNDP method, for 2023 (the same
+#   year as UNDP's current ranking). No rank, because UNDP doesn't rank Taiwan
+#
+# Vatican City
+# - Population: residents (citizens and non-citizens) on 31 December 2024, vaticanstate.va
+# - No GDP or Human Development Index is published
 
 TW:
-  population: { value: 23516442, year: 2024, source: Legacy dataset }
-  gdpPerCapita: { value: 35513, year: 2024, currency: EUR, source: Legacy dataset }
-  gdp: { value: 760200000000, year: 2024, currency: EUR, source: Legacy dataset }
+  population: { value: 23299132, year: 2025, source: Ministry of the Interior }
+  gdpPerCapita: { value: 39477, year: 2025, currency: USD, source: DGBAS }
+  gdp: { value: 922000000000, year: 2025, currency: USD, source: DGBAS }
+  hdi: { value: 0.934, year: 2023, source: DGBAS }
 VA:
-  population: { value: 800, year: 2024, source: Legacy dataset }
+  population: { value: 882, year: 2024, source: Vatican City State }
