@@ -9,9 +9,13 @@
   --card: rgba(240, 240, 237, 0.68);
   --card-border: rgba(255, 255, 255, 0.65);
   --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --inset: clamp(12px, 2vw, 24px);
+  /* One inset for everything in the corners: the title, the panel, the drawer, and the footer all sit
+     this far from their edges. The footer takes a line of its own along the bottom, and the panel and
+     drawer stop the same distance above it */
+  --inset: 18px;
   --drawer-w: min(440px, calc(100vw - 2 * var(--inset)));
-  --foot-h: 22px;
+  --foot-h: 16px;
+  --bottom: calc(var(--inset) + var(--foot-h) + var(--inset) + env(safe-area-inset-bottom));
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -20,6 +24,9 @@
   background: var(--water);
   overscroll-behavior: none;
 }
+
+/* The site reserves room for a scrollbar on every page; the map never scrolls, so it gets the full width */
+html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
 
 /* ── Map ─────────────────────────────────────────────────────────────── */
 .tf-map { position: absolute; inset: 0; }
@@ -44,7 +51,8 @@
 /* ── Brand ───────────────────────────────────────────────────────────── */
 .tf-brand {
   position: absolute; z-index: 10;
-  top: calc(var(--inset) + env(safe-area-inset-top)); left: calc(var(--inset) + 4px);
+  /* The box is nudged so the handwriting itself, not its line box, sits one inset from the top and left */
+  top: calc(var(--inset) + env(safe-area-inset-top) - 0.11em); left: calc(var(--inset) - 0.13em);
   font-size: 30px; color: var(--text);
   padding: 4px 2px; border-radius: 6px;
   transition: opacity var(--fast) ease;
@@ -63,9 +71,10 @@
 /* ── Footer: the same quiet line in every preis.works app ───────────── */
 .tf-foot {
   position: absolute; z-index: 10;
-  left: calc(var(--inset) + 4px); right: calc(var(--inset) + 4px); bottom: calc(6px + env(safe-area-inset-bottom));
+  left: var(--inset); right: var(--inset); bottom: calc(var(--inset) + env(safe-area-inset-bottom));
+  height: var(--foot-h);
   display: flex; justify-content: space-between; align-items: center; gap: 16px;
-  font-size: 11px; line-height: 1.4; color: var(--ink-soft); pointer-events: none;
+  font-size: 11px; line-height: var(--foot-h); color: var(--ink-soft); pointer-events: none;
 }
 .tf-foot nav { display: flex; gap: 16px; }
 .tf-foot a { color: inherit; pointer-events: auto; transition: color var(--fast) ease; }
@@ -74,7 +83,7 @@
 /* ── Panel (bottom left) ─────────────────────────────────────────────── */
 .tf-panel {
   position: absolute; z-index: 10;
-  left: var(--inset); bottom: calc(var(--inset) + var(--foot-h) + env(safe-area-inset-bottom));
+  left: var(--inset); bottom: var(--bottom);
   width: 232px; padding: 16px 16px 14px 18px;
   border-radius: 18px;
 }
@@ -144,7 +153,7 @@
 /* ── Drawer ──────────────────────────────────────────────────────────── */
 .tf-drawer {
   position: absolute; z-index: 20;
-  top: var(--inset); right: var(--inset); bottom: var(--inset);
+  top: var(--inset); right: var(--inset); bottom: var(--bottom);
   width: var(--drawer-w);
   pointer-events: none;
 }
