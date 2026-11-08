@@ -1,14 +1,29 @@
 ---
 import { getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { photos } from '../data/photos';
+
+// Index view: the country becomes a small flag at the start of the row (the same flat flags as in
+// gowiththeflo), and the row keeps the place within that country. The country is read from the
+// last part of the caption ("Nyhavn, Copenhagen, Denmark") and matched to the names gowiththeflo uses.
+const flagUrls = import.meta.glob<string>('../../node_modules/flag-icons/flags/4x3/*.svg', { query: '?url&no-inline', import: 'default', eager: true });
+const codeByName = new Map((await getCollection('countryReference')).map((c) => [c.data.name.toLowerCase(), c.id]));
+const flagFor = (caption: string) => {
+  const parts = caption.split(',').map((x) => x.trim());
+  if (parts.length < 2) return null;
+  const country = parts[parts.length - 1];
+  const code = codeByName.get(country.toLowerCase());
+  const url = code ? flagUrls[`../../node_modules/flag-icons/flags/4x3/${code.toLowerCase()}.svg`] : undefined;
+  return url ? { country, url, place: parts.slice(0, -1).join(', ') } : null;
+};
 
 // Two sizes per photo, generated at build time: a small grid thumbnail and a large lightbox image
 const items = await Promise.all(
   photos.map(async (p) => {
     const thumb = await getImage({ src: p.image, width: 600, format: 'webp', quality: 72 });
     const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
-    return { caption: p.caption, date: p.date, thumb: thumb.src, view: view.src, w: p.image.width, h: p.image.height };
+    return { caption: p.caption, date: p.date, thumb: thumb.src, view: view.src, w: p.image.width, h: p.image.height, flag: flagFor(p.caption) };
   })
 );
 ---
@@ -39,7 +54,9 @@ const items = await Promise.all(
     <div class="index wrap" id="index" hidden>
       {items.map((p, i) => (
         <a class="index-row" href={p.view} data-i={i}>
-          <span class="name">{p.caption}</span>
+          {p.flag
+            ? <span class="name"><img class="flag" src={p.flag.url} alt={p.flag.country} width="20" height="15" loading="lazy">{p.flag.place}</span>
+            : <span class="name">{p.caption}</span>}
           <span class="meta">{p.date}</span>
         </a>
       ))}
@@ -103,6 +120,8 @@ const items = await Promise.all(
   @media (max-width: 700px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
   .index { padding-top: 8px; }
+  .index .name { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .flag { width: 20px; height: auto; aspect-ratio: 4 / 3; flex: none; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
 
   .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
   .lightbox[hidden] { display: none; }

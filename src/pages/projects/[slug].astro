@@ -18,7 +18,7 @@ const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length 
 const views = await Promise.all(
   p.screens.map(async (sc) => {
     const v = await getImage({ src: sc.src, width: 1900, format: 'webp', quality: 85 });
-    return { src: v.src, alt: sc.alt, w: sc.src.width, h: sc.src.height };
+    return { src: v.src, alt: sc.alt, caption: sc.caption ?? '', w: sc.src.width, h: sc.src.height };
   })
 );
 ---
@@ -95,7 +95,7 @@ const views = await Promise.all(
         </section>
       )}
 
-      <!-- Lightbox: the same layout as on the Photography page, without a caption -->
+      <!-- Lightbox: the same layout as on the Photography page. The caption sits where the place name does there, with the counter beside it -->
       {views.length > 0 && (
         <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screen viewer" hidden>
           <button class="lb-close" type="button" aria-label="Close">
@@ -105,7 +105,13 @@ const views = await Promise.all(
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <figure class="lb-figure">
-            <img class="lb-img" alt="">
+            <div class="lb-frame">
+              <img class="lb-img" alt="">
+              <figcaption class="lb-caption">
+                <span class="lb-text"></span>
+                <span class="lb-count"></span>
+              </figcaption>
+            </div>
           </figure>
           <button class="lb-nav lb-next" type="button" aria-label="Next screen">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
@@ -171,10 +177,12 @@ const views = await Promise.all(
   .screen::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 43, 41, 0.1); pointer-events: none; }
   @media (max-width: 1100px) { .screens { --per: 1.5; } }
 
-  /* Lightbox, as on the Photography page */
+  /* Lightbox, exactly as on the Photography page */
   .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
   .lightbox[hidden] { display: none; }
   .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
+  /* The frame shrinks to the screen, so the caption lines up with its edges */
+  .lb-frame { display: flex; flex-direction: column; gap: 14px; width: fit-content; }
   .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
   @media (orientation: portrait) {
     .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
@@ -182,6 +190,9 @@ const views = await Promise.all(
   .lb-img.loading { filter: blur(12px); }
   /* A hairline edge, so light screens stand apart from the paper */
   .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
+  .lb-caption { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; font-size: 12px; line-height: 1.5; width: 0; min-width: 100%; }
+  .lb-text { max-width: 760px; }
+  .lb-count { color: var(--muted); white-space: nowrap; }
   .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .lb-close:hover, .lb-nav:hover { color: var(--text); }
   .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
@@ -237,8 +248,10 @@ const views = await Promise.all(
   // Lightbox: click a screen to see it large; arrows, keys, or a swipe move between screens
   const lb = document.getElementById('lightbox');
   if (lb) {
-    const data: { src: string; alt: string; w: number; h: number }[] = JSON.parse(document.getElementById('screen-data')!.textContent!);
+    const data: { src: string; alt: string; caption: string; w: number; h: number }[] = JSON.parse(document.getElementById('screen-data')!.textContent!);
     const img = lb.querySelector<HTMLImageElement>('.lb-img')!;
+    const text = lb.querySelector<HTMLElement>('.lb-text')!;
+    const count = lb.querySelector<HTMLElement>('.lb-count')!;
     const buttons = [...document.querySelectorAll<HTMLButtonElement>('.screen-open')];
     const cache = new Set<string>();
     let current = 0;
@@ -251,6 +264,8 @@ const views = await Promise.all(
     const render = () => {
       const s = data[current];
       img.alt = s.alt; img.width = s.w; img.height = s.h;
+      text.textContent = s.caption;
+      count.textContent = `${current + 1} / ${data.length}`;
       // The small screen from the page stands in, slightly blurred, while the large one loads
       if (!cache.has(s.src)) {
         const thumb = buttons[current]?.querySelector('img');

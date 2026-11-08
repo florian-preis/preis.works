@@ -13,14 +13,19 @@ focus: 50% 50%
 screens:
   - src: ./images/zine-maker/screen-1.jpg
     alt: Arranging photos across the pages
+    caption: 'Add your photos once and drag them onto any page, or fill the empty pages in one click. Choose a fold zine, a quarter-fold zine, or a stapled booklet, on A4 or A3.'
   - src: ./images/zine-maker/screen-2.jpg
     alt: Designing the cover
+    caption: 'Design the cover with a colour gradient, shapes, and grain. Shuffle for a new composition, or start from one of four colour pairs.'
   - src: ./images/zine-maker/screen-3.jpg
     alt: Editing a spread
+    caption: 'Edit a spread up close: one photo or two stacked per page, filled or framed, with an optional caption in Inter, Space Mono, or my handwriting.'
   - src: ./images/zine-maker/screen-4.jpg
     alt: Print preview of the sheet
+    caption: 'The print preview shows the sheet exactly as it comes out of your printer, with every page already turned and placed for folding.'
   - src: ./images/zine-maker/screen-5.jpg
     alt: Folding instructions
+    caption: 'A short guide walks you through folding and cutting, so one sheet of A4 becomes an eight-page zine in a couple of minutes.'
 ---
 
 I had seen tools like this shared online, but none quite matched what I wanted in design or features, so I built my own. I take a lot of photos on my trips and wanted a way to share them that goes beyond posting online or sending them on WhatsApp.

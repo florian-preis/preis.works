@@ -13,16 +13,22 @@ focus: 50% 50%
 screens:
   - src: ./images/travel-diary/screen-1.jpg
     alt: The world map, with unvisited countries under fog
+    caption: 'Every country I have visited, with the rest of the world under fog. On a computer, the cursor becomes a small plane.'
   - src: ./images/travel-diary/screen-2.jpg
     alt: The Netherlands open, with key facts and a trip story
+    caption: 'Click a country for key facts, such as its capital, population, and GDP, and the stories from my trips there.'
   - src: ./images/travel-diary/screen-3.jpg
     alt: Measuring the distance between two places
+    caption: 'On a computer, right-click two places to see the air distance between them, drawn as an arc.'
   - src: ./images/travel-diary/screen-4.jpg
     alt: The diary, with all trips by year
+    caption: 'The diary lists every trip by year, and each trip has its own link to share.'
   - src: ./images/travel-diary/screen-5.jpg
     alt: The list of visited countries
+    caption: 'The countries tab lists every country I have visited, with the year of its earliest diary entry: when I first "unlocked" it.'
   - src: ./images/travel-diary/screen-6.jpg
     alt: The features overview
+    caption: 'Features gathers everything the map can do in one place, from measuring distances to sharing a link.'
 ---
 
 The name is a play on the nickname I have used on Instagram for years. I wanted an interactive way to revisit all the places I have been, rather than keeping a diary or relying on someone else's app, and to host it on my own site so friends and family can follow along.

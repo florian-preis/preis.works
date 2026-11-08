@@ -518,7 +518,8 @@ function renderDiary(tab: 'trips' | 'countries') {
     const list = data.visited.slice().sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'en'));
     dBody.innerHTML = `<div class="tf-rows" style="margin-top:14px">${list.map((c) => {
       const ts = tripsByCountry.get(c) ?? [];
-      const years = [...new Set(ts.map((t) => t.start.slice(0, 4)))].sort().join(', ');
+      // The year of the earliest diary entry: when the country was first "unlocked"
+      const years = ts.map((t) => t.start.slice(0, 4)).sort()[0] ?? '';
       return `<a class="tf-row" href="#${c.toLowerCase()}"><span class="tf-row-main"><span class="tf-row-name">${flagImg(c, 'tf-flag')}${esc(nameOf(c))}</span></span><span class="tf-row-meta">${years}</span></a>`;
     }).join('')}</div>`;
   }

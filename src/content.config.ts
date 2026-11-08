@@ -16,8 +16,9 @@ const projects = defineCollection({
       image: image().optional(),
       // Which part of the picture stays in view when it is cropped, as CSS object-position (x% y%)
       focus: z.string().default('50% 50%'),
-      // Screens shown at the bottom of the project page, in order
-      screens: z.array(z.object({ src: image(), alt: z.string() })).default([]),
+      // Screens shown at the bottom of the project page, in order. alt: a short description for screen readers;
+      // caption: the line under the screen in the lightbox (up to two lines on a computer)
+      screens: z.array(z.object({ src: image(), alt: z.string(), caption: z.string().optional() })).default([]),
       draft: z.boolean().default(false),
     }),
 });

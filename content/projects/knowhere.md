@@ -13,16 +13,22 @@ focus: 50% 25%
 screens:
   - src: ./images/knowhere/screen-1.jpg
     alt: Home, with the daily challenge and free play
+    caption: 'Home: today''s daily challenge, the same ten questions for everyone, and free play in flags, capitals, and locations, each with your progress at a glance.'
   - src: ./images/knowhere/screen-2.jpg
     alt: A flag question
+    caption: 'Which country is this? Wrong answers are picked to be tricky, such as neighbours and flags that look alike.'
   - src: ./images/knowhere/screen-3.jpg
     alt: A capital question
+    caption: 'Capitals with more than one official answer accept all of them, and once you know a country, questions also run the other way round.'
   - src: ./images/knowhere/screen-4.jpg
     alt: A map question
+    caption: 'Locations: zoom in on the map and name the highlighted country. Countries you keep missing come back until they stick.'
   - src: ./images/knowhere/screen-5.jpg
     alt: The progress page, with a world map shaded by how well you know each country
+    caption: 'Your progress: a world map shaded by how well you know each country, with progress by region, recent rounds, and your trickiest countries.'
   - src: ./images/knowhere/screen-6.jpg
     alt: Settings for regions, difficulty, and answer style
+    caption: 'Settings: choose regions, difficulty, and multiple-choice or typed answers, and switch reverse questions and night mode on or off.'
 ---
 
 Geography quizzes have been part of my life for as long as I can remember, from guessing number plates on family holidays with my dad and brother to trivia apps on my phone. Building my own meant I could keep just the game modes I enjoy most.

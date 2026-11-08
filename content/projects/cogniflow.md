@@ -14,14 +14,19 @@ focus: 50% 50%
 screens:
   - src: ./images/cogniflow/screen-1.jpg
     alt: Pasting a new text to read
+    caption: 'Paste any article, drop in a TXT, Word, or PDF file, or send a web page straight from your browser with the Read in cogniflow bookmark.'
   - src: ./images/cogniflow/screen-2.jpg
     alt: Paused mid-article, with the surrounding paragraphs shown
+    caption: 'When you pause, the surrounding paragraphs appear so you never lose your place, and you can click any word to jump there. Speed, font, and bold word starts sit underneath.'
   - src: ./images/cogniflow/screen-3.jpg
     alt: Reading, one word at a time with the focus letter in coral
+    caption: 'While you read, everything else fades away. Each word lines up on the letter your eye should land on, marked in coral, so your eyes can stay still.'
   - src: ./images/cogniflow/screen-4.jpg
     alt: The library of saved texts with progress and time left
+    caption: 'Every text is saved automatically with your place in it. The library shows how far you got and how much time is left.'
   - src: ./images/cogniflow/screen-5.jpg
     alt: Keyboard shortcuts
+    caption: 'Keyboard shortcuts for everything: play and pause, skip by sentence or paragraph, change the speed, and switch fonts.'
 ---
 
 I noticed my attention drifting on long news and scientific articles, even ones I was really interested in. Claude Code had just come out, so I made this my first attempt at seeing what it could do, borrowing ideas from the speed readers I had come across over the years.
