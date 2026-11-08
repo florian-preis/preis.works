@@ -1,7 +1,8 @@
 ---
 // The navigation pill. Sticky on every page.
 // mode="sticky": links sit on the page at the top; the glass pill fades in once you scroll.
-// mode="veil" (Home): hidden over the veil; the pill arrives as you scroll past it and leaves when you return (set in index.astro).
+// mode="veil" (Home): hidden over the veil; the pill arrives as you scroll past it and leaves quickly
+// once you head back to the veil (both set in index.astro).
 import { nav } from '../data/site';
 interface Props { active: string; mode: 'sticky' | 'veil'; }
 const { active, mode } = Astro.props;
@@ -49,6 +50,8 @@ const { active, mode } = Astro.props;
   .nav-wrap[data-mode='veil'] { opacity: 0; transform: translateY(-10px); visibility: hidden; transition: opacity var(--base) var(--ease), transform var(--base) var(--ease), visibility 0s linear var(--base); }
   .nav-wrap[data-mode='veil'].arrived { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
   .nav-wrap[data-mode='veil'] .nav-bg { opacity: 1; }
+  /* Leaving quickly when you scroll back up to the veil (set in index.astro) */
+  .nav-wrap[data-mode='veil'].leave-fast:not(.arrived) { transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0s linear 0.15s; }
 
   .nav-toggle { display: none; width: 44px; height: 44px; margin-right: -14px; border: 0; background: transparent; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 6px; }
   /* Bars 2px thick, 6px apart: both land on whole pixels, so they render identically on every screen */

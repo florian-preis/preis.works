@@ -137,20 +137,22 @@ const hold = veil.secondsPerPhoto;
       mask: url('/brand/name-smiley-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
     }
   }
+  /* On the way back up: once the veil is sure to win, the name clears quickly instead of with the scroll */
+  .veil.homing .clear { opacity: 1; transition: opacity 0.3s ease-out; }
   .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
   .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
   @media (prefers-reduced-motion: reduce) { .drift.go { animation: none; } .slide { transition: none; } }
-  /* Nudge: if nobody scrolls, the veil lifts a little and settles back with a small second bounce,
-     showing a strip of the page underneath. Started from the script below */
-  .veil { --lift: 22px; }
-  .veil.nudge { animation: veilNudge 1.5s both; }
-  @keyframes veilNudge {
-    0%   { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
-    30%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
-    55%  { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
-    70%  { transform: translateY(calc(-0.3 * var(--lift))); animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
-    85%, 100% { transform: translateY(0); }
+  /* Nudge ("peek"): if nobody scrolls, the veil lifts a little in one smooth motion, pauses, and slides
+     back, showing a strip of the page underneath. Started from the script below. The veil keeps its
+     own compositing layer, so the movement never has to repaint the fog, mask, or condensation */
+  .veil { --lift: 22px; will-change: transform; }
+  .veil.nudge { animation: veilPeek 1.8s both; }
+  @keyframes veilPeek {
+    0%   { transform: translateY(0); animation-timing-function: cubic-bezier(0.25, 0.7, 0.3, 1); }
+    38%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: linear; }
+    50%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1); }
+    100% { transform: translateY(0); }
   }
   @media (orientation: portrait) { .veil { --lift: 30px; } }
 
@@ -180,26 +182,55 @@ const hold = veil.secondsPerPhoto;
 </style>
 
 <script>
-  // Fog returns over the name within the first quarter of the veil (at most 240 px of scrolling),
-  // so it clears quickly on tall phone screens too. The menu arrives once the name is mostly
-  // fogged and leaves again when you scroll back up to the veil.
+  // Scrolling down from the veil: the fog returns over the name within the first quarter of the veil
+  // (at most 240 px), and the menu arrives once the name is mostly fogged.
+  // Scrolling back up from the profile: the menu stays while you drag into the veil, and as soon as
+  // the veil is sure to snap into place ("homing"), the menu leaves quickly and the name clears fast,
+  // so both are done before the veil settles. Browsers that report the coming snap target
+  // (scrollsnapchanging) know this exactly; the others go by direction and the halfway point.
   const veil = document.getElementById('veil')!;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
   const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
+  const snapEvents = 'onscrollsnapchanging' in window;
   let ticking = false;
-  const update = () => {
-    ticking = false;
+  let homing = false;
+  let from: 'veil' | 'profile' = 'veil';
+  let lastY = window.scrollY;
+  const render = () => {
     const p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
     veil.style.setProperty('--p', p.toFixed(3));
-    nav?.classList.toggle('arrived', p >= 0.6);
+    nav?.classList.toggle('arrived', p >= 0.6 && !homing);
   };
+  const setHoming = (on: boolean) => {
+    if (on === homing) return;
+    homing = on;
+    veil.classList.toggle('homing', on);
+    nav?.classList.toggle('leave-fast', on);
+    render();
+  };
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY;
+    const up = y < lastY;
+    lastY = y;
+    if (y <= 1) { from = 'veil'; setHoming(false); }
+    else if (y >= veil.offsetHeight - 1) { from = 'profile'; setHoming(false); }
+    else if (!snapEvents && from === 'profile') setHoming(up ? y < veil.offsetHeight / 2 || homing : false);
+    render();
+  };
+  if (snapEvents) {
+    document.addEventListener('scrollsnapchanging', (e) => {
+      const target = (e as Event & { snapTargetBlock?: Element | null }).snapTargetBlock;
+      if (from === 'profile') setHoming(target === veil);
+    });
+  }
   window.addEventListener('scroll', () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
   update();
 
   // Nudge: if nobody has scrolled, touched, clicked, or pressed a key after two photos have gone by,
-  // the veil gives a small lift (in the middle of the third photo, not during a change). It repeats
+  // the veil peeks up a little (in the middle of the third photo, not during a change). It repeats
   // after every two more photos, three times at most, and stops for good at the first reaction.
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const hold = JSON.parse(document.getElementById('veil-pool')!.textContent!).hold as number;
