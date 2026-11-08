@@ -370,7 +370,7 @@ function drawQuestionMap(box, id) {
       g.append('circle').attr('class', 'ring').attr('cx', cx).attr('cy', cy).attr('r', Math.max(13, Math.min(size, 30) / 2 + 7) / k);
       if (!fc.features.length || c.area < 5000) g.append('circle').attr('class', 'ringdot').attr('cx', cx).attr('cy', cy).attr('r', 2.4 / k);
     }
-    const z = KV.zoom().scaleExtent([1, 40]).on('zoom', e => g.attr('transform', e.transform));
+    const z = KV.zoom().scaleExtent([1, 40]).on('zoom', e => { g.attr('transform', e.transform); g.selectAll('circle.sd').attr('r', 2.6 / Math.sqrt(e.transform.k)); });
     svg.call(z).on('dblclick.zoom', null);
     const T = KV.zoomIdentity.translate(W / 2 - k * cx, H / 2 - k * cy).scale(k);
     const go = () => svg.transition().duration(RM ? 0 : 1100).ease(KV.easeCubicInOut).call(z.transform, T);
@@ -643,7 +643,7 @@ function showDailyEnd(res) {
   showScreen('quiz');
   const score = st.marks.filter(Boolean).length;
   $('quiz-body').innerHTML = `<div class="rcs">
-    <div class="eyebrow">Daily · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+    <div class="eyebrow">Daily challenge · ${new Date().toLocaleDateString('en-GB', { weekday: 'long' })}, ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</div>
     <div class="rc-big">${score}<small>/10</small></div>
     <div class="dots" style="justify-content:center">${st.marks.map(m => `<span class="dot ${m ? 'ok' : 'no'}"></span>`).join('')}</div>
     <div class="rc-sub">${fmt(st.secs)} · daily streak ${dailyStreak()}</div>
@@ -668,14 +668,14 @@ function renderDailyCard() {
   if (st && st.done) {
     const end = new Date(); end.setHours(24, 0, 0, 0);
     const mins = Math.max(1, Math.round((end - Date.now()) / 6e4));
-    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily · ${date}</div><div class="daily-title">${st.marks.filter(Boolean).length}/10 in ${fmt(st.secs)}</div><div class="daily-sub">Next daily challenge in ${Math.floor(mins / 60)}h ${mins % 60}m</div></div>
+    el.innerHTML = `<div class="daily-body"><div class="eyebrow">${date}</div><div class="daily-title">${st.marks.filter(Boolean).length}/10 in ${fmt(st.secs)}</div><div class="daily-sub">Next daily challenge in ${Math.floor(mins / 60)}h ${mins % 60}m</div></div>
       <div class="daily-side"><button class="btn-play" id="daily-share">${ICON.share}Share</button>${stats}</div>`;
     $('daily-share').addEventListener('click', shareDaily);
     el.onclick = e => { if (!e.target.closest('button')) showDailyEnd(); };
     el.style.cursor = 'pointer';
   } else {
     const answered = st && st.marks ? st.marks.filter(m => m === 0 || m === 1).length : 0;
-    el.innerHTML = `<div class="daily-body"><div class="eyebrow">Daily · ${date}</div><div class="daily-title">Daily challenge</div><div class="daily-sub">${answered ? `${answered} of 10 answered, pick up where you left off` : '10 mixed questions, the same for everyone, one attempt'}</div></div>
+    el.innerHTML = `<div class="daily-body"><div class="eyebrow">${date}</div><div class="daily-title">Daily challenge</div><div class="daily-sub">${answered ? `${answered} of 10 answered, pick up where you left off` : '10 mixed questions, the same for everyone, one attempt'}</div></div>
       <div class="daily-side"><button class="btn-play" id="daily-play">${st ? 'Resume' : 'Play'}</button>${stats}</div>`;
     $('daily-play').addEventListener('click', () => startSession('daily'));
     el.onclick = null; el.style.cursor = '';

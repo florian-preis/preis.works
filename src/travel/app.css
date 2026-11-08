@@ -92,7 +92,7 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
 .tf-feat dd { margin: 0; color: var(--muted); }
 .tf-feat kbd { font: 500 12px var(--font, inherit); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; background: #fff; color: var(--muted); }
 .tf-touch-inline { display: inline; } .tf-fine-inline, .tf-fine-row { display: none; }
-.tf.is-fine .tf-touch-inline { display: none; } .tf.is-fine .tf-fine-inline { display: inline; } .tf.is-fine .tf-fine-row { display: block; }
+.tf.is-fine .tf-touch-inline, .tf.is-fine .tf-touch-row { display: none; } .tf.is-fine .tf-fine-inline { display: inline; } .tf.is-fine .tf-fine-row { display: block; }
 @media (max-width: 520px) { .tf-feat dl { grid-template-columns: 1fr; gap: 2px; } .tf-feat dd { margin-bottom: 10px; } }
 
 /* ── Panel (bottom left) ─────────────────────────────────────────────── */
