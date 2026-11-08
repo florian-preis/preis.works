@@ -138,7 +138,19 @@ const hold = veil.secondsPerPhoto;
     }
   }
   /* On the way back up: once the veil is sure to win, the name clears quickly instead of with the scroll */
-  .veil.homing .clear { opacity: 1; transition: opacity 0.3s ease-out; }
+  /* Fogging as you scroll, smooth on every frame: browsers that can tie an animation to the scroll
+     position (Chrome, Edge, Safari 26 and later) run it off the main thread, straight from the finger.
+     The range matches the script: a quarter of the veil (whose height is the screen, at least 520 px),
+     at most 240 px. Other browsers use --p, set by the script */
+  @supports (animation-timeline: scroll()) {
+    /* Longhands on purpose: the build would otherwise merge them into one shorthand that browsers reject */
+    .clear { animation-name: veilFog; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: scroll(root block); animation-range: 0 min(max(25svh, 130px), 240px); }
+  }
+  @keyframes veilFog { from { opacity: 1; } to { opacity: 0; } }
+  /* On the way back up: once the veil is sure to win, the name clears quickly instead of with the scroll,
+     starting from wherever the fog is (--from, set by the script) */
+  .veil.homing .clear { animation: veilClear 0.3s ease-out both; animation-timeline: auto; }
+  @keyframes veilClear { from { opacity: var(--from, 0); } to { opacity: 1; } }
   .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
   .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
@@ -192,18 +204,22 @@ const hold = veil.secondsPerPhoto;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
   const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
   const snapEvents = 'onscrollsnapchanging' in window;
+  const scrollTimeline = CSS.supports('animation-timeline: scroll()');
+  let p = 0;
   let ticking = false;
   let homing = false;
   let from: 'veil' | 'profile' = 'veil';
   let lastY = window.scrollY;
   const render = () => {
-    const p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
-    veil.style.setProperty('--p', p.toFixed(3));
+    p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
+    // With scroll-linked CSS the fog needs no update from here, which keeps the main thread free
+    if (!scrollTimeline) veil.style.setProperty('--p', p.toFixed(3));
     nav?.classList.toggle('arrived', p >= 0.6 && !homing);
   };
   const setHoming = (on: boolean) => {
     if (on === homing) return;
     homing = on;
+    if (on) veil.style.setProperty('--from', (1 - p).toFixed(3));
     veil.classList.toggle('homing', on);
     nav?.classList.toggle('leave-fast', on);
     render();
