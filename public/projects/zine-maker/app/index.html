@@ -159,6 +159,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 .page .sheetwrap { position: relative; background: #fff; line-height: 0; outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .2s var(--ease); }
 .page canvas { width: 100%; display: block; }
 .page.ghost { visibility: hidden; }
+.page.poster { width: calc(var(--pw, 150px) * 2); }
 .page.sel .sheetwrap { outline-color: var(--text); }
 .page.over .sheetwrap { outline-color: var(--muted); outline-style: dashed; }
 .page figcaption { font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; padding: 0 2px; }
@@ -254,6 +255,10 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
           <button type="button" data-v="A3">A3</button>
         </div>
         <p class="hint" id="sizeHint"></p>
+      </div>
+      <div class="group" data-show="format=fold">
+        <label class="check"><input type="checkbox" id="in-poster" data-k="poster.on"> Secret poster on the back</label>
+        <p class="hint" data-show="poster.on=true">One photo fills the back of the sheet, revealed when the zine is unfolded. Needs printing on both sides. The cut runs through the middle of the poster.</p>
       </div>
       <div class="group" data-show="format=booklet">
         <div class="label"><label for="in-pages">Pages</label><output data-out="bookletPages"></output></div>
@@ -508,6 +513,7 @@ const PRESETS = [
 const LIGHT_INK = '#f7f5f0';
 const DARK_INK = '#2b2b29';
 const STORE_KEY = 'zine-maker-v3';
+const POSTER = -1;                   // page id of the secret poster on the back of the fold zine sheet
 
 /* ---------- state ---------- */
 const newPage = () => ({ layout: 'single', fit: 'auto', captionOn: false,
@@ -516,6 +522,7 @@ const newPage = () => ({ layout: 'single', fit: 'auto', captionOn: false,
 function defaultState() {
   return {
     v: 3, format: 'fold', paper: 'A4', bookletPages: 16, frame: 'medium', guides: true, pageNumbers: 'none',
+    poster: { on: false, photo: null },
     titleFont: 'inter', smallFont: 'inter', captionFont: 'inter',
     cover: {
       mode: 'gradient', style: 'any', seed: 54, blend: 'soft', size: 'medium', offX: 0, offY: 0,
@@ -558,6 +565,7 @@ function load() {
     const st = merge(defaultState(), s);
     st.pages = (Array.isArray(s.pages) ? s.pages : []).map(cleanPage);
     st.back.page = cleanPage(s.back && s.back.page);
+    st.poster.photo = null;
     return st;
   } catch (e) { return null; }
 }
@@ -584,6 +592,7 @@ const isBlankPage = n => isBooklet() && (n === 2 || n === count() - 1);
 const pageIndex = n => (n <= 1 || n >= count() || isBlankPage(n)) ? -1 : n - firstInner();
 const pageNo = i => i + firstInner();
 const backMode = () => (isBooklet() ? 'colophon' : state.back.mode);
+const posterOn = () => state.format === 'fold' && state.poster.on;
 const slotsOf = p => p.slots.slice(0, p.layout === 'stack' ? 2 : 1);
 const hasPhoto = p => slotsOf(p).some(s => s.photo && photos.has(s.photo));
 function syncPages() {
@@ -620,9 +629,12 @@ function pageSizeName() {
 // slot: [page, col, row, upsideDown]
 function impose() {
   const N = count();
-  if (state.format === 'fold') return [{ label: 'One sheet, single-sided', slots: [
-    [5, 0, 0, 1], [4, 1, 0, 1], [3, 2, 0, 1], [2, 3, 0, 1],
-    [6, 0, 1, 0], [7, 1, 1, 0], [8, 2, 1, 0], [1, 3, 1, 0]] }];
+  if (state.format === 'fold') {
+    const zine = { label: posterOn() ? 'Side 1, the zine' : 'One sheet, single-sided', slots: [
+      [5, 0, 0, 1], [4, 1, 0, 1], [3, 2, 0, 1], [2, 3, 0, 1],
+      [6, 0, 1, 0], [7, 1, 1, 0], [8, 2, 1, 0], [1, 3, 1, 0]] };
+    return posterOn() ? [zine, { label: 'Side 2, the secret poster', poster: true, slots: [[POSTER, 0, 0, 0]] }] : [zine];
+  }
   if (state.format === 'quarter') return [
     { label: 'Side 1, cover side', slots: [[5, 0, 0, 1], [4, 1, 0, 1], [8, 0, 1, 0], [1, 1, 1, 0]] },
     { label: 'Side 2, printed on the back', slots: [[3, 0, 0, 1], [6, 1, 0, 1], [2, 0, 1, 0], [7, 1, 1, 0]] }];
@@ -964,9 +976,34 @@ function drawPhotoPage(ctx, page, W, H, o, n) {
   }
 }
 
+// The poster fills the whole sheet inside the zine's white frame. Portrait photos turn 90 degrees to fill it.
+function drawPoster(ctx, W, H, o) {
+  const g = o.g, s = W / g.sw, m = frameMm(g) * s;
+  const x = m, y = m, w = W - 2 * m, h = H - 2 * m;
+  const ph = state.poster.photo && photos.get(state.poster.photo);
+  if (!ph) {
+    if (!o.preview) return;
+    ctx.fillStyle = '#efeeea'; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = '#a9a8a3'; ctx.font = `400 ${smallPx(g, W / g.pw) * 1.3}px ${FONT_CSS.inter}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Drop a photo for the secret poster', W / 2, H / 2);
+    return;
+  }
+  const src = o.img(ph), [sw, sh] = srcDims(src);
+  const turn = sh > sw;
+  const bw = turn ? h : w, bh = turn ? w : h;           // box size in the photo's own orientation
+  const sc = Math.max(bw / sw, bh / sh), cw = bw / sc, ch = bh / sc;
+  ctx.save();
+  ctx.translate(x + w / 2, y + h / 2);
+  if (turn) ctx.rotate(-Math.PI / 2);
+  ctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, -bw / 2, -bh / 2, bw, bh);
+  ctx.restore();
+}
+
 function renderPage(ctx, n, W, H, o) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+  if (n === POSTER) return drawPoster(ctx, W, H, o);
   const N = count();
   if (n === 1) drawCover(ctx, W, H, o);
   else if (n === N) drawBack(ctx, W, H, o);
@@ -1033,7 +1070,7 @@ function tick() {
 const dpr = () => Math.min(2, window.devicePixelRatio || 1);
 function renderView(v) {
   const g = geom(), cssW = v.canvas.clientWidth || 150;
-  const W = Math.round(cssW * dpr()), H = Math.round(W * g.ph / g.pw);
+  const W = Math.round(cssW * dpr()), H = Math.round(W * (v.n === POSTER ? g.sh / g.sw : g.ph / g.pw));
   if (v.canvas.width !== W) v.canvas.width = W;
   if (v.canvas.height !== H) v.canvas.height = H;
   renderPage(v.canvas.getContext('2d', { willReadFrequently: true }), v.n, W, H, { g, preview: true, img: ph => ph.thumb });
@@ -1092,7 +1129,7 @@ function bindPreviewDrag() {
 }
 
 /* ---------- pages grid ---------- */
-function pageLabel(n) { const N = count(); return n === 1 ? 'Cover' : n === N ? 'Back' : isBlankPage(n) ? 'Inside cover' : `Page ${n}`; }
+function pageLabel(n) { const N = count(); if (n === POSTER) return 'Poster'; return n === 1 ? 'Cover' : n === N ? 'Back' : isBlankPage(n) ? 'Inside cover' : `Page ${n}`; }
 function spreadList() {
   const N = count(), s = [[0, 1]];
   for (let n = 2; n < N; n += 2) s.push([n, n + 1]);
@@ -1122,6 +1159,13 @@ function buildGrid() {
     sp.addEventListener('dblclick', () => openZoom(idx));
     host.append(sp);
   });
+  if (posterOn()) {
+    const canvas = el('canvas', { width: 20, height: 14, 'aria-label': 'Secret poster' });
+    const fig = el('figure', { class: 'page poster', 'data-n': POSTER, tabindex: 0, draggable: 'false' },
+      el('div', { class: 'sheetwrap' }, canvas), el('figcaption', {}, el('span', { text: 'Secret poster, back of the sheet' })));
+    bindCard(fig, POSTER); addView(POSTER, fig, canvas, false);
+    host.append(el('div', { class: 'spread' }, fig));
+  }
   if (zoomIdx !== null) openZoom(zoomIdx);
   markSelected();
   invalidate('all');
@@ -1220,6 +1264,7 @@ function usedIds() {
   const u = new Map(), N = count();
   state.pages.forEach((p, i) => slotsOf(p).forEach(s => { if (s.photo) u.set(s.photo, pageNo(i)); }));
   if (backMode() === 'photo') slotsOf(state.back.page).forEach(s => { if (s.photo) u.set(s.photo, N); });
+  if (posterOn() && state.poster.photo) u.set(state.poster.photo, POSTER);
   return u;
 }
 function fillEmpty(ids) {
@@ -1234,6 +1279,11 @@ function fillEmpty(ids) {
 }
 function placePhoto(id, n, slot, quiet) {
   const N = count();
+  if (n === POSTER) {
+    state.poster.photo = id; invalidate([POSTER]);
+    if (!quiet) { select(POSTER); renderTray(); renderEditors(); save(); }
+    return;
+  }
   if (n === 1) { toast('The cover takes no photo. Drop photos on the inner pages.'); return; }
   if (isBlankPage(n)) { toast('The inside of the cover stays blank in booklets.'); return; }
   if (n === N) {
@@ -1250,6 +1300,7 @@ function removePhoto(id) {
   const touched = [], N = count();
   state.pages.forEach((p, i) => p.slots.forEach(s => { if (s.photo === id) { s.photo = null; touched.push(pageNo(i)); } }));
   state.back.page.slots.forEach(s => { if (s.photo === id) { s.photo = null; touched.push(N); } });
+  if (state.poster.photo === id) { state.poster.photo = null; touched.push(POSTER); }
   URL.revokeObjectURL(ph.url); photos.delete(id);
   invalidate(touched); renderTray(); renderEditors(); save();
 }
@@ -1307,7 +1358,18 @@ function pageEditor(host, page, n) {
 function renderEditors() {
   const N = count();
   const host = $('#pageEditor'), i = pageIndex(selected);
-  if (i >= 0) pageEditor(host, state.pages[i], selected);
+  if (selected === POSTER && posterOn()) {
+    const ph = state.poster.photo && photos.get(state.poster.photo);
+    host.textContent = '';
+    host.append(el('div', { class: 'group' }, el('h3', { text: 'Secret poster' }),
+      el('p', { class: 'hint', text: 'Fills the back of the sheet inside the white frame. Portrait photos are turned to fill it.' })),
+      el('div', { class: 'slotrow' },
+        el('div', { class: 'ph' }, ph ? el('img', { src: ph.trayUrl, alt: '' }) : 'Photo'),
+        el('div', { class: 'meta' }, ph
+          ? el('div', { class: 'row' }, el('button', { type: 'button', class: 'btn small', text: 'Remove photo',
+              onclick: () => { state.poster.photo = null; invalidate([POSTER]); renderTray(); renderEditors(); save(); } }))
+          : el('span', { class: 'hint', text: 'Drop a photo on the poster, or drag one from the tray.' }))));
+  } else if (i >= 0) pageEditor(host, state.pages[i], selected);
   else {
     host.textContent = '';
     host.append(el('p', { class: 'hint', text: isBlankPage(selected)
@@ -1334,7 +1396,8 @@ function coerce(path, raw) {
 function onChange(path) {
   save();
   const N = count();
-  if (['format', 'paper', 'bookletPages'].includes(path)) {
+  if (['format', 'paper', 'bookletPages', 'poster.on'].includes(path)) {
+    if (selected === POSTER && !posterOn()) selected = 1;
     syncPages(); buildGrid(); renderEditors(); renderTray();
   } else if (['frame', 'titleFont', 'smallFont', 'captionFont', 'pageNumbers'].includes(path)) invalidate('all');
   else if (path.startsWith('cover.')) invalidate(state.back.mode === 'colophon' && state.back.bg === 'cover' ? [1, N] : [1]);
@@ -1377,7 +1440,7 @@ function syncControls() {
   $('#c2wrap').hidden = !grad || !state.cover.useC2;
   const g = geom();
   $('#sizeHint').textContent = `Each page is ${pageSizeName()}, ${fmtMm(g.pw)} × ${fmtMm(g.ph)} mm.` +
-    (g.duplex ? ' Needs a printer that prints on both sides.' : ' Prints on one side of one sheet.');
+    (g.duplex ? ' Needs a printer that prints on both sides.' : posterOn() ? ' Prints on both sides of one sheet.' : ' Prints on one side of one sheet.');
 }
 function buildPresets() {
   const host = $('#presets');
@@ -1392,6 +1455,7 @@ function drawSheet(canvas, side, si, s, o) {
   const g = geom(), W = Math.round(g.sw * s), H = Math.round(g.sh * s);
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
+  if (side.poster) { renderPage(ctx, POSTER, W, H, o); return; }
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
   const pw = Math.round(g.pw * s), ph = Math.round(g.ph * s);
   const off = document.createElement('canvas'); off.width = pw; off.height = ph;
@@ -1486,7 +1550,8 @@ function closeOverlay() { previewRun++; $('#overlay').hidden = true; }
 function openExport() {
   const g = geom(), N = count();
   const dup = g.duplex === 'long' ? 'Print on both sides, flipping on the long edge.'
-    : g.duplex === 'short' ? 'Print on both sides, flipping on the short edge.' : 'Print on one side.';
+    : g.duplex === 'short' ? 'Print on both sides, flipping on the short edge.'
+    : posterOn() ? 'Print on both sides; either flip setting works.' : 'Print on one side.';
   const empty = state.pages.filter(p => !hasPhoto(p)).length;
   const host = el('div', { class: 'sheets' });
   const body = el('div', { style: 'display:grid;gap:14px' },
@@ -1520,20 +1585,30 @@ async function exportPdf() {
       for (const [n, col, row, flip] of side.slots) {
         status.textContent = `Rendering ${pageLabel(n).toLowerCase()} (${done + 1} of ${total})`;
         const p = pageObj(n), full = new Map();
-        if (p) for (const sl of slotsOf(p)) {
-          const ph0 = sl.photo && photos.get(sl.photo);
+        const ids = n === POSTER ? [state.poster.photo] : p ? slotsOf(p).map(sl => sl.photo) : [];
+        for (const id of ids) {
+          const ph0 = id && photos.get(id);
           if (ph0 && !full.has(ph0.id)) full.set(ph0.id, await loadImage(ph0.url));
         }
-        renderPage(ctx, n, pw, ph, { g, preview: false, img: x => full.get(x.id) || x.thumb });
-        const jpeg = await toJpeg(cv);
+        const opt = { g, preview: false, img: x => full.get(x.id) || x.thumb };
+        if (n === POSTER) {
+          // the poster is one image covering the whole back of the sheet
+          const sc = document.createElement('canvas');
+          sc.width = Math.round(g.sw * pxMm); sc.height = Math.round(g.sh * pxMm);
+          renderPage(sc.getContext('2d'), POSTER, sc.width, sc.height, opt);
+          images.push({ jpeg: await toJpeg(sc), pxW: sc.width, pxH: sc.height, rot: false, x: 0, y: 0, w: g.sw * mmPt, h: g.sh * mmPt });
+          sc.width = sc.height = 1;
+        } else {
+          renderPage(ctx, n, pw, ph, opt);
+          images.push({ jpeg: await toJpeg(cv), pxW: pw, pxH: ph, rot: !!flip,
+            x: col * g.pw * mmPt, y: (g.sh - (row + 1) * g.ph) * mmPt, w: g.pw * mmPt, h: g.ph * mmPt });
+        }
         full.clear();
-        images.push({ jpeg, pxW: pw, pxH: ph, rot: !!flip,
-          x: col * g.pw * mmPt, y: (g.sh - (row + 1) * g.ph) * mmPt, w: g.pw * mmPt, h: g.ph * mmPt });
         done++; bar.style.width = `${Math.round(done / total * 100)}%`;
         await nextFrame();
       }
       let ops = '';
-      if (state.guides) {
+      if (state.guides && !side.poster) {
         for (const [x1, y1, x2, y2, dash] of guides(si)) {
           ops += `q 0.6 G 0.35 w ${dash ? '[3 2] 0 d' : '[] 0 d'} ${(x1 * mmPt).toFixed(2)} ${((g.sh - y1) * mmPt).toFixed(2)} m ${(x2 * mmPt).toFixed(2)} ${((g.sh - y2) * mmPt).toFixed(2)} l S Q\n`;
         }
@@ -1577,31 +1652,37 @@ async function offerDownload(filename, blob) {
 
 /* ---------- folding help ---------- */
 function foldHelp() {
-  const g = geom(), N = count();
+  const g = geom(), N = count(), poster = posterOn();
+  const side = poster ? 'zine side' : 'printed side';
   const steps = {
     fold: [
-      `Print the PDF on one side of ${state.paper} paper at actual size (100%).`,
-      'Fold the sheet in half three times along its long side to crease seven folds, then unfold it flat with the printed side up.',
-      'Fold it in half widthways, short edge to short edge.',
-      'From the folded edge, cut along the dashed line to the first crease. You are cutting through both layers, between the middle pages.',
-      'Unfold, then fold in half lengthways with the printing on the outside.',
-      'Hold the two ends and push them towards the middle. The slit opens into a diamond. Keep pushing until the pages collapse into a booklet, then wrap the cover around.',
+      poster
+        ? 'Print the PDF at actual size (100%), not "fit to page", on both sides of one sheet: page 1 is the zine, page 2 the poster. Either flip setting works. No double-sided printing? Print page 1, put the sheet back in the printer, and print page 2 on the reverse.'
+        : 'Print the PDF at actual size (100%), not "fit to page".',
+      `Lay the sheet landscape, ${side} up. Fold it in half from top to bottom, crease, and open it again.`,
+      'Fold it in half from left to right, crease, and open it again.',
+      'Fold the left and right edges in to meet the middle crease, crease, and open again. You now have eight panels.',
+      'Fold it in half from left to right once more. Starting at the fold, cut along the dashed line as far as the next crease.',
+      `Open the sheet and fold the top half backwards behind the bottom half, so the ${poster ? 'zine' : 'printing'} is on the outside.`,
+      'Hold the two ends and push them towards each other. The cut opens into a diamond, then a cross. Keep pushing until the pages close into a booklet, then wrap the cover round to the front.',
+      poster ? 'To find the poster, unfold the zine completely and turn the sheet over.' : null,
     ],
     quarter: [
-      `Print both sides of one ${state.paper} sheet at actual size (100%), flipping on the long edge.`,
-      'Hold the sheet with side 1 facing you: the cover and back are on the bottom half.',
-      'Fold the top half down behind the bottom half.',
-      'Fold the left half behind the right half, so the cover faces you and the fold is on the left.',
-      'Slit the folded top edge with a knife or scissors so the pages open.',
+      'Print the PDF at actual size (100%) on both sides of one sheet, flipping on the long edge.',
+      'Hold the sheet upright with the cover side facing you. The cover is in the bottom right corner.',
+      'Fold the top half backwards, behind the bottom half.',
+      'Fold the left half backwards, behind the right half. The cover now faces you, with the fold on the left.',
+      'Cut along the folded top edge so the pages can turn.',
+      'Optional: one staple through the spine keeps the two layers together.',
     ],
     booklet: [
-      `Print all ${N / 4} sheets on both sides at actual size (100%), flipping on the short edge.`,
-      'Keep the printed stack in order. Sheet 1, with the cover and back, goes on the outside.',
-      'Sheet 1 is blank on its reverse, so you can print just its front on coloured card and the rest on paper.',
-      'Fold the whole stack in half along the centre marks.',
-      'Staple twice along the fold. A long-reach stapler works best; an opened stapler on a cork board also works.',
-      N > 48 ? 'A home stapler handles about 20 folded sheets. Above that, use a heavy-duty long-reach stapler or sew the spine.' : null,
-      N > 32 ? 'With this many pages the inner sheets push out at the front edge. Trim the front edge with a craft knife and a ruler if you want it flush.' : null,
+      'Print the PDF at actual size (100%) on both sides, flipping on the short edge. For a card cover, print page 1 of the PDF on card on its own, then pages 3 to the end on paper. Page 2 is the blank inside of the cover.',
+      'Stack the sheets in order: sheet 1, with the covers, on top and facing up.',
+      'Turn the whole stack over, so the covers face the table.',
+      'Fold the stack in half from right to left and press the fold flat. Turn it over: the cover is now on top, with the fold on the left.',
+      'Open it flat, covers facing up, and put two staples along the fold, each about a quarter of the way in from the top and bottom edges. Close it again.',
+      N > 48 ? 'A normal stapler struggles with more than about 12 sheets. Use a heavy-duty long-reach stapler, or stitch the spine with needle and thread.' : null,
+      N > 32 ? 'The inner sheets stick out at the front edge. Trim it with a ruler and craft knife if you want it flush.' : null,
     ],
   }[state.format].filter(Boolean);
   overlay('How to fold', el('div', { style: 'display:grid;gap:12px' },
@@ -1652,6 +1733,7 @@ function boot() {
   $('#clearBtn').addEventListener('click', () => {
     state.pages.forEach(p => p.slots.forEach(s => { s.photo = null; }));
     state.back.page.slots.forEach(s => { s.photo = null; });
+    state.poster.photo = null;
     invalidate('all'); renderTray(); renderEditors(); save(); toast('Photos removed from the pages. They are still in the tray.');
   });
   let rz = 0;
