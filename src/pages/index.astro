@@ -141,6 +141,18 @@ const hold = veil.secondsPerPhoto;
   .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
   @media (prefers-reduced-motion: reduce) { .drift.go { animation: none; } .slide { transition: none; } }
+  /* Nudge: if nobody scrolls, the veil lifts a little and settles back with a small second bounce,
+     showing a strip of the page underneath. Started from the script below */
+  .veil { --lift: 22px; }
+  .veil.nudge { animation: veilNudge 1.5s both; }
+  @keyframes veilNudge {
+    0%   { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+    30%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
+    55%  { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+    70%  { transform: translateY(calc(-0.3 * var(--lift))); animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0); }
+    85%, 100% { transform: translateY(0); }
+  }
+  @media (orientation: portrait) { .veil { --lift: 30px; } }
 
   /* ── Two resting places: the veil, and everything after it ──
      The block after the veil is at least as tall as the largest screen height (100vh is the
@@ -170,22 +182,46 @@ const hold = veil.secondsPerPhoto;
 <script>
   // Fog returns over the name within the first quarter of the veil (at most 240 px of scrolling),
   // so it clears quickly on tall phone screens too. The menu arrives once the name is mostly
-  // fogged and then stays for the rest of the visit; it only starts hidden again on a fresh load.
+  // fogged and leaves again when you scroll back up to the veil.
   const veil = document.getElementById('veil')!;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
   const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
   let ticking = false;
-  let arrived = false;
   const update = () => {
     ticking = false;
     const p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
     veil.style.setProperty('--p', p.toFixed(3));
-    if (!arrived && p >= 0.6) { arrived = true; nav?.classList.add('arrived'); }
+    nav?.classList.toggle('arrived', p >= 0.6);
   };
   window.addEventListener('scroll', () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
   update();
+
+  // Nudge: if nobody has scrolled, touched, clicked, or pressed a key after two photos have gone by,
+  // the veil gives a small lift (in the middle of the third photo, not during a change). It repeats
+  // after every two more photos, three times at most, and stops for good at the first reaction.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const hold = JSON.parse(document.getElementById('veil-pool')!.textContent!).hold as number;
+    const reactions = ['scroll', 'wheel', 'touchstart', 'pointerdown', 'keydown'];
+    let count = 0;
+    let timer = 0;
+    const stop = () => {
+      clearTimeout(timer);
+      reactions.forEach((t) => window.removeEventListener(t, stop));
+      document.removeEventListener('visibilitychange', resume);
+    };
+    const nudge = () => {
+      if (document.hidden || window.scrollY > 0) return;
+      veil.classList.remove('nudge'); void veil.offsetWidth; veil.classList.add('nudge');
+      if (++count < 3) timer = window.setTimeout(nudge, hold * 2 * 1000);
+    };
+    // A hidden tab pauses the photos, so the count starts over when you come back
+    const resume = () => { clearTimeout(timer); if (!document.hidden && count < 3) timer = window.setTimeout(nudge, (hold * 2 + 4) * 1000); };
+    reactions.forEach((t) => window.addEventListener(t, stop, { passive: true }));
+    document.addEventListener('visibilitychange', resume);
+    resume();
+  }
 
   // Phone number: never in the page source. It is stored as character codes and only written
   // into the page after the first sign of a person (scrolling, a touch, the mouse, or a key).

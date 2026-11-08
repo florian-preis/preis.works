@@ -1,7 +1,7 @@
 ---
 // The navigation pill. Sticky on every page.
 // mode="sticky": links sit on the page at the top; the glass pill fades in once you scroll.
-// mode="veil" (Home): hidden over the veil; the pill arrives on first scroll and stays (set in index.astro).
+// mode="veil" (Home): hidden over the veil; the pill arrives as you scroll past it and leaves when you return (set in index.astro).
 import { nav } from '../data/site';
 interface Props { active: string; mode: 'sticky' | 'veil'; }
 const { active, mode } = Astro.props;
@@ -45,7 +45,7 @@ const { active, mode } = Astro.props;
   .nav-links { display: flex; gap: 32px; font-size: 13px; }
   .nav-links .current { font-weight: 600; }
 
-  /* Veil mode: absent over the veil, arrives on first scroll and stays */
+  /* Veil mode: absent over the veil, arrives once you scroll past it */
   .nav-wrap[data-mode='veil'] { opacity: 0; transform: translateY(-10px); visibility: hidden; transition: opacity var(--base) var(--ease), transform var(--base) var(--ease), visibility 0s linear var(--base); }
   .nav-wrap[data-mode='veil'].arrived { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
   .nav-wrap[data-mode='veil'] .nav-bg { opacity: 1; }
