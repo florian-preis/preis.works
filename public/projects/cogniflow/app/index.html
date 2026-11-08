@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#18181A">
+<meta name="color-scheme" content="dark">
+<title>cogniflow · preis.works</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181A'/%3E%3Crect x='15' y='4' width='2' height='5' rx='1' fill='%23FF6F59'/%3E%3Crect x='15' y='23' width='2' height='5' rx='1' fill='%23FF6F59'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23FF6F59'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #18181A;
+  --surface: #202023;
+  --surface-2: #28282C;
+  --line: #2F2F34;
+  --text: #ECEAE6;
+  --muted: #9A9893;
+  --faint: #66656A;
+  --accent: #FF6F59;
+  --accent-soft: rgba(255, 111, 89, 0.14);
+  --on-accent: #18181A;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Literata', Georgia, 'Times New Roman', serif;
+  --read: var(--serif);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fast: 0.25s;
+  --base: 0.45s;
+  --w: min(100% - 2 * clamp(16px, 3vw, 32px), 980px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 400 15px/1.6 var(--sans);
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+body.font-sans { --read: var(--sans); }
+button, input, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.hidden { display: none !important; }
+.wrap { width: var(--w); margin-inline: auto; }
+
+/* ── header ── */
+.bar { padding-top: 18px; }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; height: 44px; }
+.mark { font-weight: 600; font-size: 19px; letter-spacing: -0.02em; text-decoration: none; }
+.mark b { color: var(--accent); font-weight: 600; }
+.nav { display: flex; align-items: center; gap: 4px; }
+.nav a, .nav button {
+  font-size: 14px; color: var(--muted); text-decoration: none;
+  padding: 8px 12px; border-radius: 999px; min-height: 36px;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.nav a:hover, .nav button:hover { color: var(--text); }
+.nav a[aria-current="page"] { color: var(--text); background: var(--surface); }
+.nav .new { color: var(--text); border: 1px solid var(--line); }
+.nav .new:hover { border-color: var(--muted); }
+.nav svg { width: 16px; height: 16px; }
+
+main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
+
+/* ── shared controls ── */
+.btn {
+  min-height: 44px; padding: 0 20px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), color var(--fast) var(--ease), opacity var(--fast);
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn.primary:disabled { opacity: 1; background: var(--surface-2); border-color: var(--surface-2); color: var(--faint); filter: none; }
+.btn svg { width: 16px; height: 16px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: inline-grid; place-items: center; color: var(--muted);
+  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.icon-btn:hover { color: var(--text); background: var(--surface-2); }
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn:disabled { opacity: 0.3; cursor: default; background: none; }
+
+/* ── reader ── */
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; min-height: 24px; }
+.title { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.title a { color: var(--muted); font-weight: 400; text-decoration: none; margin-left: 8px; font-size: 13px; }
+.title a:hover { color: var(--text); }
+.left { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.stage {
+  position: relative; background: var(--surface); border-radius: 22px;
+  height: clamp(200px, 36vh, 340px); overflow: hidden;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.tick { position: absolute; left: 50%; width: 2px; height: 14px; margin-left: -1px; border-radius: 2px; background: var(--accent); opacity: 0.55; }
+.tick.top { top: calc(50% - 0.95 * var(--fs) - 14px); }
+.tick.bot { top: calc(50% + 0.95 * var(--fs)); }
+.stage { --fs: clamp(40px, 7.4vw, 76px); }
+.word {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline;
+  font-family: var(--read); font-size: var(--fs); line-height: 1.2; font-weight: 400;
+  white-space: pre; letter-spacing: -0.005em;
+}
+.word .l { justify-self: end; }
+.word .r { justify-self: start; }
+.word .p { color: var(--accent); font-weight: 600; }
+.word b { font-weight: 600; }
+.word.msg { display: block; text-align: center; font-family: var(--sans); font-size: 16px; color: var(--muted); white-space: normal; padding: 0 24px; }
+
+.progress { position: relative; height: 24px; margin: 6px 0 2px; cursor: pointer; touch-action: none; }
+.progress .track { position: absolute; left: 0; right: 0; top: 11px; height: 3px; border-radius: 3px; background: var(--line); }
+.progress .fill { position: absolute; left: 0; top: 11px; height: 3px; border-radius: 3px; background: var(--accent); width: 0; }
+.progress .knob { position: absolute; top: 6px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: var(--text); opacity: 0; transition: opacity var(--fast); }
+.progress:hover .knob, .progress.drag .knob { opacity: 1; }
+
+.transport { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 8px 0 18px; }
+.play {
+  width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+  display: grid; place-items: center; transition: transform var(--fast) var(--ease), filter var(--fast);
+}
+.play:hover { filter: brightness(1.06); }
+.play:active { transform: scale(0.96); }
+.play svg { width: 24px; height: 24px; }
+.play:disabled { opacity: 0.35; cursor: default; }
+
+.settings {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 1px;
+  background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+}
+.setting { background: var(--bg); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 64px; }
+.setting > span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.speed { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+.speed output { font-size: 14px; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; max-width: 220px; height: 24px; background: transparent; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: var(--line); }
+input[type=range]::-moz-range-track { height: 3px; border-radius: 3px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); margin-top: -6.5px; border: 0; }
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 0; }
+.seg { display: inline-grid; grid-template-columns: 1fr 1fr; background: var(--surface); border-radius: 999px; padding: 3px; }
+.seg button { font-size: 13px; color: var(--muted); padding: 6px 14px; border-radius: 999px; min-height: 32px; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); font-weight: 500; }
+.seg .serif { font-family: var(--serif); }
+.switch { position: relative; width: 40px; height: 24px; border-radius: 999px; background: var(--line); transition: background var(--fast) var(--ease); flex-shrink: 0; }
+.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--text); transition: transform var(--fast) var(--ease); }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(16px); background: var(--on-accent); }
+
+/* context shown on pause */
+.context {
+  margin-top: 18px; max-height: 42vh; overflow-y: auto; padding: 18px 22px;
+  border-radius: 16px; background: var(--surface);
+  font-family: var(--read); font-size: 17px; line-height: 1.75;
+  overscroll-behavior: contain; overflow-wrap: anywhere;
+}
+.context p { max-width: 64ch; }
+.context p + p { margin-top: 0.9em; }
+.context p.dim { color: var(--muted); }
+.context span { cursor: pointer; border-radius: 4px; transition: background var(--fast); }
+.context span:hover { background: var(--surface-2); }
+.context span.cur { background: var(--accent-soft); color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.end-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+/* focus state while playing */
+.fade { transition: opacity var(--base) var(--ease); }
+body.reading .fade { opacity: 0; pointer-events: none; }
+body.reading .transport { opacity: 0.3; }
+body.reading .transport:hover, body.reading .transport:focus-within { opacity: 1; }
+body.reading .progress { opacity: 0.45; }
+.transport, .progress { transition: opacity var(--base) var(--ease); }
+
+/* ── input ── */
+.compose textarea {
+  width: 100%; min-height: clamp(220px, 42vh, 460px); resize: vertical;
+  background: var(--surface); border: 1px solid transparent; border-radius: 22px;
+  padding: 22px 24px; font-family: var(--serif); font-size: 17px; line-height: 1.7; color: var(--text);
+  outline: none; transition: border-color var(--fast) var(--ease);
+}
+.compose textarea:focus { border-color: var(--line); }
+.compose textarea::placeholder { color: var(--faint); font-family: var(--sans); font-size: 15px; }
+.compose-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.compose-actions .hint { font-size: 13px; color: var(--muted); margin-left: auto; }
+kbd { font: 500 12px var(--sans); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; color: var(--muted); background: var(--surface); }
+.drop {
+  margin-top: 26px; border: 1px dashed var(--line); border-radius: 16px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 14px;
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.drop svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--faint); }
+.drop label { color: var(--text); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; cursor: pointer; }
+.drop small { font-size: 12px; color: var(--faint); margin-left: auto; white-space: nowrap; }
+body.dragging .drop { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.bm { margin-top: 14px; border-radius: 16px; padding: 18px 20px; background: var(--surface); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.bm p { font-size: 14px; color: var(--muted); flex: 1; min-width: 240px; }
+.bm p strong { color: var(--text); font-weight: 500; display: block; margin-bottom: 2px; }
+.bm a.btn { text-decoration: none; cursor: grab; border-color: var(--accent); color: var(--accent); }
+.status { margin-top: 14px; font-size: 14px; color: var(--muted); min-height: 22px; }
+.status.err { color: var(--accent); }
+
+/* ── library ── */
+.lib-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.lib-head h1 { font-size: 15px; font-weight: 500; }
+.lib-head span { font-size: 13px; color: var(--muted); }
+.rows { list-style: none; border-top: 1px solid var(--line); }
+.row {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px;
+  min-height: 64px; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  cursor: pointer; border-radius: 0; transition: background var(--fast) var(--ease);
+}
+.row:hover, .row:focus-within { background: var(--surface); }
+.row .t { min-width: 0; }
+.row .t div:first-child { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .t div + div { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row input { width: 100%; font-size: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; outline: none; }
+.row .pg { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row .pg > span:last-child { min-width: 84px; text-align: right; }
+.row .mini { width: 56px; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.row .mini i { display: block; height: 100%; background: var(--accent); }
+.row .acts { display: flex; opacity: 0; transition: opacity var(--fast); }
+.row:hover .acts, .row:focus-within .acts { opacity: 1; }
+.row .acts .icon-btn { width: 36px; height: 36px; }
+.row .acts svg { width: 17px; height: 17px; }
+.empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+.empty p { margin-bottom: 18px; }
+
+/* ── footer, toast, overlay ── */
+footer { padding: 18px 0 calc(18px + env(safe-area-inset-bottom)); }
+footer .wrap { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+footer a, footer button { color: var(--muted); text-decoration: none; font-size: 12px; }
+footer a:hover, footer button:hover { color: var(--text); }
+footer .links { display: flex; gap: 18px; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 18px;
+  display: flex; align-items: center; gap: 12px; font-size: 14px; opacity: 0; pointer-events: none;
+  transition: opacity var(--base) var(--ease), transform var(--base) var(--ease); z-index: 50;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { color: var(--accent); font-weight: 500; padding: 6px 12px; border-radius: 999px; }
+.toast button:hover { background: var(--accent-soft); }
+.overlay { position: fixed; inset: 0; background: rgba(10,10,11,0.7); display: grid; place-items: center; z-index: 60; opacity: 0; pointer-events: none; transition: opacity var(--fast) var(--ease); }
+.overlay.show { opacity: 1; pointer-events: auto; }
+.keys { background: var(--surface); border-radius: 22px; padding: 24px 28px; min-width: 300px; }
+.keys h2 { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+.keys dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; font-size: 14px; }
+.keys dt { text-align: right; }
+.keys dd { color: var(--muted); }
+
+@media (max-width: 700px) {
+  .nav .lbl { display: none; }
+  .nav a, .nav button { padding: 8px 10px; }
+  .settings { grid-template-columns: 1fr; }
+  .setting { min-height: 56px; padding: 10px 16px; }
+  .head { flex-direction: column; gap: 2px; }
+  .title { max-width: 100%; }
+  .row { grid-template-columns: 1fr auto; }
+  .row .acts { opacity: 1; grid-column: 2; grid-row: 1; }
+  .row .pg { grid-column: 1; grid-row: 2; }
+  .drop small, .compose-actions .hint, .kbd-only { display: none; }
+  .context { font-size: 16px; padding: 16px 18px; }
+}
+@media (hover: none) {
+  .row .acts { opacity: 1; }
+  .kbd-only { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar fade">
+  <div class="wrap">
+    <a class="mark" href="#read" aria-label="cogniflow">co<b>g</b>niflow</a>
+    <nav class="nav">
+      <a href="#read" data-view="read">Read</a>
+      <a href="#library" data-view="library">Library</a>
+      <button class="new" id="newBtn" type="button" aria-label="New text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">New</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- reader -->
+  <section id="reader" class="wrap hidden" aria-label="Reader">
+    <div class="head fade">
+      <div class="title" id="title"></div>
+      <div class="left" id="left"></div>
+    </div>
+    <div class="stage" id="stage" role="button" tabindex="-1" aria-label="Play or pause">
+      <div class="tick top"></div>
+      <div class="tick bot"></div>
+      <div class="word" id="word" aria-hidden="true"><span class="l"></span><span class="p"></span><span class="r"></span></div>
+    </div>
+    <div class="progress" id="progress" aria-label="Position" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="track"></div><div class="fill" id="fill"></div><div class="knob" id="knob"></div>
+    </div>
+    <div class="transport">
+      <button class="icon-btn" id="backBtn" type="button" aria-label="Previous sentence" title="Previous sentence">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 6l-8 6 8 6V6z"/></svg>
+      </button>
+      <button class="play" id="playBtn" type="button" aria-label="Play">
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+        <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg>
+      </button>
+      <button class="icon-btn" id="fwdBtn" type="button" aria-label="Next sentence" title="Next sentence">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5v14M6 6l8 6-8 6V6z"/></svg>
+      </button>
+    </div>
+    <div class="settings fade">
+      <div class="setting">
+        <span>Speed</span>
+        <div class="speed">
+          <input type="range" id="speed" min="100" max="1000" step="25" value="300" aria-label="Words per minute">
+          <output id="speedOut">300 wpm</output>
+        </div>
+      </div>
+      <div class="setting">
+        <span>Font</span>
+        <div class="seg" role="group" aria-label="Reading font">
+          <button type="button" class="serif" data-font="serif" aria-pressed="true">Serif</button>
+          <button type="button" data-font="sans" aria-pressed="false">Sans</button>
+        </div>
+      </div>
+      <div class="setting">
+        <span>Bold word starts</span>
+        <button type="button" class="switch" id="boldSw" role="switch" aria-checked="false" aria-label="Bold word starts"></button>
+      </div>
+    </div>
+    <div class="context fade" id="context" aria-label="Text around the current word"></div>
+    <div class="end-actions fade hidden" id="endActions">
+      <button class="btn" type="button" id="againBtn">Read again</button>
+      <button class="btn primary" type="button" id="nextBtn">New text</button>
+    </div>
+  </section>
+
+  <!-- compose -->
+  <section id="compose" class="wrap compose hidden" aria-label="New text">
+    <textarea id="paste" placeholder="Paste an article or any text" aria-label="Text to read"></textarea>
+    <div class="compose-actions">
+      <button class="btn primary" type="button" id="readBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>Read
+      </button>
+      <button class="btn" type="button" id="cancelBtn">Cancel</button>
+      <span class="hint"><kbd id="modKey">Ctrl</kbd> <kbd>V</kbd> anywhere starts reading straight away</span>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <div class="drop" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9.5 14.5 12 12l2.5 2.5"/></svg>
+      <span>Drop a file here or <label for="file">browse</label></span>
+      <small>TXT, DOCX, PDF</small>
+      <input type="file" id="file" class="hidden" accept=".txt,.md,.text,.docx,.pdf,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+    </div>
+    <div class="bm">
+      <p><strong>Read from any web page</strong>Drag this button to your bookmarks bar. Click it on an article, or select a passage first.</p>
+      <a class="btn" id="bookmarklet" href="#" title="Drag to your bookmarks bar">Read in cogniflow</a>
+      <button class="btn" type="button" id="copyBm">Copy code</button>
+    </div>
+  </section>
+
+  <!-- library -->
+  <section id="library" class="wrap hidden" aria-label="Library">
+    <div class="lib-head"><h1>Library</h1></div>
+    <ul class="rows" id="rows"></ul>
+    <div class="empty hidden" id="libEmpty">
+      <p>Nothing here yet. Everything you read is kept here automatically.</p>
+      <button class="btn primary" type="button" id="libNew">Paste text</button>
+    </div>
+  </section>
+</main>
+
+<footer class="fade">
+  <div class="wrap">
+    <span>cogniflow</span>
+    <span class="links">
+      <button type="button" class="kbd-only" id="keysBtn">Shortcuts</button>
+      <a href="/projects/cogniflow/">About</a>
+      <a href="/">preis.works</a>
+    </span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status"><span id="toastMsg"></span><button type="button" id="toastBtn">Undo</button></div>
+
+<div class="overlay" id="keys" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+  <div class="keys">
+    <h2>Shortcuts</h2>
+    <dl>
+      <dt><kbd>Space</kbd></dt><dd>Play or pause</dd>
+      <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Previous or next sentence</dd>
+      <dt><kbd>Shift</kbd> <kbd>←</kbd> <kbd>→</kbd></dt><dd>Previous or next paragraph</dd>
+      <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Speed up or slow down</dd>
+      <dt><kbd>F</kbd></dt><dd>Switch font</dd>
+      <dt><kbd>N</kbd></dt><dd>New text</dd>
+      <dt><kbd>Ctrl</kbd> <kbd>V</kbd></dt><dd>Read what you copied</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Pause, or close this</dd>
+    </dl>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const APP_URL = location.origin + location.pathname;
+
+/* ───────────────────────── storage ───────────────────────── */
+const Store = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise(res => {
+      let req;
+      try { req = indexedDB.open('cogniflow', 1); } catch (e) { return res(null); }
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        db.createObjectStore('texts', { keyPath: 'id' });
+        db.createObjectStore('meta', { keyPath: 'id' });
+      };
+      req.onsuccess = () => { this.db = req.result; res(this.db); };
+      req.onerror = () => res(null);
+    });
+  },
+  async tx(store, mode, fn) {
+    const db = await this.open();
+    if (!db) return null;
+    return new Promise(res => {
+      const t = db.transaction(store, mode);
+      const r = fn(t.objectStore(store));
+      t.oncomplete = () => res(r && 'result' in r ? r.result : true);
+      t.onerror = t.onabort = () => res(null);
+    });
+  },
+  allMeta() { return this.tx('meta', 'readonly', s => s.getAll()).then(r => r || []); },
+  getMeta(id) { return this.tx('meta', 'readonly', s => s.get(id)); },
+  getText(id) { return this.tx('texts', 'readonly', s => s.get(id)).then(r => r && r.text); },
+  putMeta(m) { return this.tx('meta', 'readwrite', s => s.put(m)); },
+  async add(meta, text) {
+    await this.tx('texts', 'readwrite', s => s.put({ id: meta.id, text }));
+    return this.putMeta(meta);
+  },
+  async remove(id) {
+    await this.tx('texts', 'readwrite', s => s.delete(id));
+    return this.tx('meta', 'readwrite', s => s.delete(id));
+  }
+};
+
+const Settings = {
+  v: { wpm: 300, font: 'serif', bold: false },
+  load() {
+    try { Object.assign(this.v, JSON.parse(localStorage.getItem('cogniflow:settings') || '{}')); } catch (e) {}
+    this.v.wpm = Math.min(1000, Math.max(100, +this.v.wpm || 300));
+  },
+  save() { try { localStorage.setItem('cogniflow:settings', JSON.stringify(this.v)); } catch (e) {} }
+};
+
+/* ───────────────────────── text processing ───────────────────────── */
+function hash(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return 't' + (h >>> 0).toString(36) + str.length.toString(36);
+}
+
+// Turns any raw text into clean paragraphs joined by a blank line
+function normalise(raw) {
+  let s = String(raw).replace(/\r\n?/g, '\n').replace(/[   ]/g, ' ').replace(/[​­]/g, '').replace(/[ \t\f\v]+/g, ' ');
+  const blankBreaks = (s.match(/\n[ ]*\n/g) || []).length;
+  const lines = (s.match(/\n/g) || []).length;
+  // Mostly blank-line separated: single newlines are soft wraps. Otherwise every newline is a paragraph.
+  const paras = blankBreaks >= 2 && blankBreaks * 3 >= lines * 0.5
+    ? s.split(/\n[ ]*\n+/).map(p => p.replace(/\n/g, ' '))
+    : s.split(/\n+/);
+  return paras.map(p => p.replace(/ +/g, ' ').trim()).filter(Boolean).join('\n\n');
+}
+
+const ABBR = /^(mr|mrs|ms|dr|prof|st|vs|etc|e\.g|i\.e|inc|ltd|co|jr|sr|no|fig|approx|ca|cf|al|z\.b|bzw|evt|mio|mrd|nr|ggf|usw|dvs|bl\.a|f\.eks|pga|ift|kr)\.$/i;
+
+// Words with timing factors, paragraph and sentence structure
+function tokenise(text) {
+  const w = [], ctx = [], glue = [], para = [], sent = [], fac = [], paraStart = [];
+  const paras = text.split('\n\n');
+  paras.forEach((p, pi) => {
+    paraStart.push(w.length);
+    const raw = p.replace(/([—–])(?=\S)/g, '$1 ').replace(/(\S)([—–])/g, '$1 $2').split(' ').filter(Boolean);
+    // Very long words are shown in two or three parts so they stay large enough to read
+    const toks = [];
+    raw.forEach(t => {
+      const letters = t.replace(/[^\p{L}]/gu, '').length;
+      const url = t.match(/^(['"“‘(]*)(?:https?:\/\/|www\.)([^\/\s]+)(\S*?)(['"”’).,;:!?]*)$/i);
+      if (url) return toks.push({ t, show: url[1] + url[2].replace(/^www\./, '') + (url[3].length > 1 ? '/…' : '') + url[4], glue: false });
+      if (letters < 20 || /[\/@]|\d/.test(t)) return toks.push({ t, show: t, glue: false });
+      const chars = Array.from(t), cuts = [];
+      const vowel = c => /[aeiouyäöüåæøéèàáíóú]/i.test(c);
+      // Prefer a cut after a joining "s" (e.g. Fahrts|gesellschafts|kapitän), else after a consonant before a vowel
+      for (let start = 0; chars.length - start > 16;) {
+        let cut = -1;
+        for (let j = Math.min(start + 16, chars.length - 5); j >= start + 7; j--) {
+          if (chars[j - 1] === 's' && !vowel(chars[j - 2]) && !/[ctpz]/i.test(chars[j]) && !vowel(chars[j - 2] || 'a')) { cut = j; break; }
+        }
+        if (cut < 0) for (let j = Math.min(start + 16, chars.length - 5); j >= start + 6; j--) {
+          if (chars.slice(j, j + 3).join('').toLowerCase() === 'sch' && !vowel(chars[j - 1]) && chars[j - 1] !== 's') { cut = j; break; }
+        }
+        if (cut < 0) for (let j = Math.min(start + 14, chars.length - 5); j >= start + 8; j--) {
+          if (!vowel(chars[j - 1]) && vowel(chars[j + 1] || '') && !vowel(chars[j]) && !/^(ch|ck|ph|th|sh|sc|qu)$/i.test(chars[j - 1] + chars[j])) { cut = j; break; }
+        }
+        if (cut < 0) cut = start + 13;
+        cuts.push(cut); start = cut;
+      }
+      const bounds = [0, ...cuts, chars.length];
+      for (let k = 0; k < bounds.length - 1; k++) {
+        const c = chars.slice(bounds[k], bounds[k + 1]).join('');
+        toks.push({ t: c, show: k < bounds.length - 2 ? c + '-' : c, glue: k > 0 });
+      }
+    });
+    let newSentence = true;
+    toks.forEach((o, ti) => {
+      const t = o.t;
+      const last = ti === toks.length - 1;
+      const letters = t.replace(/[^\p{L}\p{N}]/gu, '').length;
+      const sentEnd = /[.!?…]['"”’»)\]]*$/.test(t) && !ABBR.test(t.replace(/^['"“‘«(]+/, '')) && !/^\p{Lu}\.$/u.test(t);
+      let f = 1;
+      if (letters > 6) f += Math.min(0.7, (letters - 6) * 0.07);
+      if (letters <= 2 && !/[^\p{L}]/u.test(t)) f -= 0.1;
+      if (/\d/.test(t)) f += 0.3;
+      if (last) f *= 2.6;
+      else if (sentEnd) f *= 2.0;
+      else if (/[,;:]['"”’»)\]]*$/.test(t)) f *= 1.45;
+      else if (/[—–-]$/.test(t) || /^[—–]$/.test(t)) f *= 1.3;
+      w.push(o.show); ctx.push(t); glue.push(o.glue); para.push(pi); sent.push(newSentence && !o.glue); fac.push(f);
+      if (!o.glue || sentEnd) newSentence = sentEnd;
+    });
+  });
+  const cum = new Float64Array(w.length + 1);
+  for (let i = 0; i < w.length; i++) cum[i + 1] = cum[i] + fac[i];
+  return { w, ctx, glue, para, sent, fac, cum, paraStart, paras };
+}
+
+// Index of the letter the eye should rest on (optimal recognition point)
+function pivotIndex(chars) {
+  const isAlnum = c => /[\p{L}\p{N}]/u.test(c);
+  const n = chars.filter(isAlnum).length;
+  const target = n <= 1 ? 0 : n <= 5 ? 1 : n <= 9 ? 2 : n <= 13 ? 3 : 4;
+  let seen = -1;
+  for (let i = 0; i < chars.length; i++) {
+    if (isAlnum(chars[i]) && ++seen === target) return i;
+  }
+  return Math.floor(chars.length / 2);
+}
+
+function titleFrom(text) {
+  const first = text.split('\n\n')[0].trim();
+  if (first.length <= 90 && !/[.,;:]$/.test(first)) return first;
+  const words = first.split(' ').slice(0, 8).join(' ');
+  return words.replace(/[.,;:]$/, '') + '…';
+}
+
+/* ───────────────────────── file loaders ───────────────────────── */
+const scripts = {};
+function loadScript(src) {
+  if (!scripts[src]) scripts[src] = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => { delete scripts[src]; rej(new Error('Could not load ' + src)); };
+    document.head.appendChild(s);
+  });
+  return scripts[src];
+}
+
+async function readDocx(file) {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const docFile = zip.file('word/document.xml');
+  if (!docFile) throw new Error('This does not look like a Word document.');
+  const xml = new DOMParser().parseFromString(await docFile.async('string'), 'application/xml');
+  const out = [];
+  for (const p of xml.getElementsByTagName('w:p')) {
+    let s = '';
+    for (const el of p.getElementsByTagName('*')) {
+      if (el.nodeName === 'w:t') s += el.textContent;
+      else if (el.nodeName === 'w:tab' || el.nodeName === 'w:br' || el.nodeName === 'w:cr') s += ' ';
+    }
+    if (s.trim()) out.push(s.trim());
+  }
+  let title = '';
+  const core = zip.file('docProps/core.xml');
+  if (core) {
+    const c = new DOMParser().parseFromString(await core.async('string'), 'application/xml');
+    const t = c.getElementsByTagName('dc:title')[0];
+    if (t && t.textContent.trim()) title = t.textContent.trim();
+  }
+  return { text: out.join('\n\n'), title };
+}
+
+async function readPdf(file) {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pages = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n);
+    const { items } = await page.getTextContent();
+    const lines = [];
+    let cur = null;
+    for (const it of items) {
+      if (!('str' in it)) continue;
+      const x = it.transform[4], y = it.transform[5], h = Math.abs(it.transform[3]) || it.height || 10;
+      if (!cur || Math.abs(y - cur.y) > h * 0.5) {
+        if (cur && cur.text.trim()) lines.push(cur);
+        cur = { text: '', y, h, x0: x, x1: x };
+      }
+      if (cur.text && it.str && !/\s$/.test(cur.text) && !/^\s/.test(it.str) && x - cur.x1 > h * 0.15) cur.text += ' ';
+      cur.text += it.str;
+      cur.x1 = x + (it.width || 0);
+      if (it.hasEOL) { if (cur.text.trim()) lines.push(cur); cur = null; }
+    }
+    if (cur && cur.text.trim()) lines.push(cur);
+    pages.push(lines.map(l => ({ ...l, text: l.text.replace(/\s+/g, ' ').trim() })));
+  }
+  // Repeated headers and footers, and bare page numbers
+  const key = s => s.replace(/\d+/g, '#').toLowerCase();
+  const counts = {};
+  pages.forEach(ls => {
+    const edge = new Set([...ls.slice(0, 2), ...ls.slice(-2)].map(l => key(l.text)));
+    edge.forEach(k => counts[k] = (counts[k] || 0) + 1);
+  });
+  const repeated = k => pages.length >= 3 && counts[k] >= pages.length * 0.5;
+  const paras = [];
+  let buf = '';
+  const flush = () => { if (buf.trim()) paras.push(buf.trim()); buf = ''; };
+  pages.forEach(ls => {
+    const pageW = Math.max(1, ...ls.map(l => l.x1 - l.x0));
+    const kept = ls.filter((l, i) => !/^[\divxlc\s.\-–—|]*$/i.test(l.text) && !((i < 2 || i >= ls.length - 2) && (l.x1 - l.x0) < pageW * 0.8 && repeated(key(l.text))));
+    const gaps = [];
+    for (let i = 1; i < kept.length; i++) gaps.push(Math.abs(kept[i - 1].y - kept[i].y));
+    const med = gaps.length ? gaps.slice().sort((a, b) => a - b)[Math.floor(gaps.length / 2)] : 0;
+    const maxW = Math.max(1, ...kept.map(l => l.x1 - l.x0));
+    kept.forEach((l, i) => {
+      if (i > 0) {
+        const prev = kept[i - 1];
+        const gap = Math.abs(prev.y - l.y);
+        const shortEnd = /[.!?:"”’)]$/.test(prev.text) && (prev.x1 - prev.x0) < maxW * 0.75;
+        if ((med && gap > med * 1.45) || shortEnd) flush();
+      }
+      if (/[\p{Ll}]-$/u.test(buf) && /^\p{Ll}/u.test(l.text)) buf = buf.slice(0, -1) + l.text;
+      else buf += (buf ? ' ' : '') + l.text;
+    });
+  });
+  flush();
+  let title = '';
+  try {
+    const meta = await pdf.getMetadata();
+    const t = meta && meta.info && meta.info.Title;
+    if (t && t.trim().length > 3 && !/^(untitled|microsoft word|document)/i.test(t.trim())) title = t.trim();
+  } catch (e) {}
+  return { text: paras.join('\n\n'), title };
+}
+
+async function readFile(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const base = file.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim();
+  let r;
+  if (ext === 'pdf' || file.type === 'application/pdf') r = await readPdf(file);
+  else if (ext === 'docx') r = await readDocx(file);
+  else if (['txt', 'md', 'text'].includes(ext) || file.type.startsWith('text/')) {
+    let t = await file.text();
+    if (ext === 'md') t = t.replace(/^#{1,6}\s+/gm, '').replace(/(\*\*|__)(.*?)\1/g, '$2').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1');
+    r = { text: t, title: '' };
+  } else throw new Error('Use a TXT, DOCX, or PDF file.');
+  if (!r.text.trim()) throw new Error('No readable text found in this file.');
+  return { text: r.text, title: r.title || base };
+}
+
+/* ───────────────────────── reader ───────────────────────── */
+const R = {
+  doc: null, meta: null, pos: 0, playing: false, timer: null, ramp: 0,
+  explicit: false, lastSave: 0,
+
+  el: {
+    stage: $('stage'), word: $('word'), l: null, p: null, r: null,
+    title: $('title'), left: $('left'), fill: $('fill'), knob: $('knob'), progress: $('progress'),
+    play: $('playBtn'), playIcon: $('playIcon'), pauseIcon: $('pauseIcon'),
+    context: $('context'), endActions: $('endActions')
+  },
+
+  init() {
+    const w = this.el.word;
+    this.el.l = w.children[0]; this.el.p = w.children[1]; this.el.r = w.children[2];
+  },
+
+  async open(meta, text) {
+    this.pause(false);
+    this.meta = meta;
+    this.doc = tokenise(text);
+    this.pos = Math.min(meta.index || 0, Math.max(0, this.doc.w.length - 1));
+    if (meta.done) this.pos = 0;
+    this.explicit = this.pos === 0;
+    this.renderTitle();
+    if (this.pos === 0) this.showMessage('Press space or tap here to start');
+    else this.show(this.pos);
+    this.updateProgress();
+    this.renderContext();
+    meta.lastRead = Date.now();
+    meta.done = false;
+    Store.putMeta(meta);
+  },
+
+  renderTitle() {
+    const t = this.el.title;
+    t.textContent = this.meta.title;
+    if (this.meta.source) {
+      try {
+        const u = new URL(this.meta.source);
+        const a = document.createElement('a');
+        a.href = u.href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        a.textContent = u.hostname.replace(/^www\./, '');
+        t.appendChild(a);
+      } catch (e) {}
+    }
+    document.title = this.meta.title + ' · cogniflow';
+  },
+
+  showMessage(msg) {
+    const w = this.el.word;
+    w.classList.add('msg');
+    w.style.fontSize = '';
+    this.el.l.textContent = ''; this.el.r.textContent = '';
+    this.el.p.textContent = msg;
+    this.el.p.className = '';
+  },
+
+  // Renders one word with its pivot letter on the fixed centre line
+  show(i) {
+    const token = this.doc.w[i];
+    if (token == null) return;
+    const w = this.el.word;
+    w.classList.remove('msg');
+    this.el.p.className = 'p';
+    const chars = Array.from(token);
+    const k = pivotIndex(chars);
+    const boldUpTo = Settings.v.bold ? Math.max(1, Math.ceil(chars.filter(c => /[\p{L}\p{N}]/u.test(c)).length * 0.45)) + (chars.findIndex(c => /[\p{L}\p{N}]/u.test(c)) || 0) : 0;
+    const fill = (el, from, to) => {
+      el.textContent = '';
+      if (to <= from) return;
+      const b = Math.min(to, Math.max(from, boldUpTo));
+      if (b > from) { const s = document.createElement('b'); s.textContent = chars.slice(from, b).join(''); el.appendChild(s); }
+      if (to > b) el.appendChild(document.createTextNode(chars.slice(b, to).join('')));
+    };
+    fill(this.el.l, 0, k);
+    this.el.p.textContent = chars[k] || '';
+    fill(this.el.r, k + 1, chars.length);
+    this.fit();
+  },
+
+  // Shrinks words that do not fit; very long ones move off centre rather than becoming tiny
+  fit() {
+    const w = this.el.word, { l, p, r } = this.el;
+    w.style.fontSize = ''; w.style.transform = '';
+    if (w.classList.contains('msg')) return;
+    const W = this.el.stage.clientWidth, m = W * 0.05, avail = W - 2 * m;
+    const half = Math.max(l.offsetWidth, r.offsetWidth) + p.offsetWidth / 2;
+    if (half * 2 <= avail) return;
+    const base = parseFloat(getComputedStyle(w).fontSize);
+    const centred = avail / (half * 2);
+    if (centred >= 0.7) { w.style.fontSize = base * centred + 'px'; return; }
+    const total = l.offsetWidth + p.offsetWidth + r.offsetWidth;
+    w.style.fontSize = base * Math.max(0.3, Math.min(0.7, avail / total)) + 'px';
+    const L = l.offsetWidth, P = p.offsetWidth, Rw = r.offsetWidth;
+    const left = W / 2 - L - P / 2, right = W / 2 + P / 2 + Rw;
+    let dx = 0;
+    if (right > W - m) dx = W - m - right;
+    if (left + dx < m) dx = m - left;
+    w.style.transform = 'translate(' + dx + 'px, -50%)';
+  },
+
+  delay(i) {
+    const base = 60000 / Settings.v.wpm;
+    const ramp = [1.9, 1.6, 1.35, 1.15][this.ramp] || 1;
+    this.ramp++;
+    return base * this.doc.fac[i] * ramp;
+  },
+
+  play() {
+    if (!this.doc || this.playing) return;
+    if (this.pos >= this.doc.w.length - 1 && this.meta.done) this.pos = 0;
+    if (!this.explicit) this.pos = this.resumePoint(this.pos);
+    this.explicit = false;
+    this.playing = true;
+    this.ramp = 0;
+    document.body.classList.add('reading');
+    this.el.play.setAttribute('aria-label', 'Pause');
+    this.el.playIcon.classList.add('hidden'); this.el.pauseIcon.classList.remove('hidden');
+    this.el.endActions.classList.add('hidden');
+    this.tick();
+  },
+
+  tick() {
+    if (!this.playing) return;
+    if (this.pos >= this.doc.w.length) return this.finish();
+    this.show(this.pos);
+    this.updateProgress();
+    const d = this.delay(this.pos);
+    this.timer = setTimeout(() => { this.pos++; this.tick(); }, d);
+    if (Date.now() - this.lastSave > 3000) this.save();
+  },
+
+  pause(withContext = true) {
+    clearTimeout(this.timer);
+    const was = this.playing;
+    this.playing = false;
+    document.body.classList.remove('reading');
+    this.el.play.setAttribute('aria-label', 'Play');
+    this.el.playIcon.classList.remove('hidden'); this.el.pauseIcon.classList.add('hidden');
+    if (was) { this.save(); if (withContext) this.renderContext(); }
+  },
+
+  toggle() { this.playing ? this.pause() : this.play(); },
+
+  finish() {
+    this.pause(false);
+    this.pos = this.doc.w.length - 1;
+    this.meta.done = true;
+    this.meta.index = this.doc.w.length;
+    this.showMessage('The end');
+    this.updateProgress(true);
+    this.el.context.classList.add('hidden');
+    this.el.endActions.classList.remove('hidden');
+    Store.putMeta(this.meta);
+  },
+
+  // When resuming, go back to the start of the sentence (at most 15 words)
+  resumePoint(i) {
+    let j = i;
+    while (j > 0 && !this.doc.sent[j] && i - j < 15) j--;
+    return this.doc.sent[j] ? j : Math.max(0, i - 3);
+  },
+
+  sentenceStart(i) { while (i > 0 && !this.doc.sent[i]) i--; return i; },
+
+  seek(i, snap = false) {
+    if (!this.doc) return;
+    i = Math.max(0, Math.min(this.doc.w.length - 1, i));
+    if (snap) i = this.sentenceStart(i);
+    this.pos = i;
+    this.explicit = true;
+    this.ramp = 0;
+    this.meta.done = false;
+    this.el.endActions.classList.add('hidden');
+    this.show(i);
+    this.updateProgress();
+    if (this.playing) { clearTimeout(this.timer); this.timer = setTimeout(() => { this.pos++; this.tick(); }, this.delay(i)); }
+    else this.renderContext();
+    this.save();
+  },
+
+  stepSentence(dir) {
+    if (!this.doc) return;
+    let i = this.pos;
+    if (dir < 0) {
+      const s = this.sentenceStart(i);
+      i = (i - s < 3 && s > 0) ? this.sentenceStart(s - 1) : s;
+    } else {
+      i++;
+      while (i < this.doc.w.length && !this.doc.sent[i]) i++;
+      if (i >= this.doc.w.length) return;
+    }
+    this.seek(i);
+  },
+
+  stepParagraph(dir) {
+    if (!this.doc) return;
+    const p = this.doc.para[this.pos], ps = this.doc.paraStart;
+    let target;
+    if (dir < 0) target = (this.pos - ps[p] < 3 && p > 0) ? ps[p - 1] : ps[p];
+    else { if (p + 1 >= ps.length) return; target = ps[p + 1]; }
+    this.seek(target);
+  },
+
+  updateProgress(done = false) {
+    if (!this.doc) return;
+    const n = this.doc.w.length;
+    const ratio = done ? 1 : n > 1 ? this.pos / (n - 1) : 0;
+    const pct = Math.round(ratio * 100);
+    this.el.fill.style.width = pct + '%';
+    this.el.knob.style.left = pct + '%';
+    this.el.progress.setAttribute('aria-valuenow', pct);
+    const remainingFactor = done ? 0 : this.doc.cum[n] - this.doc.cum[this.pos];
+    const mins = remainingFactor * (60000 / Settings.v.wpm) / 60000;
+    this.el.left.textContent = done ? 'Finished' : pct + '%  ·  ' + fmtMins(mins) + ' left';
+  },
+
+  renderContext() {
+    const box = this.el.context;
+    if (!this.doc || this.playing) return;
+    box.classList.remove('hidden');
+    box.textContent = '';
+    const d = this.doc, pi = d.para[this.pos];
+    let cur = null;
+    for (let p = Math.max(0, pi - 1); p <= Math.min(d.paras.length - 1, pi + 1); p++) {
+      const el = document.createElement('p');
+      if (p !== pi) el.className = 'dim';
+      const end = p + 1 < d.paraStart.length ? d.paraStart[p + 1] : d.w.length;
+      for (let i = d.paraStart[p]; i < end; i++) {
+        const s = document.createElement('span');
+        s.textContent = d.ctx[i];
+        s.dataset.i = i;
+        if (i === this.pos) { s.className = 'cur'; cur = s; }
+        el.appendChild(s);
+        if (i < end - 1 && !d.glue[i + 1]) el.appendChild(document.createTextNode(' '));
+      }
+      box.appendChild(el);
+    }
+    if (cur) {
+      const top = cur.offsetTop - box.clientHeight * 0.35;
+      box.scrollTop = Math.max(0, top);
+    }
+  },
+
+  save() {
+    if (!this.meta || !this.doc) return;
+    this.lastSave = Date.now();
+    this.meta.index = this.pos;
+    this.meta.lastRead = Date.now();
+    Store.putMeta(this.meta);
+  }
+};
+
+function fmtMins(m) {
+  if (m < 1) return '<1 min';
+  const r = Math.round(m);
+  if (r < 60) return r + ' min';
+  return Math.floor(r / 60) + ' h ' + (r % 60) + ' min';
+}
+
+/* ───────────────────────── app ───────────────────────── */
+const App = {
+  view: null,
+
+  async start() {
+    R.init();
+    Settings.load();
+    this.applySettings();
+    this.bind();
+    this.buildBookmarklet();
+    if (/Mac|iPhone|iPad/.test(navigator.platform)) $('modKey').textContent = '⌘';
+    await migrateOld();
+    if (await this.handleImport()) return;
+    const route = location.hash.slice(1);
+    if (route === 'library') return this.go('library');
+    if (route === 'new') return this.go('compose');
+    const recent = (await Store.allMeta()).filter(m => !m.done).sort((a, b) => b.lastRead - a.lastRead)[0];
+    if (recent) { await this.openMeta(recent, false); this.go('read', true); }
+    else this.go('compose', true);
+  },
+
+  go(view, replace = false) {
+    if (view === 'read' && !R.doc) view = 'compose';
+    if (view !== 'read') R.pause(false);
+    this.view = view;
+    $('reader').classList.toggle('hidden', view !== 'read');
+    $('compose').classList.toggle('hidden', view !== 'compose');
+    $('library').classList.toggle('hidden', view !== 'library');
+    $('cancelBtn').classList.toggle('hidden', !R.doc);
+    document.querySelectorAll('.nav a').forEach(a => {
+      if (a.dataset.view === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    const hash = view === 'compose' ? '#new' : '#' + view;
+    if (location.hash !== hash) history[replace ? 'replaceState' : 'pushState'](null, '', hash);
+    if (view === 'library') { this.renderLibrary(); document.title = 'Library · cogniflow'; }
+    if (view === 'compose') { document.title = 'cogniflow'; setTimeout(() => $('paste').focus(), 0); }
+    if (view === 'read') { R.renderTitle(); requestAnimationFrame(() => R.fit()); }
+    window.scrollTo(0, 0);
+  },
+
+  async openMeta(meta, navigate = true) {
+    const text = await Store.getText(meta.id);
+    if (!text) { this.toast('That text could not be found.'); return; }
+    await R.open(meta, text);
+    if (navigate) this.go('read');
+  },
+
+  // Adds a new text (or reopens it if it is already in the library)
+  async addText(raw, title, source) {
+    const text = normalise(raw);
+    if (text.replace(/\s/g, '').length < 2) { this.status('There is no text to read.', true); return false; }
+    const id = hash(text);
+    let meta = await Store.getMeta(id);
+    if (!meta) {
+      meta = { id, title: (title || titleFrom(text)).slice(0, 200), source: source || '', created: Date.now(), lastRead: Date.now(), index: 0, words: 0, done: false };
+      meta.words = text.split(/\s+/).length;
+      await Store.add(meta, text);
+    }
+    await R.open(meta, text);
+    $('paste').value = '';
+    $('readBtn').disabled = true;
+    this.status('');
+    this.go('read');
+    return true;
+  },
+
+  async handleImport() {
+    const h = location.hash;
+    if (!h.startsWith('#import=')) return false;
+    let data = null;
+    try { data = JSON.parse(decodeURIComponent(h.slice(8))); } catch (e) {}
+    history.replaceState(null, '', '#read');
+    if (!data || typeof data.t !== 'string' || !data.t.trim()) { this.go('compose', true); this.status('Nothing came through from that page. Try selecting the text first.', true); return true; }
+    let source = '';
+    try { const u = new URL(String(data.u || '')); if (/^https?:$/.test(u.protocol)) source = u.href; } catch (e) {}
+    const title = typeof data.h === 'string' ? data.h.trim().slice(0, 200) : '';
+    await this.addText(data.t.slice(0, 2000000), title, source);
+    return true;
+  },
+
+  async loadFile(file) {
+    if (!file) return;
+    this.go('compose');
+    this.status('Reading ' + file.name + '…');
+    try {
+      const { text, title } = await readFile(file);
+      await this.addText(text, title, '');
+    } catch (e) {
+      console.error(e);
+      this.status(e.message && !/^Could not load/.test(e.message) ? e.message : 'That file could not be read. Check your connection and try again.', true);
+    }
+    $('file').value = '';
+  },
+
+  status(msg, err = false) { const s = $('status'); s.textContent = msg; s.classList.toggle('err', err); },
+
+  applySettings() {
+    const v = Settings.v;
+    $('speed').value = v.wpm;
+    $('speedOut').textContent = v.wpm + ' wpm';
+    document.body.classList.toggle('font-sans', v.font === 'sans');
+    document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.font === v.font)));
+    $('boldSw').setAttribute('aria-checked', String(v.bold));
+    if (R.doc) {
+      if (!R.el.word.classList.contains('msg')) R.show(R.pos);
+      R.updateProgress(R.meta && R.meta.done);
+      if (!R.playing) R.renderContext();
+    }
+  },
+
+  setWpm(v) {
+    Settings.v.wpm = Math.min(1000, Math.max(100, Math.round(v / 25) * 25));
+    Settings.save();
+    $('speed').value = Settings.v.wpm;
+    $('speedOut').textContent = Settings.v.wpm + ' wpm';
+    if (R.doc) R.updateProgress(R.meta && R.meta.done);
+  },
+
+  bind() {
+    $('playBtn').addEventListener('click', () => R.toggle());
+    $('stage').addEventListener('click', () => R.toggle());
+    $('backBtn').addEventListener('click', () => R.stepSentence(-1));
+    $('fwdBtn').addEventListener('click', () => R.stepSentence(1));
+    $('againBtn').addEventListener('click', () => { R.seek(0); R.play(); });
+    $('nextBtn').addEventListener('click', () => this.go('compose'));
+    $('newBtn').addEventListener('click', () => this.go('compose'));
+    $('libNew').addEventListener('click', () => this.go('compose'));
+    $('cancelBtn').addEventListener('click', () => this.go('read'));
+    $('speed').addEventListener('input', e => this.setWpm(+e.target.value));
+    document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { Settings.v.font = b.dataset.font; Settings.save(); this.applySettings(); }));
+    $('boldSw').addEventListener('click', () => { Settings.v.bold = !Settings.v.bold; Settings.save(); this.applySettings(); });
+    $('context').addEventListener('click', e => { const i = e.target.dataset && e.target.dataset.i; if (i != null) R.seek(+i); });
+
+    // progress scrubbing
+    const prog = $('progress');
+    const seekAt = (x, snap) => { const r = prog.getBoundingClientRect(); R.seek(Math.round((x - r.left) / r.width * (R.doc.w.length - 1)), snap); };
+    prog.addEventListener('pointerdown', e => {
+      if (!R.doc) return;
+      const wasPlaying = R.playing;
+      if (wasPlaying) R.pause(false);
+      prog.classList.add('drag');
+      prog.setPointerCapture(e.pointerId);
+      seekAt(e.clientX, true);
+      const move = ev => seekAt(ev.clientX, true);
+      const up = () => { prog.classList.remove('drag'); prog.removeEventListener('pointermove', move); prog.removeEventListener('pointerup', up); prog.removeEventListener('pointercancel', up); if (wasPlaying) R.play(); else R.renderContext(); };
+      prog.addEventListener('pointermove', move);
+      prog.addEventListener('pointerup', up);
+      prog.addEventListener('pointercancel', up);
+    });
+
+    // compose
+    const paste = $('paste');
+    paste.addEventListener('input', () => { $('readBtn').disabled = !paste.value.trim(); });
+    paste.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('readBtn').click(); } });
+    $('readBtn').addEventListener('click', () => this.addText(paste.value));
+    $('file').addEventListener('change', e => this.loadFile(e.target.files[0]));
+
+    // drag and drop anywhere
+    let depth = 0;
+    document.addEventListener('dragenter', e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { depth++; document.body.classList.add('dragging'); if (this.view !== 'compose') this.go('compose'); } });
+    document.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; document.body.classList.remove('dragging'); } });
+    document.addEventListener('dragover', e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) e.preventDefault(); });
+    document.addEventListener('drop', e => {
+      if (!e.dataTransfer?.files?.length) return;
+      e.preventDefault(); depth = 0; document.body.classList.remove('dragging');
+      this.loadFile(e.dataTransfer.files[0]);
+    });
+
+    // paste anywhere outside a text field starts reading
+    document.addEventListener('paste', e => {
+      const t = e.target;
+      if (t.closest && t.closest('input, textarea, [contenteditable]')) return;
+      const text = e.clipboardData && e.clipboardData.getData('text/plain');
+      if (text && text.trim()) { e.preventDefault(); this.addText(text); }
+    });
+
+    // keyboard
+    document.addEventListener('keydown', e => {
+      if ($('keys').classList.contains('show')) { if (e.key === 'Escape' || e.key === '?') this.keys(false); return; }
+      const t = e.target;
+      if (t.closest && t.closest('input, textarea, [contenteditable]')) { if (e.key === 'Escape') t.blur(); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === '?') { e.preventDefault(); return this.keys(true); }
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); return this.go('compose'); }
+      if (this.view !== 'read' || !R.doc) return;
+      if (t.tagName === 'BUTTON' && e.key === 'Enter') return;
+      if (t.tagName === 'BUTTON' && e.key === ' ' && !t.closest('.transport')) return;
+      switch (e.key) {
+        case ' ': case 'k': e.preventDefault(); R.toggle(); break;
+        case 'Escape': R.pause(); break;
+        case 'ArrowLeft': e.preventDefault(); e.shiftKey ? R.stepParagraph(-1) : R.stepSentence(-1); break;
+        case 'ArrowRight': e.preventDefault(); e.shiftKey ? R.stepParagraph(1) : R.stepSentence(1); break;
+        case 'ArrowUp': e.preventDefault(); this.setWpm(Settings.v.wpm + 25); break;
+        case 'ArrowDown': e.preventDefault(); this.setWpm(Settings.v.wpm - 25); break;
+        case 'f': case 'F': Settings.v.font = Settings.v.font === 'serif' ? 'sans' : 'serif'; Settings.save(); this.applySettings(); break;
+      }
+    });
+    $('keysBtn').addEventListener('click', () => this.keys(true));
+    $('keys').addEventListener('click', e => { if (e.target === $('keys')) this.keys(false); });
+
+    window.addEventListener('popstate', () => {
+      const r = location.hash.slice(1);
+      if (r.startsWith('import=')) return this.handleImport();
+      this.go(r === 'library' ? 'library' : r === 'new' ? 'compose' : 'read', true);
+    });
+    window.addEventListener('resize', () => R.fit(), { passive: true });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { R.pause(); R.save(); } });
+    window.addEventListener('pagehide', () => R.save());
+    if (document.fonts) document.fonts.ready.then(() => R.fit());
+  },
+
+  keys(show) { $('keys').classList.toggle('show', show); if (show) R.pause(); },
+
+  /* library */
+  async renderLibrary() {
+    const list = (await Store.allMeta()).sort((a, b) => b.lastRead - a.lastRead);
+    const rows = $('rows');
+    rows.textContent = '';
+    $('libEmpty').classList.toggle('hidden', list.length > 0);
+    rows.classList.toggle('hidden', !list.length);
+    const wpm = Settings.v.wpm;
+    list.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'row';
+      li.tabIndex = 0;
+      const pct = m.done ? 100 : m.words ? Math.min(99, Math.round((m.index || 0) / m.words * 100)) : 0;
+      const minsLeft = m.done ? 0 : (m.words - (m.index || 0)) * 1.25 / wpm;
+      let host = '';
+      try { host = m.source ? new URL(m.source).hostname.replace(/^www\./, '') : ''; } catch (e) {}
+      const t = document.createElement('div'); t.className = 't';
+      const a = document.createElement('div'); a.textContent = m.title;
+      const b = document.createElement('div'); b.textContent = [host, fmtDate(m.lastRead)].filter(Boolean).join('  ·  ');
+      t.append(a, b);
+      const pg = document.createElement('div'); pg.className = 'pg';
+      pg.innerHTML = '<span class="mini"><i></i></span><span></span>';
+      pg.querySelector('i').style.width = pct + '%';
+      pg.lastChild.textContent = m.done ? 'Done' : pct === 0 ? fmtMins(minsLeft) : fmtMins(minsLeft) + ' left';
+      const acts = document.createElement('div'); acts.className = 'acts';
+      acts.innerHTML =
+        '<button class="icon-btn" type="button" data-act="rename" aria-label="Rename" title="Rename"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></svg></button>' +
+        '<button class="icon-btn" type="button" data-act="delete" aria-label="Remove" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>';
+      li.append(t, pg, acts);
+      li.addEventListener('click', e => {
+        const act = e.target.closest('[data-act]');
+        if (act && act.dataset.act === 'delete') { e.stopPropagation(); return this.removeText(m); }
+        if (act && act.dataset.act === 'rename') { e.stopPropagation(); return this.rename(li, a, m); }
+        if (e.target.tagName === 'INPUT') return;
+        this.openMeta(m);
+      });
+      li.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === li) this.openMeta(m); });
+      rows.appendChild(li);
+    });
+  },
+
+  rename(li, el, m) {
+    const input = document.createElement('input');
+    input.value = m.title;
+    input.setAttribute('aria-label', 'Title');
+    el.replaceWith(input);
+    input.focus(); input.select();
+    let done = false;
+    const finish = async (keep) => {
+      if (done) return; done = true;
+      const v = input.value.trim();
+      if (keep && v) { m.title = v.slice(0, 200); await Store.putMeta(m); if (R.meta && R.meta.id === m.id) R.meta.title = m.title; }
+      this.renderLibrary();
+    };
+    input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+    input.addEventListener('blur', () => finish(true));
+  },
+
+  async removeText(m) {
+    const text = await Store.getText(m.id);
+    await Store.remove(m.id);
+    if (R.meta && R.meta.id === m.id) { R.pause(false); R.doc = null; R.meta = null; }
+    this.renderLibrary();
+    this.toast('Removed “' + (m.title.length > 40 ? m.title.slice(0, 40) + '…' : m.title) + '”', 'Undo', async () => {
+      await Store.add(m, text);
+      this.renderLibrary();
+    });
+  },
+
+  toast(msg, action, fn) {
+    const t = $('toast');
+    $('toastMsg').textContent = msg;
+    const b = $('toastBtn');
+    b.classList.toggle('hidden', !action);
+    b.textContent = action || '';
+    b.onclick = () => { t.classList.remove('show'); fn && fn(); };
+    t.classList.add('show');
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => t.classList.remove('show'), 6000);
+  },
+
+  /* bookmarklet: grabs the selection or the main article text and opens it here */
+  buildBookmarklet() {
+    const src = `(()=>{const A=${JSON.stringify(APP_URL)};const X='nav,aside,footer,header,figure,figcaption,form,button,[role=complementary],[aria-hidden=true],[class*=share],[class*=related],[class*=newsletter],[class*=promo]';let t=String(getSelection()).trim();const og=document.querySelector('meta[property="og:title"]');let h=(og&&og.content)||document.title;if(t.length<200){const sc=new Map;document.querySelectorAll('p').forEach(p=>{if(p.closest(X))return;const l=p.innerText.trim().length;if(l<40)return;const a=p.parentElement,b=a&&a.parentElement;if(a)sc.set(a,(sc.get(a)||0)+l);if(b)sc.set(b,(sc.get(b)||0)+l/2)});let r=null,v=0;sc.forEach((s,e)=>{if(s>v){v=s;r=e}});const art=document.querySelector('article');if(art&&(!r||art.contains(r)||art.innerText.length>v))r=art;if(r){const els=[...r.querySelectorAll('h1,h2,h3,h4,p,li,blockquote,pre')].filter(e=>!e.closest(X)&&!e.parentElement.closest('p,li,blockquote'));t=els.map(e=>e.innerText.replace(/\\s+/g,' ').trim()).filter(Boolean).join('\\n\\n')}}if(!t){alert('cogniflow: no article text found. Select the text and try again.');return}const u=A+'#import='+encodeURIComponent(JSON.stringify({t:t,h:h,u:location.href}));const w=open(u,'_blank');if(!w)location.href=u})()`;
+    this.bmCode = 'javascript:' + src;
+    const a = $('bookmarklet');
+    a.href = this.bmCode;
+    a.addEventListener('click', e => { e.preventDefault(); this.toast('Drag the button to your bookmarks bar instead of clicking it.'); });
+    $('copyBm').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(this.bmCode); this.toast('Copied. Paste it as the address of a new bookmark.'); }
+      catch (e) { this.toast('Could not copy. Drag the button to your bookmarks bar instead.'); }
+    });
+  }
+};
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  const days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+}
+
+/* one-off move of books saved by the previous version */
+async function migrateOld() {
+  try {
+    if (localStorage.getItem('cogniflow:migrated')) return;
+    const old = JSON.parse(localStorage.getItem('cogniflowLibrary') || '[]');
+    if (old.length && indexedDB) {
+      const db = await new Promise(res => {
+        const req = indexedDB.open('cogniflowDB', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('books', { keyPath: 'id' });
+        req.onsuccess = () => res(req.result);
+        req.onerror = () => res(null);
+      });
+      for (const b of old) {
+        let rec = null;
+        if (db) rec = await new Promise(res => { const r = db.transaction('books').objectStore('books').get(b.id); r.onsuccess = () => res(r.result); r.onerror = () => res(null); });
+        if (!rec) { try { rec = JSON.parse(localStorage.getItem('cfbook:' + b.id) || 'null'); } catch (e) {} }
+        if (!rec || !rec.chapters) continue;
+        const text = normalise(rec.chapters.map(c => c.text).join('\n\n'));
+        if (!text) continue;
+        const id = hash(text);
+        const words = text.split(/\s+/).length;
+        const index = Math.round((b.progress || 0) / 100 * words);
+        await Store.add({ id, title: (b.title || titleFrom(text)).replace(/\.(epub|txt|pdf|docx|html?|rtf)$/i, ''), source: '', created: Date.parse(b.uploadDate) || Date.now(), lastRead: Date.parse(b.lastRead) || Date.now(), index, words, done: (b.progress || 0) >= 99.5 }, text);
+      }
+      if (db) db.close();
+    }
+    localStorage.setItem('cogniflow:migrated', '1');
+  } catch (e) { console.warn('Migration skipped', e); }
+}
+
+App.start();
+</script>
+</body>
+</html>

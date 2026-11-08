@@ -1,0 +1,261 @@
+/* gowiththeflo: the travel diary app.
+   Built on the preis.works tokens (global.css). Its own touches: the fogged map,
+   a floating glass drawer, and Florian Hand for the app name, the counter, and
+   country names only. */
+
+.tf {
+  --water: #74b4e8;
+  --ink-soft: rgba(43, 43, 41, 0.62);
+  --card: rgba(240, 240, 237, 0.68);
+  --card-border: rgba(255, 255, 255, 0.65);
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --inset: clamp(12px, 2vw, 24px);
+  --drawer-w: min(440px, calc(100vw - 2 * var(--inset)));
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  display: block;
+  min-height: 0;
+  background: var(--water);
+  overscroll-behavior: none;
+}
+
+/* ── Map ─────────────────────────────────────────────────────────────── */
+.tf-map { position: absolute; inset: 0; }
+.tf-map .maplibregl-canvas { opacity: 0; transition: opacity var(--base) var(--ease); outline: none; }
+.tf-map.is-ready .maplibregl-canvas { opacity: 1; }
+.tf-map .maplibregl-ctrl-attrib { background: transparent; font-size: 11px; color: var(--muted); }
+.tf-map .maplibregl-ctrl-attrib a { color: var(--muted); }
+.tf-map .maplibregl-ctrl-bottom-right { margin: 0 6px 2px 0; }
+/* The plane replaces the cursor over the map, on desktop only */
+.tf.is-fine .tf-map .maplibregl-canvas-container.maplibregl-interactive,
+.tf.is-fine .tf-map .maplibregl-canvas-container.maplibregl-interactive:active { cursor: none; }
+
+.tf-plane {
+  position: fixed; left: 0; top: 0; z-index: 60;
+  width: 20px; height: 20px; margin: -10px 0 0 -10px;
+  pointer-events: none; opacity: 0; will-change: transform;
+  transition: opacity var(--fast) ease;
+}
+.tf-plane.is-on { opacity: 1; }
+.tf-plane svg { width: 100%; height: 100%; fill: #fff; stroke: var(--text); stroke-width: 0.9px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)); }
+
+/* ── Brand ───────────────────────────────────────────────────────────── */
+.tf-brand {
+  position: absolute; z-index: 10;
+  top: calc(var(--inset) + env(safe-area-inset-top)); left: calc(var(--inset) + 4px);
+  font-size: 30px; color: var(--text);
+  padding: 4px 2px; border-radius: 6px;
+  transition: opacity var(--fast) ease;
+}
+.tf-brand:hover { opacity: 0.7; }
+
+/* ── Glass surfaces ──────────────────────────────────────────────────── */
+.tf-panel, .tf-drawer-card, .tf-chip, .tf-pop {
+  background: var(--card);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  backdrop-filter: blur(24px) saturate(1.35);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+
+/* ── Panel (bottom left) ─────────────────────────────────────────────── */
+.tf-panel {
+  position: absolute; z-index: 10;
+  left: var(--inset); bottom: calc(var(--inset) + env(safe-area-inset-bottom));
+  width: 232px; padding: 16px 16px 14px 18px;
+  border-radius: 18px;
+}
+.tf-count { display: flex; align-items: baseline; gap: 6px; }
+.tf-count-num { font-size: 34px; font-weight: 300; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.tf-count-of { font-size: 14px; color: var(--muted); }
+.tf-info {
+  margin-left: auto; align-self: center;
+  width: 22px; height: 22px; border-radius: 999px; padding: 0;
+  border: 1px solid var(--line); background: transparent;
+  font-size: 11px; color: var(--muted); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color var(--fast) ease, border-color var(--fast) ease;
+  position: relative;
+}
+.tf-info::after { content: ''; position: absolute; inset: -11px; } /* 44 px touch target */
+.tf-info:hover, .tf-info[aria-expanded='true'] { color: var(--text); border-color: var(--faint); }
+.tf-count-label { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.tf-pop {
+  margin: 10px 0 2px; padding: 10px 12px; border-radius: 12px;
+  font-size: 12px; line-height: 1.55; color: var(--text);
+  background: rgba(255, 255, 255, 0.55); box-shadow: none;
+}
+.tf-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.tf-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--text); background: transparent;
+  font-size: 13px; color: var(--text); cursor: pointer;
+  transition: background var(--fast) ease, color var(--fast) ease;
+}
+.tf-pill:hover { background: rgba(255, 255, 255, 0.5); }
+.tf-pill[aria-expanded='true'] { background: rgba(255, 255, 255, 0.82); font-weight: 500; }
+.tf-zoom { display: flex; gap: 4px; }
+.tf-zoom button, .tf-icon-btn {
+  width: 36px; height: 36px; padding: 0; border-radius: 999px;
+  border: 1px solid transparent; background: transparent; color: var(--text); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--fast) ease, border-color var(--fast) ease;
+}
+.tf-zoom button:hover, .tf-icon-btn:hover { background: rgba(255, 255, 255, 0.6); border-color: var(--line); }
+.tf svg path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.tf-plane svg path { fill: #fff; stroke: var(--text); stroke-width: 0.9px; }
+.tf-hint { margin: 12px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.tf-fine-only { display: none; }
+.tf.is-fine .tf-fine-only { display: block; }
+
+/* ── Chips: country names on hover, measured distances ───────────────── */
+.tf-chip {
+  position: fixed; left: 0; top: 0; z-index: 50;
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; line-height: 1.2; white-space: nowrap; color: var(--text);
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.tf-chip.is-on { opacity: 1; }
+/* Country names next to the plane: just the name, handwritten, no container */
+.tf-label {
+  position: fixed; left: 0; top: 0; z-index: 50;
+  font-family: 'Florian Hand', sans-serif; font-size: 18px; line-height: 1; white-space: nowrap;
+  color: var(--text); pointer-events: none; opacity: 0;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.5);
+  transition: opacity 0.15s ease;
+}
+.tf-label.is-on { opacity: 1; }
+.tf-dist { font-variant-numeric: tabular-nums; }
+
+/* ── Drawer ──────────────────────────────────────────────────────────── */
+.tf-drawer {
+  position: absolute; z-index: 20;
+  top: var(--inset); right: var(--inset); bottom: var(--inset);
+  width: var(--drawer-w);
+  pointer-events: none;
+}
+.tf-drawer-card {
+  height: 100%; border-radius: 22px; overflow: hidden;
+  display: flex; flex-direction: column;
+  pointer-events: auto;
+  transform: translateX(calc(100% + var(--inset) + 8px));
+  transition: transform var(--slow) var(--ease), visibility 0s linear var(--slow);
+  visibility: hidden;
+}
+.tf-drawer.is-open .tf-drawer-card {
+  transform: none; visibility: visible;
+  transition: transform var(--slow) var(--ease), visibility 0s;
+}
+.tf-d-head {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 16px 12px 14px 22px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.tf-d-head .tf-back { margin: 0 2px 0 -12px; flex: none; }
+.tf-d-titles { flex: 1; min-width: 0; padding-top: 4px; }
+.tf-d-titles:focus { outline: none; }
+.tf-close { flex: none; }
+.tf-d-flagline { display: flex; align-items: center; gap: 12px; }
+.tf-flag { width: 30px; height: auto; aspect-ratio: 4 / 3; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); flex: none; }
+.tf-d-name { margin: 0; font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.015em; overflow-wrap: anywhere; }
+.tf-d-title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.tf-d-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.tf-d-body {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: 6px 22px 28px;
+  scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+.tf-section-label { margin: 22px 0 10px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.tf-diary-label { margin-top: 30px; margin-bottom: 0; }
+.tf-diary-label + .tf-trip { padding-top: 10px; }
+.tf-diary-label + .tf-empty { margin-top: 10px; }
+
+/* Trips inside a country, and the single-trip view */
+.tf-trip { padding: 20px 0 22px; border-bottom: 1px solid var(--line-soft); }
+.tf-trip:last-of-type { border-bottom: 0; }
+.tf-trip h3 { margin: 0; font-size: 22px; font-weight: 400; line-height: 1.15; }
+.tf-trip-title { font-size: 22px; font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+.tf-row-trip { font-size: 19px; line-height: 1.2; }
+.tf-trip h3 a { transition: color var(--fast) ease; }
+.tf-trip h3 a:hover { color: var(--muted); }
+.tf-meta { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.tf-places { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.tf-place {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 30px; padding: 0 12px 0 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.4);
+  font-size: 12px; color: var(--text); cursor: pointer;
+  transition: border-color var(--fast) ease, background var(--fast) ease;
+}
+.tf-place:hover { border-color: var(--faint); background: rgba(255, 255, 255, 0.75); }
+.tf-place img { width: 16px; aspect-ratio: 4 / 3; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
+.tf-story { margin-top: 12px; font-size: 15px; line-height: 1.72; }
+.tf-story p { margin: 0 0 0.9em; }
+.tf-story p:last-child { margin-bottom: 0; }
+.tf-empty { margin: 18px 0 4px; font-size: 14px; color: var(--muted); }
+
+/* Country facts */
+.tf-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; }
+.tf-facts dt, .tf-facts dd { margin: 0; padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.tf-facts dt { color: var(--muted); padding-right: 18px; display: flex; align-items: center; gap: 6px; }
+.tf-facts dd { text-align: right; font-variant-numeric: tabular-nums; }
+.tf-facts .tf-na { color: var(--faint); }
+.tf-facts .tf-info { margin-left: 0; width: 18px; height: 18px; font-size: 10px; }
+.tf-facts .tf-pop { grid-column: 1 / -1; margin: 0 0 10px; }
+.tf-source { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+
+/* Diary lists */
+.tf-tabs { display: inline-flex; gap: 2px; padding: 3px; margin-top: 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.045); }
+.tf-tab {
+  height: 30px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent;
+  font-size: 13px; color: var(--muted); cursor: pointer;
+  transition: background var(--fast) ease, color var(--fast) ease;
+}
+.tf-tab[aria-selected='true'] { background: rgba(255, 255, 255, 0.85); color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+.tf-year { margin: 22px 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.tf-rows { display: flex; flex-direction: column; }
+.tf-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center;
+  min-height: 52px; padding: 8px 10px; margin: 0 -10px;
+  border: 0; border-top: 1px solid var(--line-soft); border-radius: 0;
+  background: transparent; text-align: left; color: var(--text); cursor: pointer;
+  transition: background var(--fast) ease;
+}
+.tf-row:last-child { border-bottom: 1px solid var(--line-soft); }
+.tf-row:hover { background: rgba(255, 255, 255, 0.55); }
+.tf-row-main { display: flex; flex-direction: column; min-width: 0; }
+.tf-row-name { font-size: 14px; line-height: 1.35; display: flex; align-items: center; gap: 10px; }
+.tf-row-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-row-meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+.tf-noscript { position: absolute; inset: auto 0 50% 0; text-align: center; color: var(--muted); }
+
+/* ── Phone: the drawer becomes a sheet from the bottom ───────────────── */
+@media (max-width: 700px) {
+  .tf { --inset: 12px; }
+  .tf-brand { font-size: 26px; }
+  .tf-panel { width: auto; right: auto; padding: 12px 14px 12px 16px; border-radius: 16px; }
+  .tf-count-num { font-size: 28px; }
+  .tf-actions { margin-top: 10px; }
+  .tf-zoom { display: none; }
+  .tf-drawer { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: min(72vh, 72dvh); }
+  .tf-drawer-card {
+    border-radius: 22px 22px 0 0; border-bottom: 0;
+    transform: translateY(calc(100% + 8px));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tf-d-head { padding: 14px 8px 12px 18px; }
+  .tf-d-body { padding: 4px 18px 28px; }
+  .tf-d-name { font-size: 20px; }
+}
+@media (hover: none), (pointer: coarse) { .tf-zoom { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-drawer-card { transition: none !important; }
+}
+.tf-row-name .tf-flag { width: 20px; border-radius: 2px; }
+.tf-credit { display: block; margin-top: 6px; color: var(--muted); }
+.tf-credit a { text-decoration: underline; text-underline-offset: 2px; }

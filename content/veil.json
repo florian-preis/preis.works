@@ -1,0 +1,7 @@
+{
+  "_help": "The fogged-glass veil on the home page shows every photo in photography/, in a random order on each visit. 'tone' is 'muted' (soft colour) or 'mono' (black and white). List filenames under 'exclude' to keep a photo out of the veil. Under 'focus', a filename and a crop point keep a subject in frame when phones crop to portrait (e.g. '30% 50%' = 30% from the left, halfway down).",
+  "tone": "muted",
+  "secondsPerPhoto": 8,
+  "exclude": [],
+  "focus": {}
+}

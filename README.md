@@ -1,90 +1,55 @@
 # preis.works
 
-Personal site of Florian Preis. Static site built by Jekyll and served by GitHub Pages.
-No build tools are needed on your machine: GitHub builds the site on every push to `main`.
+Personal site of Florian Preis, built with [Astro](https://astro.build) and published to GitHub Pages.
 
-## How the site is put together
+## Where things live
 
-| File or folder | What it does | How often you touch it |
+Your content sits in three top-level folders. Everything under `src/` is the site's code, which you rarely need to open.
+
+| Folder or file | What it holds | You edit it when |
 |---|---|---|
-| `_layouts/default.html` | The page shell: head, nav, footer, script wiring | Almost never |
-| `_includes/chrome.css` | Shared design: colour tokens, navbar, mobile drawer, footer | When changing site-wide design |
-| `_includes/chrome.js` | Shared behaviour: navbar pill on scroll, hamburger, footer year | Almost never |
-| `_includes/nav.html` | The navbar and mobile drawer markup | When adding a nav item |
-| `_includes/footer.html` | The footer markup and social links | Rarely |
-| `_includes/about.css` / `.js` | Styles and scripts used only by the About page | When changing that page |
-| `_includes/photography.css` / `.js` | Styles and scripts used only by the gallery | When changing that page |
-| `_includes/projects.css` | Styles used only by the Projects page | When changing that page |
-| `index.html` | About page content | When editing your bio |
-| `photography.html` | Gallery page content | Rarely |
-| `projects.html` | Project cards | When adding a project |
-| `photography/` | Photo files, named `YYYYMMDD_Caption.jpg` | Every time you publish photos |
-| `projects/` | The three standalone project apps | Independent of the rest of the site |
-| `sitemap.xml` | Lists every page for search engines, builds itself | Never |
-| `robots.txt` | Tells crawlers they may index the site | Never |
-| `404.html` | Shown for a URL that does not exist | Rarely |
-| `_includes/notfound.css` | Styles for the 404 page only | Rarely |
-| `assets/social-card.jpg` | 1200x630 preview image used when the site is shared | Rarely |
+| `photography/` | Every photo on the Photography page | Adding or removing a photo |
+| `content/about.md` | The about text on the home page | Changing your introduction |
+| `content/veil.json` | Home page veil settings: colour or black and white, seconds per photo, photos to leave out, crop points for phones | Changing the veil |
+| `content/projects/` | One file per project: name, category, description, "Why I made it", year, picture | Editing or adding a project |
+| `content/projects/images/<name>/` | Project pictures: `mockup.jpg` (card and top of the page) and `screen-1.jpg` to `screen-5.jpg` (screens at the bottom) | Swapping a project picture |
+| `content/travel/` | gowiththeflo, the travel diary: trips, visited countries, country facts | Adding a trip or a country |
+| `public/projects/<name>/app/` | The project apps themselves (plain HTML, no build step; knowhere also keeps its own scripts, map, flags, and fonts in its folder; gowiththeflo is the exception, see below) | Updating an app |
+| `public/` | Files served as they are: fonts, logo, favicon, social card, CNAME | Rarely |
+| `src/` | Site code: pages, layout, nav, styles, scripts | Design or behaviour changes |
+| `src/data/site.ts` | Name, email, LinkedIn, Instagram, nav labels | Changing contact details |
+| `src/styles/global.css` | Colours, content width, fonts, motion timing | Changing the look site-wide |
 
-## The one rule that matters
+## Common tasks
 
-**To change the navbar, footer, or any site-wide design value, edit the file in `_includes/`.
-Never edit those things inside a page file.** That is the whole point of this structure:
-one change, three pages updated.
+**Add a photo.** Put the file in `photography/`, named `YYYYMMDD_Caption.jpg`, for example `20260219_Staircase at Marina Bay Sands, Singapore.jpg`. The date and caption on the site come from the filename. Sizes for the grid and the lightbox are generated automatically when the site builds.
 
-## Social previews and search
+**Change the veil.** The veil shows every photo in `photography/`, in a random order on each visit. In `content/veil.json`, set `tone` to `muted` or `mono`, list filenames under `exclude` to leave photos out, and add a filename with a crop point under `focus` (e.g. `"20250310_Sossusvlei, Namibia.jpg": "30% 50%"`, 30% from the left, halfway down) to keep a subject in frame on phones.
 
-The layout builds the meta description, canonical URL, and social preview card for every
-page from its front matter. To change how a page looks when shared on LinkedIn, WhatsApp,
-or Slack, edit two lines in that page's front matter:
+**Write "Why I made it" for a project.** Open the project's file in `content/projects/` and write below the second `---` line. While it is empty, the section stays hidden.
 
-```yaml
-description: "The one-sentence summary that appears under the link"
-image: "/photography/20251011_Grenen, Skagen, Denmark.jpg"
+**Add a project.** Copy one of the files in `content/projects/`, rename it (the filename becomes the address, e.g. `photobook.md` → `/projects/photobook/`), and fill in the fields. `order` sets the position: 1 is shown first, so give the newest project 1 and move the others down. If it has an app, put it in `public/projects/<name>/app/index.html` and set `app:` to that address. Set `draft: true` to keep a project off the site while you work on it.
+
+**Add a trip to gowiththeflo.** The easiest way is the "log my trip" skill in Claude: it interviews you and opens a pull request; merging it publishes the entry. By hand: add a file to `content/travel/trips/` named `YYYY-MM-short-title.md` (copy an existing one). In the header, `title`, `start` (`2022-04` or `2022-04-14`), optionally `end`, `countries` as two-letter codes (`[NL, DE, FR]`, one trip can cover several), and optionally `with`. The story goes below the second `---` line; `draft: true` keeps it off the site. A new country also needs a line in `content/travel/countries.yml`, which is the list the map and the counter read. The build checks all of this (codes, dates, countries missing from the list, the same story twice) and stops with a message naming the file if something is off, so a mistake never reaches the live site.
+
+**Country facts in gowiththeflo.** Population, GDP, and the Human Development Index come from the World Bank and the UN (UNDP). On the 3rd of each month, the "Update country facts" workflow fetches the latest figures and, if anything changed, opens a pull request with a report of the changes and anything unusual. Merging it publishes the figures. You can also start it from the Actions tab. Names, capitals, and which places count towards the 197 are hand-kept in `content/travel/facts/reference.yml`; figures for places the sources skip (Taiwan, Vatican City) go in `content/travel/facts/overrides.yml`. One-time setting for the pull requests: Settings > Actions > General > Workflow permissions > "Allow GitHub Actions to create and approve pull requests".
+
+**How gowiththeflo is built.** Unlike the other apps, it is an Astro page (`src/pages/projects/travel-diary/app/index.astro`, code in `src/travel/`), so it can read the travel content at build time. The map is MapLibre with self-hosted Natural Earth data: relief tiles in `public/projects/travel-diary/map/relief/` and country shapes in `src/travel/countries.topo.json`, both made by `scripts/travel/build-map.py` (only needed if the map's look or borders change).
+
+**Change contact details.** Edit `src/data/site.ts`.
+
+## Publishing
+
+- Work on a branch other than `main`, then merge into `main` when ready.
+- Every push to `main` builds and publishes the site automatically (`.github/workflows/deploy.yml`). If a build fails, nothing changes on the live site. Progress is visible in the repository's Actions tab.
+- Every pull request into `main` gets a "Check" that builds the site without publishing it (`.github/workflows/check.yml`), so a broken trip file shows up before merging.
+
+## Running it on your own computer (optional)
+
+Requires Node.js 22 or later.
+
 ```
-
-`image` is optional. Without it, pages fall back to `/assets/social-card.jpg`, a 1200x630
-crop of the profile portrait framed on the face.
-
-**Never point `image` at the raw profile portrait.** It is 1600x2400, and social platforms
-centre-crop to roughly 1.9:1, which on that photo takes a band from shoulders to belt and
-cuts the head off entirely. Any image used here must already be landscape, ideally 1200x630.
-
-To change the site-wide preview image, replace `assets/social-card.jpg` with a new 1200x630
-file of the same name. No code change needed.
-
-After changing either, paste the page URL into the LinkedIn Post Inspector to force LinkedIn
-to re-read it, otherwise it serves you its cached old version for up to a week.
-
-## Page front matter
-
-Each page starts with a small block that tells the layout what to do:
-
-```yaml
----
-layout: default
-title: Photography | Florian Preis
-nav_active: photography      # which nav item is highlighted: about, photography, projects
-page_css: photography.css    # which file in _includes/ holds this page's styles
-page_js: photography.js      # which file in _includes/ holds this page's scripts
----
+npm install      # once
+npm run dev      # live preview at http://localhost:4321
+npm run build    # the finished site, in dist/
 ```
-
-## Adding a photo
-
-Put the file in `photography/`. That is the whole job: the gallery reads the folder at build time.
-
-
-Name every file exactly `YYYYMMDD_Caption.jpg`. The date and caption shown on the site are
-read from the filename, so the name is the content.
-
-## The project apps
-
-`projects/cogniflow.html`, `projects/knowhere.html`, and `projects/travel-diary.html` are
-self-contained applications with their own design languages. They deliberately do not use
-the shared chrome. Leave them alone unless you are working on that specific app.
-
-## If a deploy goes wrong
-
-GitHub Pages keeps serving the last successful build. If a push fails to build, the live
-site does not change. Check the Actions tab in GitHub for the error.

@@ -1,0 +1,1011 @@
+# Reference data for every country and territory on the map.
+# Hand-kept: names, capitals, and status. The figures (population, GDP, HDI) live in
+# country-facts.json and are refreshed by the monthly update.
+#
+# counted: true for the 197 that make up the counter (193 UN members plus Kosovo,
+# Palestine, Taiwan, and Vatican City). Territories are false: they light up on the
+# map when visited but do not change the count.
+
+AF:
+  name: Afghanistan
+  capital: Kabul
+  counted: true
+AL:
+  name: Albania
+  capital: Tirana
+  counted: true
+DZ:
+  name: Algeria
+  capital: Algiers
+  counted: true
+AS:
+  name: American Samoa
+  counted: false
+  badge: Territory
+AD:
+  name: Andorra
+  capital: Andorra la Vella
+  counted: true
+AO:
+  name: Angola
+  capital: Luanda
+  counted: true
+AI:
+  name: Anguilla
+  counted: false
+  badge: Territory
+AQ:
+  name: Antarctica
+  counted: false
+AG:
+  name: Antigua and Barbuda
+  capital: "Saint John's"
+  counted: true
+AR:
+  name: Argentina
+  capital: Buenos Aires
+  counted: true
+AM:
+  name: Armenia
+  capital: Yerevan
+  counted: true
+AW:
+  name: Aruba
+  counted: false
+  badge: Territory
+AU:
+  name: Australia
+  capital: Canberra
+  counted: true
+AT:
+  name: Austria
+  capital: Vienna
+  counted: true
+AZ:
+  name: Azerbaijan
+  capital: Baku
+  counted: true
+BS:
+  name: Bahamas
+  capital: Nassau
+  counted: true
+BH:
+  name: Bahrain
+  capital: Manama
+  counted: true
+BD:
+  name: Bangladesh
+  capital: Dhaka
+  counted: true
+BB:
+  name: Barbados
+  capital: Bridgetown
+  counted: true
+BY:
+  name: Belarus
+  capital: Minsk
+  counted: true
+BE:
+  name: Belgium
+  capital: Brussels
+  counted: true
+BZ:
+  name: Belize
+  capital: Belmopan
+  counted: true
+BJ:
+  name: Benin
+  capital: Porto-Novo
+  counted: true
+BM:
+  name: Bermuda
+  counted: false
+  badge: Territory
+BT:
+  name: Bhutan
+  capital: Thimphu
+  counted: true
+BO:
+  name: Bolivia
+  capital: Sucre
+  counted: true
+BA:
+  name: Bosnia and Herzegovina
+  capital: Sarajevo
+  counted: true
+BW:
+  name: Botswana
+  capital: Gaborone
+  counted: true
+BV:
+  name: Bouvet Island
+  counted: false
+  badge: Territory
+BR:
+  name: Brazil
+  capital: Brasília
+  counted: true
+IO:
+  name: British Indian Ocean Territory
+  counted: false
+  badge: Territory
+VG:
+  name: British Virgin Islands
+  counted: false
+  badge: Territory
+BN:
+  name: Brunei
+  capital: Bandar Seri Begawan
+  counted: true
+BG:
+  name: Bulgaria
+  capital: Sofia
+  counted: true
+BF:
+  name: Burkina Faso
+  capital: Ouagadougou
+  counted: true
+BI:
+  name: Burundi
+  capital: Gitega
+  counted: true
+KH:
+  name: Cambodia
+  capital: Phnom Penh
+  counted: true
+CM:
+  name: Cameroon
+  capital: Yaoundé
+  counted: true
+CA:
+  name: Canada
+  capital: Ottawa
+  counted: true
+CV:
+  name: Cape Verde
+  capital: Praia
+  counted: true
+BQ:
+  name: Caribbean Netherlands
+  counted: false
+  badge: Part of the Kingdom of the Netherlands
+KY:
+  name: Cayman Islands
+  counted: false
+  badge: Territory
+CF:
+  name: Central African Republic
+  capital: Bangui
+  counted: true
+TD:
+  name: Chad
+  capital: "N'Djamena"
+  counted: true
+CL:
+  name: Chile
+  capital: Santiago
+  counted: true
+CN:
+  name: China
+  capital: Beijing
+  counted: true
+CX:
+  name: Christmas Island
+  counted: false
+  badge: Territory
+CC:
+  name: Cocos (Keeling) Islands
+  counted: false
+  badge: Territory
+CO:
+  name: Colombia
+  capital: Bogotá
+  counted: true
+KM:
+  name: Comoros
+  capital: Moroni
+  counted: true
+CK:
+  name: Cook Islands
+  counted: false
+  badge: Territory
+CR:
+  name: Costa Rica
+  capital: San José
+  counted: true
+HR:
+  name: Croatia
+  capital: Zagreb
+  counted: true
+CU:
+  name: Cuba
+  capital: Havana
+  counted: true
+CW:
+  name: Curaçao
+  counted: false
+  badge: Territory
+CY:
+  name: Cyprus
+  capital: Nicosia
+  counted: true
+CZ:
+  name: Czechia
+  capital: Prague
+  counted: true
+CI:
+  name: "Côte d'Ivoire"
+  capital: Yamoussoukro
+  counted: true
+CD:
+  name: DR Congo
+  capital: Kinshasa
+  counted: true
+DK:
+  name: Denmark
+  capital: Copenhagen
+  counted: true
+DJ:
+  name: Djibouti
+  capital: Djibouti
+  counted: true
+DM:
+  name: Dominica
+  capital: Roseau
+  counted: true
+DO:
+  name: Dominican Republic
+  capital: Santo Domingo
+  counted: true
+EC:
+  name: Ecuador
+  capital: Quito
+  counted: true
+EG:
+  name: Egypt
+  capital: Cairo
+  counted: true
+SV:
+  name: El Salvador
+  capital: San Salvador
+  counted: true
+GQ:
+  name: Equatorial Guinea
+  capital: Malabo
+  counted: true
+ER:
+  name: Eritrea
+  capital: Asmara
+  counted: true
+EE:
+  name: Estonia
+  capital: Tallinn
+  counted: true
+SZ:
+  name: Eswatini
+  capital: Mbabane
+  counted: true
+ET:
+  name: Ethiopia
+  capital: Addis Ababa
+  counted: true
+FK:
+  name: Falkland Islands
+  counted: false
+  badge: Territory
+FO:
+  name: Faroe Islands
+  counted: false
+  badge: Part of the Kingdom of Denmark
+FJ:
+  name: Fiji
+  capital: Suva
+  counted: true
+FI:
+  name: Finland
+  capital: Helsinki
+  counted: true
+FR:
+  name: France
+  capital: Paris
+  counted: true
+GF:
+  name: French Guiana
+  counted: false
+  badge: Overseas region of France
+PF:
+  name: French Polynesia
+  counted: false
+  badge: Territory
+TF:
+  name: French Southern Territories
+  counted: false
+  badge: Territory
+GA:
+  name: Gabon
+  capital: Libreville
+  counted: true
+GM:
+  name: Gambia
+  capital: Banjul
+  counted: true
+GE:
+  name: Georgia
+  capital: Tbilisi
+  counted: true
+DE:
+  name: Germany
+  capital: Berlin
+  counted: true
+GH:
+  name: Ghana
+  capital: Accra
+  counted: true
+GI:
+  name: Gibraltar
+  counted: false
+  badge: Territory
+GR:
+  name: Greece
+  capital: Athens
+  counted: true
+GL:
+  name: Greenland
+  counted: false
+  badge: Part of the Kingdom of Denmark
+GD:
+  name: Grenada
+  capital: "Saint George's"
+  counted: true
+GP:
+  name: Guadeloupe
+  counted: false
+  badge: Overseas region of France
+GU:
+  name: Guam
+  counted: false
+  badge: Territory
+GT:
+  name: Guatemala
+  capital: Guatemala City
+  counted: true
+GG:
+  name: Guernsey
+  counted: false
+  badge: Territory
+GN:
+  name: Guinea
+  capital: Conakry
+  counted: true
+GW:
+  name: Guinea-Bissau
+  capital: Bissau
+  counted: true
+GY:
+  name: Guyana
+  capital: Georgetown
+  counted: true
+HT:
+  name: Haiti
+  capital: Port-au-Prince
+  counted: true
+HM:
+  name: Heard Island and McDonald Islands
+  counted: false
+  badge: Territory
+HN:
+  name: Honduras
+  capital: Tegucigalpa
+  counted: true
+HK:
+  name: Hong Kong
+  counted: false
+  badge: Special administrative region of China
+HU:
+  name: Hungary
+  capital: Budapest
+  counted: true
+IS:
+  name: Iceland
+  capital: Reykjavik
+  counted: true
+IN:
+  name: India
+  capital: New Delhi
+  counted: true
+ID:
+  name: Indonesia
+  capital: Jakarta
+  counted: true
+IR:
+  name: Iran
+  capital: Tehran
+  counted: true
+IQ:
+  name: Iraq
+  capital: Baghdad
+  counted: true
+IE:
+  name: Ireland
+  capital: Dublin
+  counted: true
+IM:
+  name: Isle of Man
+  counted: false
+  badge: Territory
+IL:
+  name: Israel
+  capital: Jerusalem
+  counted: true
+IT:
+  name: Italy
+  capital: Rome
+  counted: true
+JM:
+  name: Jamaica
+  capital: Kingston
+  counted: true
+JP:
+  name: Japan
+  capital: Tokyo
+  counted: true
+JE:
+  name: Jersey
+  counted: false
+  badge: Territory
+JO:
+  name: Jordan
+  capital: Amman
+  counted: true
+KZ:
+  name: Kazakhstan
+  capital: Astana
+  counted: true
+KE:
+  name: Kenya
+  capital: Nairobi
+  counted: true
+KI:
+  name: Kiribati
+  capital: South Tarawa
+  counted: true
+XK:
+  name: Kosovo
+  capital: Pristina
+  counted: true
+  badge: Partially recognised
+KW:
+  name: Kuwait
+  capital: Kuwait City
+  counted: true
+KG:
+  name: Kyrgyzstan
+  capital: Bishkek
+  counted: true
+LA:
+  name: Laos
+  capital: Vientiane
+  counted: true
+LV:
+  name: Latvia
+  capital: Riga
+  counted: true
+LB:
+  name: Lebanon
+  capital: Beirut
+  counted: true
+LS:
+  name: Lesotho
+  capital: Maseru
+  counted: true
+LR:
+  name: Liberia
+  capital: Monrovia
+  counted: true
+LY:
+  name: Libya
+  capital: Tripoli
+  counted: true
+LI:
+  name: Liechtenstein
+  capital: Vaduz
+  counted: true
+LT:
+  name: Lithuania
+  capital: Vilnius
+  counted: true
+LU:
+  name: Luxembourg
+  capital: Luxembourg City
+  counted: true
+MO:
+  name: Macao
+  counted: false
+  badge: Special administrative region of China
+MG:
+  name: Madagascar
+  capital: Antananarivo
+  counted: true
+MW:
+  name: Malawi
+  capital: Lilongwe
+  counted: true
+MY:
+  name: Malaysia
+  capital: Kuala Lumpur
+  counted: true
+MV:
+  name: Maldives
+  capital: Malé
+  counted: true
+ML:
+  name: Mali
+  capital: Bamako
+  counted: true
+MT:
+  name: Malta
+  capital: Valletta
+  counted: true
+MH:
+  name: Marshall Islands
+  capital: Majuro
+  counted: true
+MQ:
+  name: Martinique
+  counted: false
+  badge: Overseas region of France
+MR:
+  name: Mauritania
+  capital: Nouakchott
+  counted: true
+MU:
+  name: Mauritius
+  capital: Port Louis
+  counted: true
+YT:
+  name: Mayotte
+  counted: false
+  badge: Overseas region of France
+MX:
+  name: Mexico
+  capital: Mexico City
+  counted: true
+FM:
+  name: Micronesia
+  capital: Palikir
+  counted: true
+MD:
+  name: Moldova
+  capital: Chișinău
+  counted: true
+MC:
+  name: Monaco
+  capital: Monaco
+  counted: true
+MN:
+  name: Mongolia
+  capital: Ulaanbaatar
+  counted: true
+ME:
+  name: Montenegro
+  capital: Podgorica
+  counted: true
+MS:
+  name: Montserrat
+  counted: false
+  badge: Territory
+MA:
+  name: Morocco
+  capital: Rabat
+  counted: true
+MZ:
+  name: Mozambique
+  capital: Maputo
+  counted: true
+MM:
+  name: Myanmar
+  capital: Naypyidaw
+  counted: true
+NA:
+  name: Namibia
+  capital: Windhoek
+  counted: true
+NR:
+  name: Nauru
+  capital: Yaren
+  counted: true
+NP:
+  name: Nepal
+  capital: Kathmandu
+  counted: true
+NL:
+  name: Netherlands
+  capital: Amsterdam
+  counted: true
+NC:
+  name: New Caledonia
+  counted: false
+  badge: Territory
+NZ:
+  name: New Zealand
+  capital: Wellington
+  counted: true
+NI:
+  name: Nicaragua
+  capital: Managua
+  counted: true
+NE:
+  name: Niger
+  capital: Niamey
+  counted: true
+NG:
+  name: Nigeria
+  capital: Abuja
+  counted: true
+NU:
+  name: Niue
+  counted: false
+  badge: Territory
+NF:
+  name: Norfolk Island
+  counted: false
+  badge: Territory
+KP:
+  name: North Korea
+  capital: Pyongyang
+  counted: true
+MK:
+  name: North Macedonia
+  capital: Skopje
+  counted: true
+MP:
+  name: Northern Mariana Islands
+  counted: false
+  badge: Territory
+NO:
+  name: Norway
+  capital: Oslo
+  counted: true
+OM:
+  name: Oman
+  capital: Muscat
+  counted: true
+PK:
+  name: Pakistan
+  capital: Islamabad
+  counted: true
+PW:
+  name: Palau
+  capital: Ngerulmud
+  counted: true
+PS:
+  name: Palestine
+  capital: Ramallah
+  counted: true
+  badge: UN observer state
+PA:
+  name: Panama
+  capital: Panama City
+  counted: true
+PG:
+  name: Papua New Guinea
+  capital: Port Moresby
+  counted: true
+PY:
+  name: Paraguay
+  capital: Asunción
+  counted: true
+PE:
+  name: Peru
+  capital: Lima
+  counted: true
+PH:
+  name: Philippines
+  capital: Manila
+  counted: true
+PN:
+  name: Pitcairn Islands
+  counted: false
+  badge: Territory
+PL:
+  name: Poland
+  capital: Warsaw
+  counted: true
+PT:
+  name: Portugal
+  capital: Lisbon
+  counted: true
+PR:
+  name: Puerto Rico
+  counted: false
+  badge: Territory of the United States
+QA:
+  name: Qatar
+  capital: Doha
+  counted: true
+CG:
+  name: Rep. of Congo
+  capital: Brazzaville
+  counted: true
+RO:
+  name: Romania
+  capital: Bucharest
+  counted: true
+RU:
+  name: Russia
+  capital: Moscow
+  counted: true
+RW:
+  name: Rwanda
+  capital: Kigali
+  counted: true
+RE:
+  name: Réunion
+  counted: false
+  badge: Overseas region of France
+BL:
+  name: Saint Barthélemy
+  counted: false
+  badge: Territory
+SH:
+  name: "Saint Helena, Ascension and Tristan da Cunha"
+  counted: false
+  badge: Territory
+KN:
+  name: Saint Kitts and Nevis
+  capital: Basseterre
+  counted: true
+LC:
+  name: Saint Lucia
+  capital: Castries
+  counted: true
+MF:
+  name: Saint Martin
+  counted: false
+  badge: Territory
+PM:
+  name: Saint Pierre and Miquelon
+  counted: false
+  badge: Territory
+VC:
+  name: Saint Vincent and the Grenadines
+  capital: Kingstown
+  counted: true
+WS:
+  name: Samoa
+  capital: Apia
+  counted: true
+SM:
+  name: San Marino
+  capital: City of San Marino
+  counted: true
+SA:
+  name: Saudi Arabia
+  capital: Riyadh
+  counted: true
+SN:
+  name: Senegal
+  capital: Dakar
+  counted: true
+RS:
+  name: Serbia
+  capital: Belgrade
+  counted: true
+SC:
+  name: Seychelles
+  capital: Victoria
+  counted: true
+SL:
+  name: Sierra Leone
+  capital: Freetown
+  counted: true
+SG:
+  name: Singapore
+  capital: Singapore
+  counted: true
+SX:
+  name: Sint Maarten
+  counted: false
+  badge: Territory
+SK:
+  name: Slovakia
+  capital: Bratislava
+  counted: true
+SI:
+  name: Slovenia
+  capital: Ljubljana
+  counted: true
+SB:
+  name: Solomon Islands
+  capital: Honiara
+  counted: true
+SO:
+  name: Somalia
+  capital: Mogadishu
+  counted: true
+ZA:
+  name: South Africa
+  capital: Pretoria
+  counted: true
+GS:
+  name: South Georgia and the South Sandwich Islands
+  counted: false
+  badge: Territory
+KR:
+  name: South Korea
+  capital: Seoul
+  counted: true
+SS:
+  name: South Sudan
+  capital: Juba
+  counted: true
+ES:
+  name: Spain
+  capital: Madrid
+  counted: true
+LK:
+  name: Sri Lanka
+  capital: Colombo
+  counted: true
+SD:
+  name: Sudan
+  capital: Khartoum
+  counted: true
+SR:
+  name: Suriname
+  capital: Paramaribo
+  counted: true
+SJ:
+  name: Svalbard and Jan Mayen
+  counted: false
+  badge: Territory
+SE:
+  name: Sweden
+  capital: Stockholm
+  counted: true
+CH:
+  name: Switzerland
+  capital: Bern
+  counted: true
+SY:
+  name: Syria
+  capital: Damascus
+  counted: true
+ST:
+  name: São Tomé and Príncipe
+  capital: São Tomé
+  counted: true
+TW:
+  name: Taiwan
+  capital: Taipei
+  counted: true
+  badge: Partially recognised
+TJ:
+  name: Tajikistan
+  capital: Dushanbe
+  counted: true
+TZ:
+  name: Tanzania
+  capital: Dodoma
+  counted: true
+TH:
+  name: Thailand
+  capital: Bangkok
+  counted: true
+TL:
+  name: Timor-Leste
+  capital: Dili
+  counted: true
+TG:
+  name: Togo
+  capital: Lomé
+  counted: true
+TK:
+  name: Tokelau
+  counted: false
+  badge: Territory
+TO:
+  name: Tonga
+  capital: "Nuku'alofa"
+  counted: true
+TT:
+  name: Trinidad and Tobago
+  capital: Port of Spain
+  counted: true
+TN:
+  name: Tunisia
+  capital: Tunis
+  counted: true
+TR:
+  name: Turkey
+  capital: Ankara
+  counted: true
+TM:
+  name: Turkmenistan
+  capital: Ashgabat
+  counted: true
+TC:
+  name: Turks and Caicos Islands
+  counted: false
+  badge: Territory
+TV:
+  name: Tuvalu
+  capital: Funafuti
+  counted: true
+UG:
+  name: Uganda
+  capital: Kampala
+  counted: true
+UA:
+  name: Ukraine
+  capital: Kyiv
+  counted: true
+AE:
+  name: United Arab Emirates
+  capital: Abu Dhabi
+  counted: true
+GB:
+  name: United Kingdom
+  capital: London
+  counted: true
+US:
+  name: United States
+  capital: Washington D.C.
+  counted: true
+UM:
+  name: United States Minor Outlying Islands
+  counted: false
+  badge: Territory
+VI:
+  name: United States Virgin Islands
+  counted: false
+  badge: Territory
+UY:
+  name: Uruguay
+  capital: Montevideo
+  counted: true
+UZ:
+  name: Uzbekistan
+  capital: Tashkent
+  counted: true
+VU:
+  name: Vanuatu
+  capital: Port Vila
+  counted: true
+VA:
+  name: Vatican City
+  capital: Vatican City
+  counted: true
+  badge: UN observer state
+VE:
+  name: Venezuela
+  capital: Caracas
+  counted: true
+VN:
+  name: Vietnam
+  capital: Hanoi
+  counted: true
+WF:
+  name: Wallis and Futuna
+  counted: false
+  badge: Territory
+EH:
+  name: Western Sahara
+  counted: false
+  badge: Disputed territory
+YE:
+  name: Yemen
+  capital: "Sana'a"
+  counted: true
+ZM:
+  name: Zambia
+  capital: Lusaka
+  counted: true
+ZW:
+  name: Zimbabwe
+  capital: Harare
+  counted: true
+AX:
+  name: Åland Islands
+  counted: false
+  badge: Territory

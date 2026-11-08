@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import { nav } from '../data/site';
+---
+<Base title="Page not found" description="That page does not exist, or it moved." noindex>
+  <main class="nf wrap">
+    <h1>Page not found</h1>
+    <p>That page does not exist, or it moved.</p>
+    <p class="links">{nav.map((n) => <a class="link-muted" href={n.href}>{n.label}</a>)}</p>
+  </main>
+</Base>
+
+<style>
+  .nf { padding-top: 120px; }
+  h1 { margin: 0 0 12px; font-size: 28px; font-weight: 300; letter-spacing: -0.02em; }
+  p { margin: 0; color: var(--muted); }
+  .links { display: flex; gap: 24px; margin-top: 28px; font-size: 14px; }
+</style>

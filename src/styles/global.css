@@ -1,0 +1,96 @@
+/* ══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   Every colour, width, and motion curve on the site comes from here.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --paper: #f3f2ef;       /* page background */
+  --panel: #e9e8e4;       /* quiet surfaces */
+  --line: #dedddb;        /* rules and borders */
+  --line-soft: #e3e2dd;   /* index rows */
+  --text: #2b2b29;        /* soft ink */
+  --muted: #6e6d69;       /* secondary text, 4.6:1 on paper */
+  --faint: #a9a8a3;       /* icons only, never body text */
+  --glass: rgba(233, 232, 228, 0.72);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+
+  --gutter: clamp(12px, 2.5vw, 32px);
+  --maxw: 1344px;
+  --nav-h: 72px;          /* height the sticky nav occupies, incl. its top gap */
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fast: 0.25s;
+  --base: 0.45s;
+  --slow: 0.6s;
+}
+
+@font-face {
+  font-family: 'Florian Hand';
+  src: url('/fonts/FlorianHand-Regular.woff2') format('woff2');
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+  font-family: 'Inter Variable', Inter, system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main { flex: 1; }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 4px; }
+
+/* One content width for the whole site: nav pill, grids, and text share these edges */
+.wrap { width: min(100% - 2 * var(--gutter), var(--maxw)); margin-inline: auto; }
+
+.hand { font-family: 'Florian Hand', 'Inter Variable', sans-serif; font-weight: 400; line-height: 1; }
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.link-muted { color: var(--muted); transition: color var(--fast) ease; }
+.link-muted:hover { color: var(--text); }
+
+/* Index rows: shared by the photo index and the project index */
+.index-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 24px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: transparent;
+  font-size: 14px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--fast) ease;
+}
+.index-row:last-child { border-bottom: 1px solid var(--line-soft); }
+.index-row:hover { background: #ecebe7; }
+.index-row .meta { color: var(--muted); white-space: nowrap; text-align: right; }
+.index-row[aria-current='page'] .name { font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

@@ -1,0 +1,11 @@
+// Cloudflare deploy settings. The site is fully static: Cloudflare only serves the
+// finished files in dist/. Having this file stops Wrangler from reconfiguring the
+// project for server rendering on every deploy.
+{
+  "name": "preis-works",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

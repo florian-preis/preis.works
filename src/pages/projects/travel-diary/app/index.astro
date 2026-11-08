@@ -1,0 +1,97 @@
+---
+// gowiththeflo: Florian's travel diary and country fact book.
+// The content lives in /content/travel (trips, visited countries, country facts);
+// this page bundles it at build time, so the map needs only one extra request
+// (the country shapes) before it can draw.
+import '@fontsource-variable/inter';
+import '../../../../styles/global.css';
+import '../../../../travel/app.css';
+import { loadTravelData } from '../../../../travel/data';
+import topoUrl from '../../../../travel/countries.topo.json?url';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+
+const data = await loadTravelData();
+const payload = JSON.stringify({ ...data, topo: topoUrl }).replace(/</g, '\\u003c');
+const title = 'gowiththeflo';
+const description = "Florian's travel diary: the countries he has visited, the stories from each trip, and a few facts about every country.";
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/assets/social-card.jpg', Astro.site);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={canonical}>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={canonical}>
+  <meta property="og:image" content={ogImage}>
+  <meta name="theme-color" content="#f3f2ef">
+  <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+  <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+  <link rel="preload" href={topoUrl} as="fetch" crossorigin>
+  <link rel="modulepreload" href={workerUrl}>
+  <link rel="preload" href="/fonts/FlorianHand-Regular.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="tf">
+  <a class="tf-brand hand" href="/projects/travel-diary/" aria-label="gowiththeflo, about this project">gowiththeflo</a>
+
+  <section class="tf-panel" aria-label="Summary">
+    <div class="tf-count">
+      <span class="tf-count-num">{data.count}</span>
+      <span class="tf-count-of">/ {data.total}</span>
+      <button class="tf-info" type="button" aria-expanded="false" aria-controls="tf-count-pop" aria-label="How the countries are counted">i</button>
+    </div>
+    <p class="tf-count-label">countries visited</p>
+    <div id="tf-count-pop" class="tf-pop" role="note" hidden>
+      The {data.total} are the 193 UN member states plus Kosovo, Palestine, Taiwan, and Vatican City. Territories such as Hong Kong appear on the map but don't change the count.
+      <span class="tf-credit">Map data: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>.</span>
+    </div>
+    <div class="tf-actions">
+      <button class="tf-pill" type="button" id="tf-open-diary">Diary</button>
+      <div class="tf-zoom" role="group" aria-label="Zoom">
+        <button type="button" id="tf-zoom-in" aria-label="Zoom in">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button type="button" id="tf-zoom-out" aria-label="Zoom out">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="tf-hint tf-fine-only">Right-click two places to measure the distance</p>
+  </section>
+
+  <aside id="tf-drawer" class="tf-drawer" aria-hidden="true">
+    <div class="tf-drawer-card" role="dialog" aria-labelledby="tf-d-title">
+      <header class="tf-d-head">
+        <button class="tf-icon-btn tf-back" type="button" id="tf-back" aria-label="Back" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="tf-d-titles" id="tf-d-titles"></div>
+        <button class="tf-icon-btn tf-close" type="button" id="tf-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="tf-d-body" id="tf-d-body"></div>
+    </div>
+  </aside>
+
+  <div id="map" class="tf-map" aria-label="World map. Countries Florian has visited are clear, the rest sit under fog."></div>
+  <div id="tf-tip" class="tf-label" role="tooltip" aria-hidden="true"></div>
+  <div id="tf-dist" class="tf-chip tf-dist" aria-live="polite"></div>
+  <div id="tf-plane" class="tf-plane" aria-hidden="true">
+    <svg viewBox="0 0 32 32"><path d="M29.37,14.75,20,10V6a4,4,0,0,0-8,0v4L2.63,14.75a1,1,0,0,0-.63.93v5a1,1,0,0,0,1,1,1,1,0,0,0,.29-.05L12,18v5L8.55,24.72a1,1,0,0,0-.55.9V29a1,1,0,0,0,1,1,.9.9,0,0,0,.28,0L16,28l6.72,2A.9.9,0,0,0,23,30a1,1,0,0,0,1-1V25.62a1,1,0,0,0-.55-.9L20,23V18l8.71,3.61a1,1,0,0,0,.29.05,1,1,0,0,0,1-1v-5A1,1,0,0,0,29.37,14.75Z"/></svg>
+  </div>
+  <noscript><p class="tf-noscript">gowiththeflo needs JavaScript to draw the map.</p></noscript>
+
+  <script type="application/json" id="tf-data" set:html={payload}></script>
+  <script>
+    import '../../../../travel/app';
+  </script>
+</body>
+</html>
