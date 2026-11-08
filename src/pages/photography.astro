@@ -127,7 +127,9 @@ const items = await Promise.all(
   .lightbox[hidden] { display: none; }
   .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
   /* The frame shrinks to the photo, so the caption lines up with the photo's edges */
-  .lb-frame { display: flex; flex-direction: column; gap: 14px; width: fit-content; }
+  /* The frame always reserves room for a two-line caption below the image, and the caption hangs in that
+     room instead of pushing the image. So the image never moves while you flip through, whatever the caption's length */
+  .lb-frame { position: relative; display: flex; flex-direction: column; width: fit-content; padding-bottom: 50px; }
   /* Wide screens: every photo at the same height, width follows the photo (very wide panoramas cap at the screen width) */
   .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
   /* Tall screens: every photo at the same width, height follows the photo (very tall ones cap at the screen height) */
@@ -135,7 +137,8 @@ const items = await Promise.all(
     .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
   }
   .lb-img.loading { filter: blur(12px); }
-  .lb-caption { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; font-size: 12px; line-height: 1.5; width: 0; min-width: 100%; }
+  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 12px; line-height: 1.5; }
+  .lb-count { padding-top: 18px; }
   .lb-caption > span:first-child { display: flex; flex-direction: column; }
   .lb-date, .lb-count { color: var(--muted); }
   .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
