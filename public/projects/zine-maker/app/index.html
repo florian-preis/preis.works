@@ -116,7 +116,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
 .unit { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .unit input { width: 96px; }
 input[type="text"], input[type="number"], textarea { width: 100%; border: 1px solid var(--line); background: var(--sheet); color: #2b2b29; border-radius: 8px; padding: 7px 9px; font-size: 13px; }
-textarea { resize: vertical; min-height: 64px; line-height: 1.45; }
+textarea { resize: vertical; line-height: 1.45; }
 input[type="range"] { width: 100%; accent-color: var(--text); }
 .check { display: flex; gap: 8px; align-items: center; font-size: 13px; cursor: pointer; }
 .check input { accent-color: var(--text); width: 16px; height: 16px; }
@@ -183,11 +183,12 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 
 /* Page editor */
 #pageEditor, #backEditor { display: grid; gap: 18px; }
-.slotrow { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: start; }
-.slotrow .ph { width: 64px; height: 64px; border-radius: 6px; background: var(--panel); overflow: hidden; display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
+.slotrow { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; align-items: start; }
+.slotrow .ph { width: 72px; height: 72px; border-radius: 6px; background: var(--panel); overflow: hidden; display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
 .slotrow .ph img { width: 100%; height: 100%; object-fit: cover; }
 .slotrow .meta { display: grid; gap: 6px; min-width: 0; }
 .slotrow .meta .row { justify-content: space-between; min-height: 28px; }
+.slotrow .meta.with-caption { height: 72px; display: flex; flex-direction: column; justify-content: space-between; }
 
 /* Overlay */
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(20,20,19,.38); display: grid; place-items: center; padding: 16px; }
@@ -244,7 +245,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
   <aside class="rail" aria-label="Settings">
     <div class="tabbar">
     <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-zine" data-tab="zine" aria-selected="true">Zine</button>
+      <button type="button" role="tab" id="tab-zine" data-tab="zine" aria-selected="true">Layout</button>
       <button type="button" role="tab" id="tab-cover" data-tab="cover" aria-selected="false">Cover</button>
       <button type="button" role="tab" id="tab-back" data-tab="back" aria-selected="false">Back</button>
       <button type="button" role="tab" id="tab-page" data-tab="page" aria-selected="false">Page</button>
@@ -278,7 +279,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
       </div>
       <div class="group" data-show="format=fold">
         <label class="check"><input type="checkbox" id="in-poster" data-k="poster.on"> Secret poster on the back</label>
-        <p class="hint" data-show="poster.on=true">One photo on the back of the sheet, revealed when unfolded. Print on both sides; the cut runs through its middle.</p>
+        <p class="hint" data-show="poster.on=true">One photo on the back of the sheet, revealed when unfolded. Requires printing on both sides, and the cut runs through the middle of the poster.</p>
       </div>
       <div class="group" data-show="format=booklet">
         <div class="label"><label for="in-pages">Pages</label><output data-out="bookletPages"></output></div>
@@ -394,7 +395,6 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
           <button type="button" data-v="medium">Medium</button>
           <button type="button" data-v="large">Large</button>
         </div>
-        <label class="check"><input type="checkbox" id="in-upper" data-k="cover.upper"> Uppercase</label>
       </div>
       <div class="group">
         <h3>Corners</h3>
@@ -414,7 +414,6 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
           <button type="button" data-v="custom">Custom</button>
         </div>
         <label class="colour inline" data-show="cover.ink=custom"><input type="color" id="in-ink" data-k="cover.inkCustom"> Custom text colour</label>
-        <p class="hint" data-show="cover.ink=auto">Auto picks light or dark separately for the title and each corner.</p>
       </div>
     </section>
 
@@ -435,7 +434,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
           <button type="button" data-v="plain">Blank</button>
         </div>
         <label class="label" for="in-colophon">Colophon, set from the bottom left</label>
-        <textarea id="in-colophon" rows="5" data-k="back.text"></textarea>
+        <textarea id="in-colophon" rows="2" data-k="back.text"></textarea>
         <div class="label">Text colour</div>
         <div class="seg" data-k="back.ink" id="seg-backink">
           <button type="button" data-v="auto">Auto</button>
@@ -530,6 +529,8 @@ const POSTER = -1;                   // page id of the secret poster on the back
 const newPage = () => ({ layout: 'single', fit: 'auto',
   slots: [{ photo: null, caption: '', captionOn: false }, { photo: null, caption: '', captionOn: false }] });
 
+// month and year for the date corner, e.g. 11.2026
+const monthYear = (d = new Date()) => `${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 function defaultState() {
   return {
     v: 3, format: 'fold', paper: 'A4', bookletPages: 16, marginMm: 10, guides: true, pageNumbers: 'none',
@@ -539,12 +540,12 @@ function defaultState() {
       mode: 'gradient', style: 'any', seed: 54, blend: 'soft', size: 'medium', offX: 0, offY: 0,
       base: '#852736', c1: '#e2c99e', c2: '#95b0dd', useC2: false, grain: 'medium',
       title: 'Late Light', titleSize: 'medium', upper: false,
-      tl: 'Vol. 01', tr: '07.11.2026', bl: 'Copenhagen, DK', br: 'Florian Preis',
+      tl: 'Vol. 01', tr: monthYear(), bl: 'Copenhagen, DK', br: 'Florian Preis',
       ink: 'auto', inkCustom: '#ffffff',
     },
     back: {
       mode: 'colophon', bg: 'cover', ink: 'auto', inkCustom: '#ffffff',
-      text: 'Late Light\nPhotographs by Florian Preis\nPrinted at home, folded by hand\npreis.works',
+      text: 'Designed with preis.works\nPrinted at home, folded by hand',
       page: newPage(),
     },
     pages: [],
@@ -629,7 +630,7 @@ function geom() {
   if (state.format === 'quarter') return { sw: a, sh: b, cols: 2, rows: 2, pw: a / 2, ph: b / 2, duplex: 'long' };
   return { sw: b, sh: a, cols: 2, rows: 1, pw: b / 2, ph: a, duplex: 'short' };
 }
-// the white frame on every page equals the printer margin set in the Zine tab (capped so photos keep some room)
+// the white frame on every page equals the printer margin set in the Layout tab (capped so photos keep some room)
 const frameMm = g => Math.min(Math.max(0, Number(state.marginMm) || 0), g.pw * 0.3);
 function pageSizeName() {
   const map = { fold: { A4: 'A7', A3: 'A6' }, quarter: { A4: 'A6', A3: 'A5' }, booklet: { A4: 'A5', A3: 'A4' } };
@@ -846,14 +847,16 @@ function drawCover(ctx, W, H, o) {
   applyGrain(ctx, x, y, w, h, s, c.seed + 101);
   const ins = cornerInset(w), sp = smallPx(g, s);
 
-  const raw = c.upper ? c.title.toUpperCase() : c.title;
-  const lines = raw.split('\n');
+  // titles keep one of the three fixed sizes and wrap onto new lines when too wide;
+  // only a single word wider than the cover is scaled down, so it never runs off the page
+  const raw = c.title.replace(/\s+$/, '');
   let tp = TITLE[c.titleSize] / 100 * W;
+  const room = w - 2 * ins;
   ctx.font = `400 ${tp}px ${FONT_CSS[state.titleFont]}`;
+  const lines = wrapLines(ctx, raw, room);
   let tw = Math.max(1, ...lines.map(l => ctx.measureText(l).width));
-  const room = w - 2 * ins, need = tw;
-  if (need > room) {            // shrink long titles so they never run off the cover
-    const k = room / need; tp *= k; tw *= k;
+  if (tw > room) {
+    const k = room / tw; tp *= k; tw *= k;
     ctx.font = `400 ${tp}px ${FONT_CSS[state.titleFont]}`;
   }
   const lh = tp * 1.08, th = lh * lines.length, cx = x + w / 2, cy = y + h / 2;
@@ -1123,7 +1126,7 @@ function renderCoverPreview() {
   const { style } = makeShapes(state.cover);
   $('#styleNow').textContent = state.cover.mode === 'gradient' ? `Showing: ${STYLE_LABEL[style]}` : '';
   $('#resetPos').hidden = !(state.cover.offX || state.cover.offY) || state.cover.mode !== 'gradient';
-  $('#previewHint').textContent = state.cover.mode === 'gradient' ? 'Back and cover, laid flat. Drag to move the gradient.' : 'Back and cover, laid flat.';
+  $('#previewHint').textContent = state.cover.mode === 'gradient' ? 'Drag to move the gradient.' : '';
 }
 
 /* drag the preview to move the gradient */
@@ -1349,9 +1352,7 @@ function pageEditor(host, page, n) {
   const slotsShown = page.layout === 'stack' ? 2 : 1;
   host.append(
     el('div', { class: 'group' }, el('h3', { text: pageLabel(n) }),
-      el('p', { class: 'hint', text: page.layout === 'stack'
-        ? 'Drop on the top or bottom half of the page to place each photo.'
-        : 'Drop a photo on the page, or drag one from the tray.' })),
+      el('p', { class: 'hint', text: 'Drop photos on the page, or drag from the tray.' })),
     el('div', { class: 'group' }, el('div', { class: 'label', text: 'Layout' }),
       segBtns([['single', 'One photo'], ['stack', 'Two stacked']], page.layout, v => { page.layout = v; re(); })),
     el('div', { class: 'group' }, el('div', { class: 'label', text: 'Fit' }),
@@ -1360,7 +1361,7 @@ function pageEditor(host, page, n) {
   );
   for (let i = 0; i < slotsShown; i++) {
     const sl = page.slots[i], ph = sl.photo && photos.get(sl.photo);
-    const meta = el('div', { class: 'meta' });
+    const meta = el('div', { class: sl.captionOn ? 'meta with-caption' : 'meta' });
     meta.append(el('div', { class: 'row' },
       el('label', { class: 'check' },
         el('input', { type: 'checkbox', id: `cap-${n}-${i}`, ...(sl.captionOn ? { checked: '' } : {}), onchange: e => { sl.captionOn = e.target.checked; re(); } }),
