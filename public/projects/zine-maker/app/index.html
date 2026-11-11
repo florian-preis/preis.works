@@ -61,7 +61,7 @@ button { cursor: pointer; }
 .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 16px;
   padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); }
-.brand { display: flex; align-items: baseline; gap: 8px; margin-right: auto; min-width: 0; }
+.brand { display: flex; align-items: baseline; gap: 14px; margin-right: auto; min-width: 0; }
 .brand b { font: 400 30px/1 var(--hand); letter-spacing: 0; }
 .brand span { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .btn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 14px; font-size: 13px; white-space: nowrap; }
@@ -84,11 +84,11 @@ button { cursor: pointer; }
 .app { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: calc(100% - 58px); }
 .rail { border-right: 1px solid var(--line); background: var(--paper); padding-block: 14px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 16px;
   position: sticky; top: calc(58px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 58px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--panel); border-radius: 10px; padding: 3px; margin-bottom: 18px;
-  position: sticky; top: 0; z-index: 4; }
-/* paper band behind the pinned tabs, so settings scroll out of sight underneath */
-.tabs::before { content: ""; position: absolute; left: -16px; right: -16px; top: -14px; bottom: -12px; background: var(--paper); z-index: -1; }
-.tabs button { border: 0; background: none; border-radius: 8px; padding: 6px 0; font-size: 13px; color: var(--muted); }
+/* the tab bar pins to the top of the settings panel; its paper band hides settings scrolling underneath */
+.tabbar { position: sticky; top: -14px; z-index: 4; background: var(--paper); margin: -14px 0 0; padding: 14px 0 18px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--panel); border-radius: 10px; padding: 3px; height: 38px; }
+.tabs button { border: 0; background: none; border-radius: 8px; padding: 0; font-size: 13px; color: var(--muted); }
+.tabs button:hover { color: var(--text); background: rgba(255, 255, 255, 0.35); }
 .tabs button[aria-selected="true"] { background: var(--paper); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 .pane { display: grid; gap: 18px; }
 .group { display: grid; gap: 8px; }
@@ -129,7 +129,8 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 .presets button[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
 .presets button span { opacity: .75; }
 .presets button { height: 38px; text-shadow: none !important; font-size: 12px !important; text-align: left; padding: 0 10px !important; border-radius: 7px; border: 1px solid var(--line); font-size: 10.5px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); padding: 0; }
-.sticky-preview { position: sticky; top: 50px; z-index: 3; background: var(--paper); margin: 0 -4px; padding: 0 4px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+/* shared back and cover preview (Cover and Back tabs); it pins straight under the tab bar, so it never shifts */
+.sticky-preview { position: sticky; top: 56px; z-index: 3; background: var(--paper); margin: 0 -4px 18px; padding: 0 4px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
 .cover-preview { width: 100%; display: block; background: #fff; box-shadow: var(--shadow); cursor: grab; touch-action: none; }
 .cover-preview:active { cursor: grabbing; }
 .preview-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; }
@@ -186,6 +187,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 .slotrow .ph { width: 64px; height: 64px; border-radius: 6px; background: var(--panel); overflow: hidden; display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
 .slotrow .ph img { width: 100%; height: 100%; object-fit: cover; }
 .slotrow .meta { display: grid; gap: 6px; min-width: 0; }
+.slotrow .meta .row { justify-content: space-between; min-height: 28px; }
 
 /* Overlay */
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(20,20,19,.38); display: grid; place-items: center; padding: 16px; }
@@ -206,7 +208,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
   body { display: flex; flex-direction: column; }
   .bar, .app-foot { flex: none; }
   .app { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
-  .rail { position: static; max-height: none; height: 100%; }
+  .rail { position: static; max-height: none; height: 100%; overflow-y: scroll; }
   .main { height: 100%; overflow-y: auto; overscroll-behavior: contain; }
 }
 
@@ -215,12 +217,11 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
   .rail { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .tray { grid-template-columns: 1fr; }
-  .tabs { position: static; }
-  .tabs::before { display: none; }
+  .tabbar { position: static; margin: 0; padding: 0 0 18px; }
   .dock { position: static; margin: 0 0 22px; padding: 0; border-bottom: 0; }
   .tray-actions { grid-template-columns: 1fr 1fr; }
   .tray-actions .hint { grid-column: 1 / -1; }
-  .sticky-preview { position: static; margin: 0; padding: 0 0 12px; }
+  .sticky-preview { position: static; margin: 0 0 18px; padding: 0 0 12px; }
   .brand span { display: none; }
 }
 @media (max-width: 520px) {
@@ -241,11 +242,20 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 
 <div class="app">
   <aside class="rail" aria-label="Settings">
+    <div class="tabbar">
     <div class="tabs" role="tablist">
       <button type="button" role="tab" id="tab-zine" data-tab="zine" aria-selected="true">Zine</button>
       <button type="button" role="tab" id="tab-cover" data-tab="cover" aria-selected="false">Cover</button>
       <button type="button" role="tab" id="tab-back" data-tab="back" aria-selected="false">Back</button>
       <button type="button" role="tab" id="tab-page" data-tab="page" aria-selected="false">Page</button>
+    </div>
+    </div>
+    <div class="sticky-preview" id="sharedPreview" hidden>
+      <canvas class="cover-preview" id="coverPreview" aria-label="Back and front cover, laid flat"></canvas>
+      <div class="preview-meta">
+        <span class="hint" id="previewHint"></span>
+        <button type="button" class="btn small" id="resetPos" hidden>Re-centre</button>
+      </div>
     </div>
 
     <!-- ZINE -->
@@ -320,13 +330,6 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 
     <!-- COVER -->
     <section class="pane" data-pane="cover" hidden>
-      <div class="sticky-preview">
-        <canvas class="cover-preview" id="coverPreview" aria-label="Back and front cover, laid flat"></canvas>
-        <div class="preview-meta">
-          <span class="hint" id="previewHint"></span>
-          <button type="button" class="btn small" id="resetPos" hidden>Re-centre</button>
-        </div>
-      </div>
       <div class="group">
         <h3>Background</h3>
         <div class="seg" data-k="cover.mode" id="seg-mode">
@@ -524,8 +527,8 @@ const STORE_KEY = 'zine-maker-v3';
 const POSTER = -1;                   // page id of the secret poster on the back of the fold zine sheet
 
 /* ---------- state ---------- */
-const newPage = () => ({ layout: 'single', fit: 'auto', captionOn: false,
-  slots: [{ photo: null, caption: '' }, { photo: null, caption: '' }] });
+const newPage = () => ({ layout: 'single', fit: 'auto',
+  slots: [{ photo: null, caption: '', captionOn: false }, { photo: null, caption: '', captionOn: false }] });
 
 function defaultState() {
   return {
@@ -560,8 +563,8 @@ function merge(def, src) {
 }
 function cleanPage(p) {
   const q = merge(newPage(), p);
-  q.slots = [0, 1].map(i => merge({ photo: null, caption: '' }, (p && p.slots && p.slots[i]) || {}));
-  q.slots.forEach(s => { s.photo = null; });      // photos are not kept between visits
+  q.slots = [0, 1].map(i => merge({ photo: null, caption: '', captionOn: false }, (p && p.slots && p.slots[i]) || {}));
+  q.slots.forEach(s => { s.photo = null; if (p && p.captionOn) s.captionOn = true; });   // photos are not kept; old page-wide captions carry over
   return q;
 }
 function load() {
@@ -934,10 +937,11 @@ function partnerOf(n) {
   const q = n % 2 === 0 ? n + 1 : n - 1;
   return pageObj(q) ? q : null;
 }
+const pageCaptions = p => slotsOf(p).some(s => s.captionOn);
 function drawPhotoPage(ctx, page, W, H, o, n) {
   const g = o.g, s = W / g.pw, [x, y, w, h0] = frameArea(g, s, W, H), m = x;
   // both pages of a spread keep the caption strip if either has captions, so photo edges line up across the spread
-  const q = partnerOf(n), spreadCaptions = page.captionOn || (q !== null && pageObj(q).captionOn);
+  const q = partnerOf(n), spreadCaptions = pageCaptions(page) || (q !== null && pageCaptions(pageObj(q)));
   const sp = smallPx(g, s), capH = spreadCaptions ? sp * 2.5 : 0, capGap = sp * 1.6;
   const prep = () => { ctx.font = `400 ${sp}px ${FONT_CSS[state.captionFont]}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; };
   // booklet page numbers sit in a strip at the bottom of the frame, so they stay inside the printable area
@@ -957,7 +961,7 @@ function drawPhotoPage(ctx, page, W, H, o, n) {
     const bh = h - capH;
     if (!ph) {
       placeholder(ctx, x, y, w, bh, sp, o);
-      if (page.captionOn) { prep(); caption(ctx, sl.caption, x, y + bh + capGap, w, o); }
+      if (sl.captionOn) { prep(); caption(ctx, sl.caption, x, y + bh + capGap, w, o); }
       return;
     }
     const src = o.img(ph), [sw, sh] = srcDims(src);
@@ -965,18 +969,18 @@ function drawPhotoPage(ctx, page, W, H, o, n) {
     if (mode === 'fill') {
       const sc = Math.max(w / sw, bh / sh), cw = w / sc, ch = bh / sc;
       ctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, x, y, w, bh);
-      if (page.captionOn) { prep(); caption(ctx, sl.caption, x, y + bh + capGap, w, o); }
+      if (sl.captionOn) { prep(); caption(ctx, sl.caption, x, y + bh + capGap, w, o); }
     } else {
       const sc = Math.min(w / sw, bh / sh), dw = sw * sc, dh = sh * sc;
       const ix = x + (w - dw) / 2, iy = y + (h - dh - capH) * 0.45;
       ctx.drawImage(src, ix, iy, dw, dh);
-      if (page.captionOn) { prep(); caption(ctx, sl.caption, ix, iy + dh + capGap, dw, o); }
+      if (sl.captionOn) { prep(); caption(ctx, sl.caption, ix, iy + dh + capGap, dw, o); }
     }
     return;
   }
   // two equal boxes: the upper one starts at the top edge of a full-page photo, the lower one ends at its bottom edge
   const gapBase = Math.max(3 * s, Math.min(m * 0.7, 8 * s));
-  const gap = gapBase + (page.captionOn ? capH : 0);
+  const gap = gapBase + (page.slots[0].captionOn ? capH : 0);     // room for the upper photo's caption
   const boxH = (h - capH - gap) / 2;
   page.slots.slice(0, 2).forEach((sl, k) => {
     const by = y + k * (boxH + gap), ph = sl.photo && photos.get(sl.photo);
@@ -985,7 +989,7 @@ function drawPhotoPage(ctx, page, W, H, o, n) {
       const sc = Math.max(w / sw, boxH / sh), cw = w / sc, ch = boxH / sc;
       ctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, x, by, w, boxH);
     } else placeholder(ctx, x, by, w, boxH, sp, o);
-    if (page.captionOn) { prep(); caption(ctx, sl.caption, x, by + boxH + capGap, w, o); }
+    if (sl.captionOn) { prep(); caption(ctx, sl.caption, x, by + boxH + capGap, w, o); }
   });
 }
 
@@ -1072,7 +1076,7 @@ function schedule() { if (!scheduled) { scheduled = true; requestAnimationFrame(
 function tick() {
   scheduled = false;
   const t0 = performance.now(), N = count();
-  if (coverDirty && tab === 'cover') { renderCoverPreview(); coverDirty = false; }
+  if (coverDirty && (tab === 'cover' || tab === 'back')) { renderCoverPreview(); coverDirty = false; }
   let more = false;
   for (const v of [...stale]) {
     if (!isSeen(v) || (dragging && (v.n === 1 || v.n === N))) continue;
@@ -1351,20 +1355,20 @@ function pageEditor(host, page, n) {
     el('div', { class: 'group' }, el('div', { class: 'label', text: 'Fit' }),
       segBtns([['auto', 'Auto'], ['fill', 'Fill frame'], ['fit', 'Whole photo']], page.fit, v => { page.fit = v; re(); }),
       el('p', { class: 'hint', text: 'Auto fills the frame with portrait photos and shows landscape photos whole. Stacked photos fill two equal boxes and may be cropped slightly.' })),
-    el('label', { class: 'check' },
-      el('input', { type: 'checkbox', id: `cap-${n}`, ...(page.captionOn ? { checked: '' } : {}), onchange: e => { page.captionOn = e.target.checked; re(); } }),
-      'Caption'),
   );
   for (let i = 0; i < slotsShown; i++) {
     const sl = page.slots[i], ph = sl.photo && photos.get(sl.photo);
     const meta = el('div', { class: 'meta' });
-    if (page.captionOn) {
+    meta.append(el('div', { class: 'row' },
+      el('label', { class: 'check' },
+        el('input', { type: 'checkbox', id: `cap-${n}-${i}`, ...(sl.captionOn ? { checked: '' } : {}), onchange: e => { sl.captionOn = e.target.checked; re(); } }),
+        'Caption'),
+      ph ? el('button', { type: 'button', class: 'btn small', text: 'Remove photo', onclick: () => { sl.photo = null; re(); } })
+        : el('span', { class: 'hint', text: 'Empty' })));
+    if (sl.captionOn) {
       meta.append(el('input', { type: 'text', id: `capt-${n}-${i}`, value: sl.caption, placeholder: 'Caption', 'aria-label': `Caption ${i + 1}`,
         oninput: e => { sl.caption = e.target.value; invalidate([n]); save(); } }));
     }
-    meta.append(el('div', { class: 'row' },
-      ph ? el('button', { type: 'button', class: 'btn small', text: 'Remove photo', onclick: () => { sl.photo = null; re(); } })
-        : el('span', { class: 'hint', text: 'Empty' })));
     host.append(el('div', { class: 'slotrow' },
       el('div', { class: 'ph' }, ph ? el('img', { src: ph.trayUrl, alt: '' }) : (slotsShown > 1 ? (i ? 'Bottom' : 'Top') : 'Photo')), meta));
   }
@@ -1398,7 +1402,8 @@ function setTab(t) {
   tab = t;
   $$('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
   $$('.pane').forEach(p => { p.hidden = p.dataset.pane !== t; });
-  if (t === 'cover') { coverDirty = true; schedule(); }
+  $('#sharedPreview').hidden = !(t === 'cover' || t === 'back');
+  if (t === 'cover' || t === 'back') { coverDirty = true; schedule(); }
   try { sessionStorage.setItem('zine-tab', t); } catch (e) { /* ignore */ }
 }
 function coerce(path, raw) {
