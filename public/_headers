@@ -1,0 +1,5 @@
+# Keeps the test site (the redesign branch on Cloudflare) out of search engines.
+# Cloudflare reads this file; GitHub Pages, which serves preis.works, ignores it,
+# so the live site is not affected.
+https://preis-works.florian-preis.workers.dev/*
+  X-Robots-Tag: noindex

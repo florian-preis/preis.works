@@ -15,14 +15,14 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 | `content/projects/images/<name>/` | Project pictures: `mockup.jpg` (card and top of the page) and `screen-1.jpg`, `screen-2.jpg`, and so on (screens at the bottom, as many as you like; list each one in the project file) | Swapping a project picture |
 | `content/travel/` | gowiththeflo, the travel diary: trips, visited countries, country facts | Adding a trip or a country |
 | `public/projects/<name>/app/` | The project apps themselves (plain HTML, no build step; knowhere also keeps its own scripts, map, flags, and fonts in its folder; gowiththeflo is the exception, see below) | Updating an app |
-| `public/` | Files served as they are: fonts, logo, favicon, social card, CNAME | Rarely |
+| `public/` | Files served as they are: fonts (`public/fonts/`, shared by the site and the apps), logo, favicon, social card, CNAME, and `_headers` (keeps the test site out of search engines) | Rarely |
 | `src/` | Site code: pages, layout, nav, styles, scripts | Design or behaviour changes |
 | `src/data/site.ts` | Name, email, LinkedIn, Instagram, nav labels | Changing contact details |
 | `src/styles/global.css` | Colours, content width, fonts, motion timing | Changing the look site-wide |
 
 ## Common tasks
 
-**Add a photo.** Put the file in `photography/`, named `YYYYMMDD_Caption.jpg`, for example `20260219_Staircase at Marina Bay Sands, Singapore.jpg`. The date and caption on the site come from the filename. Sizes for the grid and the lightbox are generated automatically when the site builds.
+**Add a photo.** Put the file in `photography/`, named `YYYYMMDD_Caption.jpg`, for example `20260219_Staircase at Marina Bay Sands, Singapore.jpg`. The date and caption on the site come from the filename. Export photos at 2,400 px on the long side; that is plenty for the site and keeps the repository small. Sizes for the grid, the lightbox, and the veil are generated automatically when the site builds. Every photo gets its own address (`/photography/#20260219-staircase-at-marina-bay-sands-singapore`), made from the filename, so a single photo can be shared.
 
 **Change the veil.** The veil shows every photo in `photography/`, in a random order on each visit. In `content/veil.json`, set `tone` to `muted` or `mono`, list filenames under `exclude` to leave photos out, and add a filename with a crop point under `focus` (e.g. `"20250310_Sossusvlei, Namibia.jpg": "30% 50%"`, 30% from the left, halfway down) to keep a subject in frame on phones.
 
@@ -37,6 +37,12 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 **How gowiththeflo is built.** Unlike the other apps, it is an Astro page (`src/pages/projects/travel-diary/app/index.astro`, code in `src/travel/`), so it can read the travel content at build time. The map is MapLibre with self-hosted Natural Earth data: relief tiles in `public/projects/travel-diary/map/relief/` and country shapes in `src/travel/countries.topo.json`, both made by `scripts/travel/build-map.py` (only needed if the map's look or borders change).
 
 **Change contact details.** Edit `src/data/site.ts`.
+
+**Link previews.** The picture shown when a page is shared: the site uses `public/assets/social-card.jpg`; each project page and its app use the project's mockup, cropped to 1200 × 630 automatically when the site builds (`scripts/build-og.mjs`). Nothing to do when you add a project.
+
+**Offline use.** knowhere and gowiththeflo keep a copy of themselves on the visitor's device after the first visit, so they open without a connection. With a connection they always load the live version. Each has a small `sw.js` in its app folder that does this; to switch it off, delete that file and the "Offline use" lines in `public/projects/knowhere/app/app.js` or `src/travel/app.ts`.
+
+**Package updates.** Once a month, GitHub opens a pull request with updates for the site's packages and workflow actions (`.github/dependabot.yml`). When its Check is green, merge it.
 
 ## Publishing
 

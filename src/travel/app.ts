@@ -8,7 +8,15 @@ import { feature } from 'topojson-client';
 import { formatFacts, formatPeriod, monthShort } from './format';
 import { unpackFacts, type TravelData, type TripOut } from './types';
 
-setWorkerUrl(workerUrl);
+// The map's background worker is started from a copy the page fetches itself. That way it also starts
+// without a connection: the offline copy (sw.js) answers the page's own requests, but browsers don't
+// reliably ask it for worker files. If the fetch fails, the worker is loaded the ordinary way.
+try {
+  const code = await fetch(workerUrl).then((r) => (r.ok ? r.blob() : Promise.reject(new Error('worker'))));
+  setWorkerUrl(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+} catch {
+  setWorkerUrl(workerUrl);
+}
 
 type Data = TravelData & { topo: string };
 const data: Data = JSON.parse(document.getElementById('tf-data')!.textContent!);
@@ -49,6 +57,7 @@ const dTitles = $('tf-d-titles');
 const dBody = $('tf-d-body');
 const backBtn = $('tf-back');
 const diaryBtn = $('tf-open-diary');
+const findBtn = $('tf-open-find');
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 const flagImg = (c: string, cls = 'tf-flag') => (data.flags[c] ? `<img class="${cls}" src="${data.flags[c]}" alt="" width="30" height="22.5" loading="lazy">` : '');
@@ -307,7 +316,7 @@ function wirePop(btn: HTMLElement) {
 wirePop(document.querySelector<HTMLElement>('.tf-panel .tf-info')!);
 
 // ── Drawer views ────────────────────────────────────────────────────────
-// Addresses: #dk (a country), #trip/<id> (one trip), #diary and #diary/countries (lists)
+// Addresses: #dk (a country), #trip/<id> (one trip), #diary and #diary/countries (lists), #find (search)
 let lastFocus: HTMLElement | null = null;
 const drawerOpen = () => drawer.classList.contains('is-open');
 function go(hash: string) {
@@ -331,12 +340,14 @@ function closeDrawer() {
   drawer.classList.remove('is-open');
   drawer.setAttribute('aria-hidden', 'true');
   diaryBtn.setAttribute('aria-expanded', 'false');
+  findBtn.setAttribute('aria-expanded', 'false');
   if (ready) map.setFilter('selected', ['==', ['get', 'iso'], '']);
   if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
 }
 dTitles.tabIndex = -1;
 $('tf-close').addEventListener('click', () => go(''));
 diaryBtn.addEventListener('click', () => go(location.hash.startsWith('#diary') ? '' : '#diary'));
+findBtn.addEventListener('click', () => go(location.hash === '#find' ? '' : '#find'));
 backBtn.addEventListener('click', () => history.back());
 
 // Features overlay: opened from the footer, closed with Esc, the close button, or a click outside the card
@@ -363,13 +374,14 @@ let cameFromDrawer = false;
 function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   if (h !== current) {
-    const isList = (x: string) => x.startsWith('diary');
+    const isList = (x: string) => x.startsWith('diary') || x === 'find';
     if (!(isList(h) && isList(current))) cameFromDrawer = !!current && !!h;
     current = h;
   }
-  backBtn.hidden = !cameFromDrawer || h.startsWith('diary');
+  backBtn.hidden = !cameFromDrawer || h.startsWith('diary') || h === 'find';
   if (!h) { closeDrawer(); return; }
   if (h === 'diary' || h === 'diary/countries') { renderDiary(h === 'diary/countries' ? 'countries' : 'trips'); return; }
+  if (h === 'find') { renderFind(); return; }
   if (h.startsWith('trip/')) { const t = tripById.get(h.slice(5)); if (t) { renderTrip(t); return; } }
   const code = h.toUpperCase();
   if (data.ref[code]) { renderCountry(code); return; }
@@ -481,6 +493,7 @@ function renderCountry(code: string) {
   dBody.innerHTML = body;
   wireBody();
   diaryBtn.setAttribute('aria-expanded', 'false');
+  findBtn.setAttribute('aria-expanded', 'false');
   openDrawer();
   select([code]);
   requestAnimationFrame(() => ensureVisible(code));
@@ -491,6 +504,7 @@ function renderTrip(t: TripOut) {
   dBody.innerHTML = `<article class="tf-trip tf-trip-view"><ul class="tf-places" aria-label="Countries">${t.countries.map(placeChip).join('')}</ul><div class="tf-story">${t.html}</div></article>`;
   wireBody();
   diaryBtn.setAttribute('aria-expanded', 'false');
+  findBtn.setAttribute('aria-expanded', 'false');
   openDrawer();
   select(t.countries);
   fitTo(t.countries);
@@ -524,9 +538,65 @@ function renderDiary(tab: 'trips' | 'countries') {
     }).join('')}</div>`;
   }
   diaryBtn.setAttribute('aria-expanded', 'true');
+  findBtn.setAttribute('aria-expanded', 'false');
   openDrawer();
   select([]);
 }
+
+// ── Find a country ──────────────────────────────────────────────────────
+// Every country and territory by name, visited or not: the way to small islands and microstates,
+// and to any country without a pointer. Accents and capitals don't matter ("cote" finds Côte d'Ivoire).
+const plain = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const everyCountry = Object.keys(data.ref)
+  .map((c) => ({ c, name: nameOf(c), key: plain(nameOf(c)) }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'en'));
+function renderFind() {
+  setHeader(`<h2 class="tf-d-title" id="tf-d-title">Find a country</h2>
+    <input class="tf-search" id="tf-search" type="search" placeholder="Country name" aria-label="Country name" autocomplete="off" autocapitalize="off" spellcheck="false">`);
+  const input = dTitles.querySelector<HTMLInputElement>('#tf-search')!;
+  const list = () => {
+    const q = plain(input.value.trim());
+    // Names that start with what was typed come first, then names that contain it
+    const hits = q ? [...everyCountry.filter((x) => x.key.startsWith(q)), ...everyCountry.filter((x) => !x.key.startsWith(q) && x.key.includes(q))] : everyCountry;
+    dBody.innerHTML = hits.length
+      ? `<div class="tf-rows" style="margin-top:14px">${hits.map((x) => `<a class="tf-row" href="#${x.c.toLowerCase()}"><span class="tf-row-main"><span class="tf-row-name">${flagImg(x.c, 'tf-flag')}${esc(x.name)}</span></span><span class="tf-row-meta">${visited.has(x.c) ? 'Visited' : ''}</span></a>`).join('')}</div>`
+      : `<p class="tf-empty">No country by that name.</p>`;
+    dBody.scrollTop = 0;
+  };
+  input.addEventListener('input', list);
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const first = dBody.querySelector<HTMLAnchorElement>('.tf-row');
+    if (first) go(first.getAttribute('href')!);
+  });
+  list();
+  diaryBtn.setAttribute('aria-expanded', 'false');
+  findBtn.setAttribute('aria-expanded', 'true');
+  openDrawer();
+  select([]);
+  // After the drawer has taken focus, hand it to the field so typing can start straight away
+  requestAnimationFrame(() => requestAnimationFrame(() => input.focus({ preventScroll: true })));
+}
+
+// ── Offline use ─────────────────────────────────────────────────────────
+// sw.js (public/projects/travel-diary/app/) keeps a copy of the app on the device, so it opens
+// without a connection. Once the map is ready, it is told every file the app can ask for:
+// everything loaded so far (page, code, fonts, country shapes), all flags, and all map tiles.
+// Skipped when the visitor has asked their browser to save data.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  const tell = () => navigator.serviceWorker.register('/projects/travel-diary/app/sw.js').then(() => navigator.serviceWorker.ready).then((reg) => {
+    if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return;
+    const loaded = performance.getEntriesByType('resource').map((e) => e.name).filter((u) => u.startsWith(location.origin) && !u.endsWith('/sw.js'));
+    const tiles: string[] = [];
+    for (let z = 0; z <= 4; z++) for (let x = 0; x < 2 ** z; x++) for (let y = 0; y < 2 ** z; y++) tiles.push(`/projects/travel-diary/map/relief/${z}/${x}/${y}.webp`);
+    reg.active?.postMessage({ save: [location.pathname, data.topo, workerUrl, ...loaded, ...Object.values(data.flags), ...tiles] });
+  }).catch(() => {});
+  // Wait until the map has drawn, so saving the copy never competes with the first view
+  map.once('idle', () => setTimeout(tell, 1500));
+}
+
+// The year in the footer keeps itself current
+document.querySelectorAll('.yr').forEach((el) => { el.textContent = String(new Date().getFullYear()); });
 
 applyFine();
 if (!ready) {

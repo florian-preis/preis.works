@@ -134,6 +134,8 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
 }
 .tf-pill:hover { background: rgba(255, 255, 255, 0.5); }
 .tf-pill[aria-expanded='true'] { background: rgba(255, 255, 255, 0.82); font-weight: 500; }
+.tf-actions-main { display: flex; align-items: center; gap: 4px; }
+.tf-icon-btn[aria-expanded='true'] { background: rgba(255, 255, 255, 0.82); }
 .tf-zoom { display: flex; gap: 4px; }
 .tf-zoom button, .tf-icon-btn {
   width: 36px; height: 36px; padding: 0; border-radius: 999px;
@@ -255,6 +257,16 @@ html:has(body.tf) { scrollbar-gutter: auto; overflow: hidden; }
   transition: background var(--fast) ease, color var(--fast) ease;
 }
 .tf-tab[aria-selected='true'] { background: rgba(255, 255, 255, 0.85); color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+/* Find a country: one quiet field above the list, in the same material as the tabs */
+.tf-search {
+  display: block; width: 100%; height: 40px; margin-top: 12px; padding: 0 16px;
+  border: 0; border-radius: 999px; background: rgba(0, 0, 0, 0.045);
+  font: inherit; font-size: 14px; color: var(--text); -webkit-appearance: none; appearance: none;
+}
+.tf-search::placeholder { color: var(--muted); }
+.tf-search::-webkit-search-cancel-button { -webkit-appearance: none; }
+.tf-search:focus-visible { outline: 1px solid rgba(43, 43, 41, 0.35); outline-offset: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.5); }
+@media (hover: none), (pointer: coarse) { .tf-search { font-size: 16px; } } /* stops phones zooming in on the field */
 .tf-year { margin: 22px 0 6px; font-size: 12px; font-weight: 500; color: var(--muted); }
 .tf-rows { display: flex; flex-direction: column; }
 .tf-row {

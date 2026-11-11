@@ -1,18 +1,38 @@
 ---
+// Page not found: the title in Florian's handwriting, his smiley turned upside down, and the way back
+// as the same rows the photo and project indexes use.
 import Base from '../layouts/Base.astro';
 import { nav } from '../data/site';
 ---
 <Base title="Page not found" description="That page does not exist, or it moved." noindex>
-  <main class="nf wrap">
-    <h1>Page not found</h1>
+  <main class="nf wrap" id="main">
+    <span class="frown" aria-hidden="true"></span>
+    <h1 class="hand">Page not found</h1>
     <p>That page does not exist, or it moved.</p>
-    <p class="links">{nav.map((n) => <a class="link-muted" href={n.href}>{n.label}</a>)}</p>
+    <nav class="rows" aria-label="Pages">
+      {nav.map((n) => (
+        <a class="index-row" href={n.href}>
+          <span class="name">{n.label}</span>
+          <svg class="meta" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      ))}
+    </nav>
   </main>
 </Base>
 
 <style>
-  .nf { padding-top: 120px; }
-  h1 { margin: 0 0 12px; font-size: 28px; font-weight: 300; letter-spacing: -0.02em; }
+  .nf { padding-top: 96px; }
+  /* The veil's smiley, upside down */
+  .frown { display: block; width: 40px; height: 34px; margin: 0 0 28px 2px; background: var(--text); transform: scaleY(-1);
+    -webkit-mask: url('/brand/smiley.svg') center / contain no-repeat; mask: url('/brand/smiley.svg') center / contain no-repeat; }
+  h1 { margin: 0 0 14px; font-size: 40px; }
   p { margin: 0; color: var(--muted); }
-  .links { display: flex; gap: 24px; margin-top: 28px; font-size: 14px; }
+  .rows { display: flex; flex-direction: column; max-width: 420px; margin-top: 40px; }
+  .rows svg { transition: transform var(--base) var(--ease); }
+  .index-row:hover svg { transform: translateX(3px); }
+  @media (max-width: 700px) {
+    .nf { padding-top: 56px; }
+    h1 { font-size: 30px; }
+    .rows { max-width: none; }
+  }
 </style>

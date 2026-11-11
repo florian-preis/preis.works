@@ -10,15 +10,18 @@ import { loadTravelData } from '../../../../travel/data';
 import topoUrl from '../../../../travel/countries.topo.json?url';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 
+declare const __BUILD_DATE__: string;
 const data = await loadTravelData();
 const payload = JSON.stringify({ ...data, topo: topoUrl }).replace(/</g, '\\u003c');
 const title = 'gowiththeflo';
 const description = "Florian's travel diary: the countries he has visited, the stories from each trip, and a few facts about every country.";
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL('/assets/social-card.jpg', Astro.site);
+const ogImage = new URL('/og/travel-diary.jpg', Astro.site);
+// The year in the footer: the build's year to start with; the app then keeps it current (app.ts)
+const year = __BUILD_DATE__.slice(0, 4);
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -26,16 +29,21 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
   <meta name="description" content={description}>
   <link rel="canonical" href={canonical}>
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Florian Preis">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
   <meta property="og:url" content={canonical}>
   <meta property="og:image" content={ogImage}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="gowiththeflo, travel diary">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f3f2ef">
   <link rel="icon" type="image/svg+xml" href="/projects/travel-diary/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/projects/travel-diary/favicon-32.png">
   <link rel="apple-touch-icon" href="/projects/travel-diary/apple-touch-icon.png">
   <link rel="preload" href={topoUrl} as="fetch" crossorigin>
-  <link rel="modulepreload" href={workerUrl}>
+  <link rel="preload" href={workerUrl} as="fetch" crossorigin>
   <link rel="preload" href="/fonts/FlorianHand-Regular.woff2?v=2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="tf">
@@ -53,7 +61,12 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
       <span class="tf-credit">Map data: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>.</span>
     </div>
     <div class="tf-actions">
-      <button class="tf-pill" type="button" id="tf-open-diary">Diary</button>
+      <div class="tf-actions-main">
+        <button class="tf-pill" type="button" id="tf-open-diary">Diary</button>
+        <button class="tf-icon-btn" type="button" id="tf-open-find" aria-label="Find a country" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4"/></svg>
+        </button>
+      </div>
       <div class="tf-zoom" role="group" aria-label="Zoom">
         <button type="button" id="tf-zoom-in" aria-label="Zoom in">
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -65,7 +78,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
     </div>
   </section>
 
-  <footer class="tf-foot"><span>© 2026 Florian Preis</span><nav aria-label="Links"><button type="button" id="tf-feat-open" aria-haspopup="dialog" aria-controls="tf-feat">Features</button><a href="/projects/travel-diary/">About</a><a href="/">preis.works</a></nav></footer>
+  <footer class="tf-foot"><span>© <span class="yr">{year}</span> Florian Preis</span><nav aria-label="Links"><button type="button" id="tf-feat-open" aria-haspopup="dialog" aria-controls="tf-feat">Features</button><a href="/projects/travel-diary/">About</a><a href="/">preis.works</a></nav></footer>
 
   <aside id="tf-drawer" class="tf-drawer" aria-hidden="true">
     <div class="tf-drawer-card" role="dialog" aria-labelledby="tf-d-title">
@@ -96,6 +109,7 @@ const ogImage = new URL('/assets/social-card.jpg', Astro.site);
         <dt class="tf-fine-row">Hover over a country</dt><dd class="tf-fine-row">Its name, and the fog thins</dd>
         <dt class="tf-fine-row">Right-click two places</dt><dd class="tf-fine-row">The air distance between them</dd>
         <dt>Diary</dt><dd>All trips by year, and a list of every country visited</dd>
+        <dt>Search</dt><dd>Find any country by name, visited or not</dd>
         <dt class="tf-fine-row">Scroll wheel</dt><dd class="tf-fine-row">Zoom in and out, as do the + and − buttons</dd>
         <dt class="tf-fine-row">Drag</dt><dd class="tf-fine-row">Move around the map</dd>
         <dt class="tf-touch-row">Pinch and drag</dt><dd class="tf-touch-row">Zoom and move around the map</dd>

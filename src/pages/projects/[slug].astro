@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
+import Lightbox from '../../components/Lightbox.astro';
 
 export async function getStaticPaths() {
   const all = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
@@ -14,6 +15,16 @@ const p = entry.data;
 const metaDescription = p.summary.split(/(?<=\.)\s+/)[0];
 // "Why I made it" is the text under the frontmatter; the section hides itself while empty
 const hasWhy = (entry.body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim().length > 0;
+// A short machine-readable description for search engines: what the project is and who made it
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: p.name,
+  description: metaDescription,
+  url: new URL(`/projects/${entry.id}/`, Astro.site).href,
+  ...(p.year ? { dateCreated: p.year } : {}),
+  author: { '@type': 'Person', '@id': 'https://preis.works/#florian', name: 'Florian Preis', url: 'https://preis.works/' },
+};
 // Full-size screens for the lightbox
 const views = await Promise.all(
   p.screens.map(async (sc) => {
@@ -22,9 +33,10 @@ const views = await Promise.all(
   })
 );
 ---
-<Base title={p.name} active="projects" description={metaDescription}>
-  <main class="project wrap">
-    <!-- Index: about a quarter of the width on desktop, a swipeable strip on phones -->
+<Base title={p.name} active="projects" description={metaDescription} image={p.image ? `/og/${entry.id}.jpg` : undefined} imageAlt={p.image ? `${p.name}, ${p.category.toLowerCase()}` : undefined}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <main class="project wrap" id="main">
+    <!-- Index: about a quarter of the width on desktop; on phones only the way back to all projects -->
     <aside class="project-index" aria-label="Projects">
       <a class="back link-muted" href="/projects/">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
@@ -95,29 +107,12 @@ const views = await Promise.all(
         </section>
       )}
 
-      <!-- Lightbox: the same layout as on the Photography page. The caption sits where the place name does there, with the counter beside it -->
+      <!-- Lightbox: the same one as on the Photography page -->
       {views.length > 0 && (
-        <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screen viewer" hidden>
-          <button class="lb-close" type="button" aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-          <button class="lb-nav lb-prev" type="button" aria-label="Previous screen">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <figure class="lb-figure">
-            <div class="lb-frame">
-              <img class="lb-img" alt="">
-              <figcaption class="lb-caption">
-                <span class="lb-text"></span>
-                <span class="lb-count"></span>
-              </figcaption>
-            </div>
-          </figure>
-          <button class="lb-nav lb-next" type="button" aria-label="Next screen">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+        <>
+          <Lightbox label="Screen viewer" variant="screen" />
           <script type="application/json" id="screen-data" set:html={JSON.stringify(views)} />
-        </div>
+        </>
       )}
     </article>
   </main>
@@ -177,29 +172,6 @@ const views = await Promise.all(
   .screen::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(43, 43, 41, 0.1); pointer-events: none; }
   @media (max-width: 1100px) { .screens { --per: 1.5; } }
 
-  /* Lightbox, exactly as on the Photography page */
-  .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
-  .lightbox[hidden] { display: none; }
-  .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
-  /* The frame shrinks to the screen, so the caption lines up with its edges */
-  /* The frame always reserves room for a two-line caption below the image, and the caption hangs in that
-     room instead of pushing the image. So the image never moves while you flip through, whatever the caption's length */
-  .lb-frame { position: relative; display: flex; flex-direction: column; width: fit-content; padding-bottom: 50px; }
-  .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
-  @media (orientation: portrait) {
-    .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
-  }
-  .lb-img.loading { filter: blur(12px); }
-  /* A hairline edge, so light screens stand apart from the paper */
-  .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
-  /* No date here, so the counter sits on the first line of the caption */
-  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-size: 12px; line-height: 1.5; }
-  .lb-text { max-width: 760px; }
-  .lb-count { color: var(--muted); white-space: nowrap; }
-  .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lb-close:hover, .lb-nav:hover { color: var(--text); }
-  .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
-
   /* Phone: no project list, just a way back to all projects above the picture. It scrolls away with the page */
   @media (max-width: 700px) {
     .project { gap: 16px; padding-top: 8px; }
@@ -218,12 +190,12 @@ const views = await Promise.all(
     .screens-nav { display: none; }
     .screens-track { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
     .screen { flex-basis: 84%; }
-    .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }
-    .lb-nav { display: none; }
   }
 </style>
 
 <script>
+  import { initLightbox } from '../../scripts/lightbox';
+
   // Screens: the arrows move one screen at a time and fade out at either end
   document.querySelectorAll<HTMLElement>('.screens').forEach((box) => {
     const track = box.querySelector<HTMLElement>('.screens-track')!;
@@ -249,65 +221,15 @@ const views = await Promise.all(
   });
 
   // Lightbox: click a screen to see it large; arrows, keys, or a swipe move between screens
-  const lb = document.getElementById('lightbox');
-  if (lb) {
-    const data: { src: string; alt: string; caption: string; w: number; h: number }[] = JSON.parse(document.getElementById('screen-data')!.textContent!);
-    const img = lb.querySelector<HTMLImageElement>('.lb-img')!;
-    const text = lb.querySelector<HTMLElement>('.lb-text')!;
-    const count = lb.querySelector<HTMLElement>('.lb-count')!;
+  const dataEl = document.getElementById('screen-data');
+  if (dataEl) {
+    const data: { src: string; alt: string; caption: string; w: number; h: number }[] = JSON.parse(dataEl.textContent!);
     const buttons = [...document.querySelectorAll<HTMLButtonElement>('.screen-open')];
-    const cache = new Set<string>();
-    let current = 0;
-    let lastFocus: HTMLElement | null = null;
-
-    const preload = () => [-1, 1].forEach((d) => {
-      const n = data[(current + d + data.length) % data.length];
-      if (!cache.has(n.src)) { new Image().src = n.src; cache.add(n.src); }
-    });
-    const render = () => {
-      const s = data[current];
-      img.alt = s.alt; img.width = s.w; img.height = s.h;
-      text.textContent = s.caption;
-      count.textContent = `${current + 1} / ${data.length}`;
-      // The small screen from the page stands in, slightly blurred, while the large one loads
-      if (!cache.has(s.src)) {
-        const thumb = buttons[current]?.querySelector('img');
-        if (thumb?.currentSrc) img.src = thumb.currentSrc;
-        img.classList.add('loading');
-      }
-      const full = new Image();
-      full.onload = () => { if (data[current] === s) { img.src = s.src; img.classList.remove('loading'); } };
-      full.src = s.src; cache.add(s.src);
-      preload();
-    };
-    const open = (i: number) => {
-      current = i; lastFocus = document.activeElement as HTMLElement;
-      render(); lb.hidden = false;
-      document.documentElement.style.overflow = 'hidden';
-      lb.querySelector<HTMLButtonElement>('.lb-close')!.focus();
-    };
-    const close = () => {
-      lb.hidden = true; document.documentElement.style.overflow = '';
-      lastFocus?.focus();
-    };
-    const step = (d: number) => { current = (current + d + data.length) % data.length; render(); };
-
-    buttons.forEach((b) => b.addEventListener('click', () => open(Number(b.dataset.i))));
-    lb.querySelector('.lb-close')!.addEventListener('click', close);
-    lb.querySelector('.lb-prev')!.addEventListener('click', () => step(-1));
-    lb.querySelector('.lb-next')!.addEventListener('click', () => step(1));
-    document.addEventListener('keydown', (e) => {
-      if (lb.hidden) return;
-      if (e.key === 'Escape') close();
-      if (e.key === 'ArrowLeft') step(-1);
-      if (e.key === 'ArrowRight') step(1);
-    });
-    let x0: number | null = null;
-    lb.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
-    lb.addEventListener('touchend', (e) => {
-      if (x0 === null) return;
-      const dx = e.changedTouches[0].clientX - x0; x0 = null;
-      if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
-    });
+    // While a large screen loads, the small one already on the page stands in
+    const lightbox = initLightbox(
+      data.map((s, i) => ({ id: `screen-${i + 1}`, src: s.src, w: s.w, h: s.h, alt: s.alt, title: s.caption })),
+      (i) => buttons[i]?.querySelector('img')?.currentSrc || undefined,
+    );
+    buttons.forEach((b) => b.addEventListener('click', () => lightbox?.open(Number(b.dataset.i))));
   }
 </script>

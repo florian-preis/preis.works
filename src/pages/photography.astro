@@ -2,7 +2,8 @@
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { photos } from '../data/photos';
+import Lightbox from '../components/Lightbox.astro';
+import { photos, viewOf } from '../data/photos';
 
 // Index view: the country becomes a small flag at the start of the row (the same flat flags as in
 // gowiththeflo), and the row keeps the place within that country. The country is read from the
@@ -18,17 +19,23 @@ const flagFor = (caption: string) => {
   return url ? { country, url, place: parts.slice(0, -1).join(', ') } : null;
 };
 
-// Two sizes per photo, generated at build time: a small grid thumbnail and a large lightbox image
+// Three sizes per photo, generated at build time: two grid thumbnails, already cropped to the tile's
+// 3:2 shape (the browser picks the smaller one on phones and ordinary screens, the larger on sharp
+// screens), and a large lightbox image
 const items = await Promise.all(
   photos.map(async (p) => {
-    const thumb = await getImage({ src: p.image, width: 600, format: 'webp', quality: 72 });
-    const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
-    return { caption: p.caption, date: p.date, thumb: thumb.src, view: view.src, w: p.image.width, h: p.image.height, flag: flagFor(p.caption) };
+    const thumb = await getImage({ src: p.image, width: 600, height: 400, fit: 'cover', format: 'webp', quality: 72 });
+    const small = await getImage({ src: p.image, width: 420, height: 280, fit: 'cover', format: 'webp', quality: 72 });
+    const view = await viewOf(p);
+    return { id: p.id, caption: p.caption, date: p.date, thumb: thumb.src, small: small.src, view: view.src, w: p.image.width, h: p.image.height, flag: flagFor(p.caption) };
   })
 );
+// How wide a tile is on screen, so the browser can pick the right thumbnail: 3, 4, or 5 columns
+const tileSizes = '(max-width: 700px) calc((100vw - 36px) / 3), (max-width: 1100px) calc((100vw - 100px) / 4), min(254px, calc((100vw - 136px) / 5))';
 ---
 <Base title="Photography" active="photography" description="A personal photography archive: street, landscape, and travel work from Copenhagen, East Africa, Southeast Asia, and beyond.">
-  <main class="photography">
+  <main class="photography" id="main">
+    <h1 class="visually-hidden">Photography</h1>
 
     <!-- Toolbar: scrolls away with the page -->
     <div class="tools wrap" id="tools">
@@ -46,7 +53,7 @@ const items = await Promise.all(
     <div class="grid wrap" id="grid">
       {items.map((p, i) => (
         <a class="tile" href={p.view} data-i={i} aria-label={`${p.caption}, ${p.date}`}>
-          <img src={p.thumb} alt={p.caption} width="600" height="400" loading={i < 10 ? 'eager' : 'lazy'} decoding="async">
+          <img src={p.thumb} srcset={`${p.small} 420w, ${p.thumb} 600w`} sizes={tileSizes} alt={p.caption} width="600" height="400" loading={i < 10 ? 'eager' : 'lazy'} fetchpriority={i < 3 ? 'high' : undefined} decoding="async">
         </a>
       ))}
     </div>
@@ -62,29 +69,9 @@ const items = await Promise.all(
       ))}
     </div>
 
-    <!-- Lightbox -->
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
-      <button class="lb-close" type="button" aria-label="Close">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-      <button class="lb-nav lb-prev" type="button" aria-label="Previous photo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <figure class="lb-figure">
-        <div class="lb-frame">
-          <img class="lb-img" alt="">
-          <figcaption class="lb-caption">
-            <span><span class="lb-place"></span><span class="lb-date"></span></span>
-            <span class="lb-count"></span>
-          </figcaption>
-        </div>
-      </figure>
-      <button class="lb-nav lb-next" type="button" aria-label="Next photo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
+    <Lightbox label="Photo viewer" variant="photo" />
 
-    <script type="application/json" id="photo-data" set:html={JSON.stringify(items)} />
+    <script type="application/json" id="photo-data" set:html={JSON.stringify(items.map(({ id, caption, date, view, w, h }) => ({ id, caption, date, view, w, h })))} />
   </main>
 </Base>
 
@@ -123,31 +110,6 @@ const items = await Promise.all(
   .index .name { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .flag { width: 20px; height: auto; aspect-ratio: 4 / 3; flex: none; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
 
-  .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
-  .lightbox[hidden] { display: none; }
-  .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
-  /* The frame shrinks to the photo, so the caption lines up with the photo's edges */
-  /* The frame always reserves room for a two-line caption below the image, and the caption hangs in that
-     room instead of pushing the image. So the image never moves while you flip through, whatever the caption's length */
-  .lb-frame { position: relative; display: flex; flex-direction: column; width: fit-content; padding-bottom: 50px; }
-  /* Wide screens: every photo at the same height, width follows the photo (very wide panoramas cap at the screen width) */
-  .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
-  /* Tall screens: every photo at the same width, height follows the photo (very tall ones cap at the screen height) */
-  @media (orientation: portrait) {
-    .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
-  }
-  .lb-img.loading { filter: blur(12px); }
-  /* The counter stays on the date line: if the place runs over several lines, both move down together */
-  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; font-size: 12px; line-height: 1.5; }
-  .lb-caption > span:first-child { display: flex; flex-direction: column; }
-  .lb-date, .lb-count { color: var(--muted); }
-  .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lb-close:hover, .lb-nav:hover { color: var(--text); }
-  .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
-  @media (max-width: 700px) {
-    .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }
-    .lb-nav { display: none; }
-  }
 </style>
 
 <script>

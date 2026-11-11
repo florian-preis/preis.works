@@ -1,0 +1,63 @@
+---
+// The full-screen viewer: one version, shared by the Photography page and the project pages.
+// variant="photo": place, date, and the counter on the date's line.
+// variant="screen": a caption with the counter beside it, and a hairline edge round each screen.
+// Behaviour (opening, flipping, the browser's Back button, each picture's own address) is in src/scripts/lightbox.ts.
+interface Props { label: string; variant: 'photo' | 'screen'; }
+const { label, variant } = Astro.props;
+const what = variant === 'photo' ? 'photo' : 'screen';
+---
+<div class="lightbox" id="lightbox" data-variant={variant} role="dialog" aria-modal="true" aria-label={label} hidden>
+  <button class="lb-close" type="button" aria-label="Close">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="lb-nav lb-prev" type="button" aria-label={`Previous ${what}`}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <figure class="lb-figure">
+    <div class="lb-frame">
+      <img class="lb-img" alt="">
+      <figcaption class="lb-caption">
+        <span class="lb-main"><span class="lb-title"></span><span class="lb-sub"></span></span>
+        <span class="lb-count"></span>
+      </figcaption>
+    </div>
+  </figure>
+  <button class="lb-nav lb-next" type="button" aria-label={`Next ${what}`}>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<style>
+  .lightbox { position: fixed; inset: 0; z-index: 100; background: var(--paper); display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; padding: 56px 8px 28px; }
+  .lightbox[hidden] { display: none; }
+  .lb-figure { margin: 0; display: flex; align-items: center; justify-content: center; min-width: 0; height: 100%; }
+  /* The frame shrinks to the picture, so the caption lines up with its edges. It always reserves room for a
+     two-line caption below the picture, and the caption hangs in that room instead of pushing the picture.
+     So the picture never moves while you flip through, whatever the caption's length */
+  .lb-frame { position: relative; display: flex; flex-direction: column; width: fit-content; padding-bottom: 50px; }
+  /* Wide screens: every picture at the same height, width follows the picture (very wide panoramas cap at the screen width) */
+  .lb-img { height: calc(100vh - 160px); height: calc(100dvh - 160px); width: auto; max-width: calc(100vw - 160px); object-fit: contain; transition: filter var(--base) var(--ease); }
+  /* Tall screens: every picture at the same width, height follows the picture (very tall ones cap at the screen height) */
+  @media (orientation: portrait) {
+    .lb-img { width: calc(100vw - 24px); height: auto; max-width: none; max-height: calc(100dvh - 150px); }
+  }
+  .lb-img.loading { filter: blur(12px); }
+  .lb-caption { position: absolute; left: 0; right: 0; top: calc(100% - 36px); display: flex; justify-content: space-between; gap: 24px; font-size: 12px; line-height: 1.5; }
+  .lb-main { display: flex; flex-direction: column; }
+  .lb-sub, .lb-count { color: var(--muted); }
+  .lb-count { white-space: nowrap; }
+  /* Photos: the counter stays on the date's line. If the place runs over several lines, both move down together */
+  [data-variant='photo'] .lb-caption { align-items: flex-end; }
+  /* Screens: no date, so the counter sits on the first line of the caption. A hairline edge, so light screens stand apart from the paper */
+  [data-variant='screen'] .lb-caption { align-items: flex-start; }
+  [data-variant='screen'] .lb-title { max-width: 760px; }
+  [data-variant='screen'] .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
+  .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lb-close:hover, .lb-nav:hover { color: var(--text); }
+  .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
+  @media (max-width: 700px) {
+    .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }
+    .lb-nav { display: none; }
+  }
+</style>

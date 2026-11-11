@@ -1,6 +1,7 @@
 // Photography page behaviour: reveal, hover location, grid/index switch, lightbox.
+import { initLightbox } from './lightbox';
 
-type Item = { caption: string; date: string; thumb: string; view: string; w: number; h: number };
+type Item = { id: string; caption: string; date: string; view: string; w: number; h: number };
 const data: Item[] = JSON.parse(document.getElementById('photo-data')!.textContent || '[]');
 
 const grid = document.getElementById('grid')!;
@@ -60,63 +61,12 @@ track.addEventListener('click', () => setView(track.getAttribute('aria-checked')
 labels.forEach((l) => l.addEventListener('click', () => setView(l.dataset.view as 'grid' | 'index')));
 
 /* ── Lightbox ── */
-const lb = document.getElementById('lightbox')!;
-const img = lb.querySelector<HTMLImageElement>('.lb-img')!;
-const place = lb.querySelector<HTMLElement>('.lb-place')!;
-const date = lb.querySelector<HTMLElement>('.lb-date')!;
-const count = lb.querySelector<HTMLElement>('.lb-count')!;
-let current = 0;
-let lastFocus: HTMLElement | null = null;
-const cache = new Set<string>();
-
-const preload = () => [-1, 1].forEach((d) => {
-  const n = data[(current + d + data.length) % data.length];
-  if (!cache.has(n.view)) { const i = new Image(); i.src = n.view; cache.add(n.view); }
-});
-const render = () => {
-  const p = data[current];
-  place.textContent = p.caption;
-  date.textContent = p.date;
-  count.textContent = `${current + 1} / ${data.length}`;
-  img.alt = p.caption;
-  img.width = p.w; img.height = p.h;
-  // The cached thumbnail stands in, slightly blurred, while the large image loads
-  if (!cache.has(p.view)) { img.src = p.thumb; img.classList.add('loading'); }
-  const full = new Image();
-  full.onload = () => { if (data[current] === p) { img.src = p.view; img.classList.remove('loading'); } };
-  full.src = p.view; cache.add(p.view);
-  preload();
-};
-const open = (i: number) => {
-  current = i; lastFocus = document.activeElement as HTMLElement;
-  render(); lb.hidden = false;
-  document.documentElement.style.overflow = 'hidden';
-  lb.querySelector<HTMLButtonElement>('.lb-close')!.focus();
-};
-const close = () => {
-  lb.hidden = true; document.documentElement.style.overflow = '';
-  lastFocus?.focus();
-};
-const step = (d: number) => { current = (current + d + data.length) % data.length; render(); };
-
+// While a large photo loads, the thumbnail already on the page stands in
+const lightbox = initLightbox(
+  data.map((p) => ({ id: p.id, src: p.view, w: p.w, h: p.h, alt: p.caption, title: p.caption, sub: p.date })),
+  (i) => tiles[i]?.querySelector('img')?.currentSrc || undefined,
+);
 document.querySelectorAll<HTMLAnchorElement>('[data-i]').forEach((a) => a.addEventListener('click', (e) => {
   if (e.metaKey || e.ctrlKey) return;
-  e.preventDefault(); open(Number(a.dataset.i));
+  e.preventDefault(); lightbox?.open(Number(a.dataset.i));
 }));
-lb.querySelector('.lb-close')!.addEventListener('click', close);
-lb.querySelector('.lb-prev')!.addEventListener('click', () => step(-1));
-lb.querySelector('.lb-next')!.addEventListener('click', () => step(1));
-document.addEventListener('keydown', (e) => {
-  if (lb.hidden) return;
-  if (e.key === 'Escape') close();
-  if (e.key === 'ArrowLeft') step(-1);
-  if (e.key === 'ArrowRight') step(1);
-});
-// Swipe on touch screens
-let x0: number | null = null;
-lb.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
-lb.addEventListener('touchend', (e) => {
-  if (x0 === null) return;
-  const dx = e.changedTouches[0].clientX - x0; x0 = null;
-  if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
-});

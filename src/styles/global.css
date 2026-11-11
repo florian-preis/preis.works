@@ -7,6 +7,7 @@
   --panel: #e9e8e4;       /* quiet surfaces */
   --line: #dedddb;        /* rules and borders */
   --line-soft: #e3e2dd;   /* index rows */
+  --hover: #ecebe7;       /* row and button hover */
   --text: #2b2b29;        /* soft ink */
   --muted: #6e6d69;       /* secondary text, 4.6:1 on paper */
   --faint: #a9a8a3;       /* icons only, never body text */
@@ -65,6 +66,9 @@ button { font: inherit; color: inherit; }
   position: absolute !important; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
 }
+/* Skip link: the first stop for keyboard users, hidden until it has focus */
+.skip { position: fixed; left: var(--gutter); top: 12px; z-index: 200; padding: 9px 16px; border-radius: 999px; font-size: 13px; transform: translateY(-64px); }
+.skip:focus-visible { transform: none; outline-offset: 2px; border-radius: 999px; }
 .link-muted { color: var(--muted); transition: color var(--fast) ease; }
 .link-muted:hover { color: var(--text); }
 
@@ -87,7 +91,7 @@ button { font: inherit; color: inherit; }
   transition: background var(--fast) ease;
 }
 .index-row:last-child { border-bottom: 1px solid var(--line-soft); }
-.index-row:hover { background: #ecebe7; }
+.index-row:hover { background: var(--hover); }
 .index-row .meta { color: var(--muted); white-space: nowrap; text-align: right; }
 .index-row[aria-current='page'] .name { font-weight: 600; }
 

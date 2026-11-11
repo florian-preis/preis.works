@@ -15,7 +15,8 @@ const spots = [
 ];
 ---
 <Base title="Projects" active="projects" description="Small things built for fun: a photo zine maker, a geography quiz, an interactive travel diary, and a word-by-word reader.">
-  <main class="desk-page">
+  <main class="desk-page" id="main">
+    <h1 class="visually-hidden">Projects</h1>
     <div class="desk wrap" style={`--rows:${Math.ceil(projects.length / 3)}`}>
       {projects.map((p, i) => {
         const s = spots[i];
@@ -24,7 +25,7 @@ const spots = [
           <a class={`card glass-card ${s ? 'placed' : ''}`} href={`/projects/${p.id}/`} style={style}>
             <div class="shot">
               {p.data.image
-                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" style={`object-position:${p.data.focus}`} />
+                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" style={`object-position:${p.data.focus}`} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
                 : <span class="hand">{p.data.name}</span>}
             </div>
             <div class="label">
@@ -45,6 +46,10 @@ const spots = [
     background-size: 24px 24px;
     margin-top: calc(-1 * var(--nav-h));
     padding-top: calc(var(--nav-h) + 24px);
+    /* The dotted desk runs all the way down to the line above the footer, on every screen:
+       it fills the space the footer otherwise keeps clear above itself (96 px) */
+    margin-bottom: -96px;
+    padding-bottom: 96px;
   }
   .desk { position: relative; height: 46rem; }
   .glass-card {

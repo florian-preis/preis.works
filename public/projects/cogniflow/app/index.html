@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,10 +9,26 @@
 <link rel="icon" type="image/svg+xml" href="/projects/cogniflow/app/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/projects/cogniflow/app/favicon-32.png">
 <link rel="apple-touch-icon" href="/projects/cogniflow/app/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet">
+<meta name="description" content="A word-by-word reader for articles and short texts.">
+<link rel="canonical" href="https://preis.works/projects/cogniflow/app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Florian Preis">
+<meta property="og:title" content="cogniflow">
+<meta property="og:description" content="A word-by-word reader for articles and short texts.">
+<meta property="og:url" content="https://preis.works/projects/cogniflow/app/">
+<meta property="og:image" content="https://preis.works/og/cogniflow.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="cogniflow, reading tool">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/literata-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* Fonts: Inter and Literata, served from preis.works itself (no outside requests) */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/inter-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/inter-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Literata';font-style:normal;font-weight:200 900;font-display:swap;src:url(/fonts/literata-latin-ext-opsz-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Literata';font-style:normal;font-weight:200 900;font-display:swap;src:url(/fonts/literata-latin-opsz-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root {
   --bg: #18181A;
   --surface: #202023;
@@ -388,7 +404,7 @@ footer .links { display: flex; gap: 16px; }
 
 <footer class="fade">
   <div class="wrap">
-    <span>© 2026 Florian Preis</span>
+    <span>© <span class="yr">2026</span> Florian Preis</span>
     <span class="links">
       <button type="button" class="kbd-only" id="keysBtn">Shortcuts</button>
       <a href="/projects/cogniflow/">About</a>
@@ -582,7 +598,7 @@ function loadScript(src) {
 }
 
 async function readDocx(file) {
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  await loadScript('/projects/cogniflow/app/vendor/jszip.min.js');
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
   const docFile = zip.file('word/document.xml');
   if (!docFile) throw new Error('This does not look like a Word document.');
@@ -607,9 +623,10 @@ async function readDocx(file) {
 }
 
 async function readPdf(file) {
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  // The PDF reader is served from preis.works itself and only loads when a PDF is opened
+  const pdfjsLib = await import('/projects/cogniflow/app/vendor/pdf.min.mjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/projects/cogniflow/app/vendor/pdf.worker.min.mjs';
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise;
   const pages = [];
   for (let n = 1; n <= pdf.numPages; n++) {
     const page = await pdf.getPage(n);
@@ -1291,6 +1308,9 @@ async function migrateOld() {
     localStorage.setItem('cogniflow:migrated', '1');
   } catch (e) { console.warn('Migration skipped', e); }
 }
+
+// The year in the footer keeps itself current
+document.querySelectorAll('.yr').forEach(el => { el.textContent = new Date().getFullYear(); });
 
 App.start();
 </script>

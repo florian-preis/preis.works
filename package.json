@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "veil": "node scripts/build-veil.mjs",
-    "dev": "npm run veil && astro dev",
-    "build": "npm run veil && astro build",
+    "previews": "node scripts/build-og.mjs",
+    "prepare-images": "npm run veil && npm run previews",
+    "dev": "npm run prepare-images && astro dev",
+    "build": "npm run prepare-images && astro build",
     "preview": "astro preview"
   },
   "dependencies": {

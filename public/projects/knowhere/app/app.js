@@ -887,11 +887,32 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 })();
 
 /* ── boot ────────────────────────────────────────────────── */
+// The year in the footer keeps itself current
+document.querySelectorAll('.yr').forEach(el => { el.textContent = new Date().getFullYear(); });
+
 migrate();
 applyTheme();
 showScreen('home');
+document.documentElement.classList.add('kw-ready');
 loadMap().catch(() => {});
 document.addEventListener('visibilitychange', () => { if (!document.hidden && $('screen-home').classList.contains('active')) renderHome(); });
+
+// Offline use: sw.js keeps a copy of the app on the device, so it opens without a connection.
+// Once the app has loaded, it is told every file the app can ask for: the page, scripts, map,
+// fonts, and all flags. Skipped when the visitor has asked their browser to save data.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  const tell = () => navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then((reg) => {
+    if (navigator.connection && navigator.connection.saveData) return;
+    const fonts = [];
+    for (const sheet of document.styleSheets) for (const rule of sheet.cssRules) {
+      const m = rule.type === CSSRule.FONT_FACE_RULE && /url\(["']?([^"')]+)/.exec(rule.style.getPropertyValue('src'));
+      if (m) fonts.push(m[1]);
+    }
+    const files = ['./', 'app.js', 'data.js', 'vendor.js', 'world.json', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', ...fonts, ...ALL.map(c => `flags/${c.id}.svg`)];
+    reg.active.postMessage({ save: files });
+  }).catch(() => {});
+  if (document.readyState === 'complete') setTimeout(tell, 1500); else window.addEventListener('load', () => setTimeout(tell, 1500));
+}
 
 // test hook, only with ?test in the URL
 if (/[?&]test\b/.test(location.search)) window.__kw = { Q: () => QZ, cur: () => QZ && QZ.items[QZ.i], drawQuestionMap, loadMap, matchAnswer, pickRound, dailyItems, makeQ, P: () => P, S: () => S, BY, ALL, level, startSession, pool };

@@ -5,10 +5,11 @@
 // Unchanged photos are skipped, so repeat builds are quick.
 import { readdir, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { fogName } from '../src/data/veil-names.mjs';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = path.join(root, 'photography');
 const out = path.join(root, 'public/veil');
 await mkdir(out, { recursive: true });

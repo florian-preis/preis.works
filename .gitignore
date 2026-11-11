@@ -4,6 +4,8 @@ dist/
 .astro/
 # Veil images are generated from photography/ by scripts/build-veil.mjs
 public/veil/
+# Link preview pictures are generated from the project mockups by scripts/build-og.mjs
+public/og/
 .DS_Store
 Thumbs.db
 # Files Claude shares in Cowork (mock-ups, previews): kept on this computer, never committed

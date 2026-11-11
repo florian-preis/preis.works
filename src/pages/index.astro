@@ -5,25 +5,50 @@ import veil from '../../content/veil.json';
 import { Content as About } from '../../content/about.md';
 import portrait from '../assets/portrait.jpg';
 import { site } from '../data/site';
-import { photos } from '../data/photos';
+import { photos, viewOf } from '../data/photos';
 import { fogName } from '../data/veil-names.mjs';
 
 // Every photo can appear in the veil. The sharp layer reuses the lightbox size (same file as on
-// the Photography page), and the fogged layer uses a tiny pre-blurred image. The browser only ever
-// loads the photo on screen and the next one.
+// the Photography page) on computers and tablets, and a smaller size on phones, where it only shows
+// through the letters of the name. The fogged layer uses a tiny pre-blurred image. The browser only
+// ever loads the photo on screen and the next one.
 const focus = veil.focus as Record<string, string>;
 const pool = await Promise.all(
   photos
     .filter((p) => !veil.exclude.includes(p.file))
     .map(async (p) => {
-      const view = await getImage({ src: p.image, width: 2000, format: 'webp', quality: 80 });
+      const landscape = p.image.width >= p.image.height;
+      const view = await viewOf(p);
+      const small = await getImage(landscape
+        ? { src: p.image, width: 1200, format: 'webp', quality: 80 }
+        : { src: p.image, height: 1600, format: 'webp', quality: 80 });
+      // v = sharp photo, s = the same for phones, f = fogged, o = crop point.
       // l = landscape. Wide screens only show landscape photos, so little is lost to cropping.
-      return { v: view.src, f: `/veil/${fogName(p.file)}`, o: focus[p.file] ?? '50% 50%', l: p.image.width >= p.image.height ? 1 : 0 };
+      return { v: view.src, s: small.src, f: `/veil/${fogName(p.file)}`, o: focus[p.file] ?? '50% 50%', l: landscape ? 1 : 0 };
     })
 );
 const hold = veil.secondsPerPhoto;
+
+// A short machine-readable description of the site and of Florian for search engines and AI tools.
+// It only repeats what the page already shows: name, portrait, email, and the two profiles.
+const portraitUrl = new URL((await getImage({ src: portrait, width: 640, format: 'webp' })).src, Astro.site).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', '@id': 'https://preis.works/#website', url: 'https://preis.works/', name: 'preis.works', inLanguage: 'en-GB', publisher: { '@id': 'https://preis.works/#florian' } },
+    { '@type': 'ProfilePage', '@id': 'https://preis.works/#page', url: 'https://preis.works/', name: site.name, isPartOf: { '@id': 'https://preis.works/#website' }, mainEntity: { '@id': 'https://preis.works/#florian' } },
+    {
+      '@type': 'Person', '@id': 'https://preis.works/#florian',
+      name: site.name, givenName: 'Florian', familyName: 'Preis',
+      url: 'https://preis.works/', image: portraitUrl, email: `mailto:${site.email}`,
+      description: site.description,
+      sameAs: [site.linkedin, site.instagram],
+    },
+  ],
+};
 ---
 <Base active="about" navMode="veil">
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <!-- Veil: a fogged window over a slow slideshow, the name wiped clear with a finger -->
   <section slot="lead" class="veil" id="veil" data-tone={veil.tone} style={`--fade:2s;--drift:${hold + 2}s`} aria-labelledby="veil-name">
     <h1 id="veil-name" class="visually-hidden">Florian Preis</h1>
@@ -49,6 +74,8 @@ const hold = veil.secondsPerPhoto;
         var cfg = JSON.parse(document.getElementById('veil-pool').textContent);
         // Wide screens: landscape photos only. Tall screens (phones): landscape and portrait.
         var tall = window.matchMedia('(orientation: portrait)').matches;
+        // Phones load the smaller sharp photo
+        var phone = window.matchMedia('(max-width: 700px)').matches;
         var pool = cfg.pool.filter(function (p) { return tall || p.l; });
         if (!pool.length) pool = cfg.pool.slice();
         for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
@@ -61,7 +88,7 @@ const hold = veil.secondsPerPhoto;
         function put(s, p) {
           [fogSlides[s], clearSlides[s]].forEach(function (el, layer) {
             var img = el.firstElementChild;
-            img.src = layer === 0 ? p.f : p.v;
+            img.src = layer === 0 ? p.f : (phone ? p.s : p.v);
             img.style.objectPosition = p.o;
             img.classList.remove('go'); void img.offsetWidth; img.classList.add('go');
           });
@@ -69,7 +96,7 @@ const hold = veil.secondsPerPhoto;
         function show(s) {
           [fogSlides, clearSlides].forEach(function (set) { set[s].classList.add('on'); set[1 - s].classList.remove('on'); });
         }
-        function preload(p) { var a = new Image(); a.src = p.f; var b = new Image(); b.src = p.v; return b; }
+        function preload(p) { var a = new Image(); a.src = p.f; var b = new Image(); b.src = phone ? p.s : p.v; return b; }
 
         put(0, pool[0]); show(0);
         if (still || pool.length < 2) return;
@@ -88,7 +115,7 @@ const hold = veil.secondsPerPhoto;
     </script>
   </section>
 
-  <main class="about wrap">
+  <main class="about wrap" id="main">
     <Image class="portrait" src={portrait} alt="Florian Preis" widths={[320, 640]} sizes="(max-width: 700px) 60vw, 320px" />
     <div class="about-text">
       <About />
@@ -104,6 +131,10 @@ const hold = veil.secondsPerPhoto;
         <li>
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M7 10v7M7 7v.01M11 17v-4a2 2 0 014 0v4M11 10v7"/></svg>
           <a href={site.linkedin} target="_blank" rel="noopener">florianpreis</a>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5v.01"/></svg>
+          <a href={site.instagram} target="_blank" rel="noopener">florianprice</a>
         </li>
       </ul>
     </div>
