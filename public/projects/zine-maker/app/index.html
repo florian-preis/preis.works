@@ -278,7 +278,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
       </div>
       <div class="group" data-show="format=fold">
         <label class="check"><input type="checkbox" id="in-poster" data-k="poster.on"> Secret poster on the back</label>
-        <p class="hint" data-show="poster.on=true">One photo fills the back of the sheet, revealed when the zine is unfolded. Needs printing on both sides. The cut runs through the middle of the poster.</p>
+        <p class="hint" data-show="poster.on=true">One photo on the back of the sheet, revealed when unfolded. Print on both sides; the cut runs through its middle.</p>
       </div>
       <div class="group" data-show="format=booklet">
         <div class="label"><label for="in-pages">Pages</label><output data-out="bookletPages"></output></div>
@@ -937,12 +937,14 @@ function partnerOf(n) {
   const q = n % 2 === 0 ? n + 1 : n - 1;
   return pageObj(q) ? q : null;
 }
-const pageCaptions = p => slotsOf(p).some(s => s.captionOn);
+// a caption at the bottom of a page: under a single photo, or under the lower of two stacked photos.
+// The upper stacked photo's caption sits between the photos, so it never moves the bottom edge.
+const bottomCaption = p => (p.layout === 'stack' ? p.slots[1].captionOn : p.slots[0].captionOn);
 function drawPhotoPage(ctx, page, W, H, o, n) {
   const g = o.g, s = W / g.pw, [x, y, w, h0] = frameArea(g, s, W, H), m = x;
   // both pages of a spread keep the caption strip if either has captions, so photo edges line up across the spread
-  const q = partnerOf(n), spreadCaptions = pageCaptions(page) || (q !== null && pageCaptions(pageObj(q)));
-  const sp = smallPx(g, s), capH = spreadCaptions ? sp * 2.5 : 0, capGap = sp * 1.6;
+  const q = partnerOf(n), spreadCaptions = bottomCaption(page) || (q !== null && bottomCaption(pageObj(q)));
+  const sp = smallPx(g, s), lineH = sp * 2.5, capH = spreadCaptions ? lineH : 0, capGap = sp * 1.6;
   const prep = () => { ctx.font = `400 ${sp}px ${FONT_CSS[state.captionFont]}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; };
   // booklet page numbers sit in a strip at the bottom of the frame, so they stay inside the printable area
   const numbered = isBooklet() && state.pageNumbers !== 'none' && n > 1 && n < count();
@@ -980,7 +982,7 @@ function drawPhotoPage(ctx, page, W, H, o, n) {
   }
   // two equal boxes: the upper one starts at the top edge of a full-page photo, the lower one ends at its bottom edge
   const gapBase = Math.max(3 * s, Math.min(m * 0.7, 8 * s));
-  const gap = gapBase + (page.slots[0].captionOn ? capH : 0);     // room for the upper photo's caption
+  const gap = gapBase + (page.slots[0].captionOn ? lineH : 0);    // room for the upper photo's caption
   const boxH = (h - capH - gap) / 2;
   page.slots.slice(0, 2).forEach((sl, k) => {
     const by = y + k * (boxH + gap), ph = sl.photo && photos.get(sl.photo);
