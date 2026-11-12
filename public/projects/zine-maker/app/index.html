@@ -131,7 +131,12 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
 .seg .f-hand { font-family: var(--hand); font-size: 14px; line-height: 1; padding: 0 3px; }
 
 .unit { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.unit input { width: 96px; }
+.cal { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.cal-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.cal .unit input[type="number"] { flex: 1; width: 0; min-width: 0; }
+.cal-status { justify-content: space-between; flex-wrap: nowrap; align-items: flex-start; }
+.cal-status .hint { flex: 1; }
+.unit input[type="number"] { width: 96px; }
 input[type="text"], input[type="number"], textarea { width: 100%; border: 1px solid var(--line); background: var(--sheet); color: #2b2b29; border-radius: 8px; padding: 7px 9px; font-size: 13px; }
 textarea { resize: vertical; line-height: 1.45; }
 input[type="range"] { width: 100%; accent-color: var(--text); }
@@ -307,6 +312,16 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
         <h3><label for="in-margin">Printer margin</label></h3>
         <div class="unit"><input type="number" id="in-margin" min="0" max="25" step="0.5" inputmode="decimal" data-k="marginMm"><span>mm</span></div>
         <p class="hint">10 mm is the margin of the printer I use. Set it to what your printer model needs: every page gets a white frame of this width.</p>
+      </div>
+      <div class="group">
+        <h3>Printer calibration</h3>
+        <p class="hint">Some printers shrink every page a little, so the folds miss the gaps between pages. Print the test sheet at actual size, measure lines A and B, and enter the lengths.</p>
+        <button type="button" class="btn small" id="calTest">Download test sheet</button>
+        <div class="grid2 cal-grid">
+          <label class="cal" for="in-calA"><span id="calALabel">Line A</span><span class="unit"><input type="number" id="in-calA" min="1" step="0.5" inputmode="decimal"><span>mm</span></span></label>
+          <label class="cal" for="in-calB"><span id="calBLabel">Line B</span><span class="unit"><input type="number" id="in-calB" min="1" step="0.5" inputmode="decimal"><span>mm</span></span></label>
+        </div>
+        <div class="row cal-status"><p class="hint" id="calStatus"></p><button type="button" class="btn small" id="calReset" hidden>Reset</button></div>
       </div>
       <div class="group" data-show="format=booklet">
         <h3>Page numbers</h3>
@@ -551,6 +566,8 @@ const monthYear = (d = new Date()) => `${String(d.getMonth() + 1).padStart(2, '0
 function defaultState() {
   return {
     v: 3, format: 'fold', paper: 'A4', bookletPages: 16, marginMm: 10, guides: true, pageNumbers: 'none',
+    // measured printer scale per paper size, along the paper's long and short side (1 = prints true to size)
+    calib: { A4: { long: 1, short: 1 }, A3: { long: 1, short: 1 } },
     poster: { on: false, photo: null },
     titleFont: 'inter', smallFont: 'inter', captionFont: 'inter',
     cover: {
@@ -1475,6 +1492,7 @@ function bindControls() {
 }
 const fmtMm = v => (Math.round(v * 10) / 10).toString();
 function syncControls() {
+  if ($('#calStatus')) syncCalib();
   $$('[data-k]').forEach(c => {
     const v = getPath(c.dataset.k);
     if (c.classList.contains('seg')) c.querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(String(v) === b.dataset.v)));
@@ -1554,6 +1572,94 @@ async function renderSheetsInto(host) {
 }
 
 /* ---------- PDF ---------- */
+/* ---------- printer calibration ----------
+   Some printers (e.g. managed office printers) fit every page to their printable area, so the whole sheet
+   prints about 3% small and the folds miss the gaps between pages. The test sheet has two lines of known
+   length; from what the user measures we know the printer's scale and enlarge every export by the inverse,
+   around the sheet centre, so the printer's shrink brings it back to true size. */
+const CAL_LINES = { A4: { long: 250, short: 150 }, A3: { long: 350, short: 200 } };
+const calOf = () => state.calib[state.paper];
+const calibrated = () => calOf().long !== 1 || calOf().short !== 1;
+function printerScale(g) {
+  const c = calOf();
+  return g.sw >= g.sh ? { kx: c.long, ky: c.short } : { kx: c.short, ky: c.long };
+}
+// smallest printer margin that keeps every photo on the page once the export is enlarged
+function calMinMargin(g) {
+  const { kx, ky } = printerScale(g);
+  return Math.max(0, (g.sw / 2) * (1 - kx), (g.sh / 2) * (1 - ky));
+}
+function syncCalib() {
+  const L = CAL_LINES[state.paper], c = calOf(), g = geom();
+  $('#calALabel').textContent = `Line A, should be ${L.long} mm`;
+  $('#calBLabel').textContent = `Line B, should be ${L.short} mm`;
+  const a = $('#in-calA'), b = $('#in-calB');
+  a.placeholder = String(L.long); b.placeholder = String(L.short);
+  if (document.activeElement !== a) a.value = c.long === 1 ? '' : fmtMm(L.long * c.long);
+  if (document.activeElement !== b) b.value = c.short === 1 ? '' : fmtMm(L.short * c.short);
+  let msg = `Not calibrated: ${state.paper} exports print as they are.`;
+  if (calibrated()) {
+    const pct = v => `${(Math.round(v * 1000) / 10).toFixed(1)}%`;
+    msg = `This printer prints ${state.paper} at ${pct(c.long)} along the long side and ${pct(c.short)} along the short side. Exports are enlarged to match.`;
+    const need = calMinMargin(g);
+    if (state.marginMm < need) msg += ` Raise the printer margin to at least ${Math.ceil(need)} mm, or photos near the edge get cut.`;
+  }
+  $('#calStatus').textContent = msg;
+  $('#calReset').hidden = !calibrated();
+}
+function bindCalib() {
+  const set = (key, input) => input.addEventListener('input', () => {
+    const v = parseFloat(String(input.value).replace(',', '.')), L = CAL_LINES[state.paper][key];
+    if (input.value === '') calOf()[key] = 1;
+    else if (isFinite(v) && v > L * 0.8 && v < L * 1.1) calOf()[key] = v / L;
+    else return;                                   // ignore half-typed or implausible values
+    save(); syncCalib();
+  });
+  set('long', $('#in-calA')); set('short', $('#in-calB'));
+  $('#calReset').addEventListener('click', () => { state.calib[state.paper] = { long: 1, short: 1 }; save(); syncCalib(); });
+  $('#calTest').addEventListener('click', testSheet);
+}
+// One sheet in landscape: line A along the long side, line B along the short side, a cross at the centre.
+// It is never corrected, so it always shows what the printer does on its own.
+async function testSheet() {
+  await fontsReady;
+  const [shortSide, longSide] = PAPER[state.paper], L = CAL_LINES[state.paper];
+  const mmPt = 72 / 25.4, pxMm = 200 / 25.4;
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(longSide * pxMm); cv.height = Math.round(shortSide * pxMm);
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  const s = pxMm, cx = longSide / 2, cy = shortSide / 2;
+  ctx.fillStyle = DARK_INK; ctx.textBaseline = 'alphabetic';
+  ctx.font = `600 ${4.2 * s}px ${FONT_CSS.inter}`;
+  ctx.fillText(`zine maker printer test sheet, ${state.paper}`, 22 * s, 24 * s);
+  ctx.font = `400 ${3.4 * s}px ${FONT_CSS.inter}`;
+  [`1. Print this page at actual size (100%), with the printer and settings you use for your zines.`,
+   `2. Measure line A and line B from end mark to end mark.`,
+   `3. Enter both lengths under Printer calibration in the zine maker's Layout tab.`,
+   `4. Fold the sheet in half both ways. If the creases cross at the centre mark, your printer centres the page.`]
+    .forEach((l, i) => ctx.fillText(l, 22 * s, (31 + i * 5.5) * s));
+  ctx.textAlign = 'center';
+  ctx.fillText(`A  ·  ${L.long} mm`, cx * s, (cy + 22) * s);
+  ctx.save(); ctx.translate((cx + L.long / 2 - 40) * s, cy * s); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(`B  ·  ${L.short} mm`, 0, 0); ctx.restore();
+  const jpeg = await toJpeg(cv);
+  // the lines are drawn as vectors so they print sharp and exact
+  const P = v => (v * mmPt).toFixed(3), Y = v => ((shortSide - v) * mmPt).toFixed(3);
+  const line = (x1, y1, x2, y2) => `${P(x1)} ${Y(y1)} m ${P(x2)} ${Y(y2)} l S\n`;
+  let ops = 'q 0 G 0.6 w\n';
+  ops += line(cx - L.long / 2, cy + 14, cx + L.long / 2, cy + 14);
+  ops += line(cx - L.long / 2, cy + 9, cx - L.long / 2, cy + 19) + line(cx + L.long / 2, cy + 9, cx + L.long / 2, cy + 19);
+  const bx = cx + L.long / 2 - 30;          // line B sits on the right, clear of the instructions
+  ops += line(bx, cy - L.short / 2, bx, cy + L.short / 2);
+  ops += line(bx - 5, cy - L.short / 2, bx + 5, cy - L.short / 2) + line(bx - 5, cy + L.short / 2, bx + 5, cy + L.short / 2);
+  ops += line(cx - 8, cy, cx + 8, cy) + line(cx, cy - 8, cx, cy + 8);
+  ops += 'Q\n';
+  const blob = buildPdf([{ w: longSide * mmPt, h: shortSide * mmPt, ops,
+    images: [{ jpeg, pxW: cv.width, pxH: cv.height, rot: false, x: 0, y: 0, w: longSide * mmPt, h: shortSide * mmPt }] }]);
+  await offerDownload(`printer-test-sheet-${state.paper}.pdf`, blob);
+}
+
 function buildPdf(pages) {
   const enc = new TextEncoder(), chunks = [], offs = [];
   let len = 0;
@@ -1610,6 +1716,7 @@ function openExport() {
   const host = el('div', { class: 'sheets' });
   const body = el('div', { style: 'display:grid;gap:14px' },
     el('p', { class: 'note', text: `${state.paper} ${g.sw > g.sh ? 'landscape' : 'portrait'}, ${impose().length} sheet side${impose().length > 1 ? 's' : ''}. ${dup} Print at actual size (100%), never "fit to page". The grey page numbers are only in this preview.` }),
+    calibrated() ? el('p', { class: 'hint', text: `Printer calibration is on for ${state.paper}: the PDF is enlarged slightly so your printer's shrink brings it back to true size. Use the same printer and settings as for the test sheet.` }) : null,
     empty ? el('p', { class: 'hint', text: `${empty} of ${photoPageCount()} photo pages ${empty > 1 ? 'are' : 'is'} still empty and will print blank.` }) : null,
     host);
   overlay('Print preview', body, [
@@ -1661,10 +1768,17 @@ async function exportPdf() {
         done++; bar.style.width = `${Math.round(done / total * 100)}%`;
         await nextFrame();
       }
+      // printer calibration: enlarge everything around the sheet centre by the inverse of the printer's shrink
+      const { kx, ky } = printerScale(g), ccx = g.sw * mmPt / 2, ccy = g.sh * mmPt / 2;
+      const fx = v => ccx + (v - ccx) / kx, fy = v => ccy + (v - ccy) / ky;
+      for (const im of images) {
+        const x2 = fx(im.x + im.w), y2 = fy(im.y + im.h);
+        im.x = fx(im.x); im.y = fy(im.y); im.w = x2 - im.x; im.h = y2 - im.y;
+      }
       let ops = '';
       if (state.guides && !side.poster) {
         for (const [x1, y1, x2, y2, dash] of guides(si)) {
-          ops += `q 0.6 G 0.35 w ${dash ? '[3 2] 0 d' : '[] 0 d'} ${(x1 * mmPt).toFixed(2)} ${((g.sh - y1) * mmPt).toFixed(2)} m ${(x2 * mmPt).toFixed(2)} ${((g.sh - y2) * mmPt).toFixed(2)} l S Q\n`;
+          ops += `q 0.6 G 0.35 w ${dash ? '[3 2] 0 d' : '[] 0 d'} ${fx(x1 * mmPt).toFixed(2)} ${fy((g.sh - y1) * mmPt).toFixed(2)} m ${fx(x2 * mmPt).toFixed(2)} ${fy((g.sh - y2) * mmPt).toFixed(2)} l S Q\n`;
         }
       }
       pages.push({ w: g.sw * mmPt, h: g.sh * mmPt, images, ops });
@@ -1722,7 +1836,7 @@ function foldHelp() {
   }[state.format].filter(Boolean);
   overlay('How to fold', el('div', { style: 'display:grid;gap:12px' },
     el('ol', {}, steps.map(t => el('li', { text: t }))),
-    el('p', { class: 'note', text: `Pages are ${pageSizeName()} (${fmtMm(g.pw)} × ${fmtMm(g.ph)} mm). If your printer dialog offers "fit to page" or "shrink", turn it off, or the folds won't line up.` })));
+    el('p', { class: 'note', text: `Pages are ${pageSizeName()} (${fmtMm(g.pw)} × ${fmtMm(g.ph)} mm). If your printer dialog offers "fit to page" or "shrink", turn it off. If the folds still miss the gaps between pages, your printer shrinks the page: calibrate it in the Layout tab.` })));
 }
 
 /* ---------- boot ---------- */
@@ -1735,6 +1849,7 @@ const fontsReady = (async () => {
 function boot() {
   bindControls(); buildPresets(); syncControls(); bindPreviewDrag();
   $$('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  bindCalib(); syncCalib();
   $('#shuffleBtn').addEventListener('click', () => {
     Object.assign(state.cover, { seed: Math.floor(Math.random() * 1e9), offX: 0, offY: 0 });
     onChange('cover.seed');
