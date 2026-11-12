@@ -98,3 +98,16 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* Switch: a two-way toggle with a label on each side, a word or an icon.
+   Used for Grid / Index on Photography and for the two portraits on About */
+.switch { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.switch-label { min-height: 44px; padding: 0 2px; border: 0; background: transparent; cursor: pointer; color: var(--muted); transition: color var(--fast) ease; }
+.switch-label.is-on { color: var(--text); font-weight: 500; }
+.switch-label svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.switch-label svg .dot { fill: currentColor; stroke: none; }
+.switch-track { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.switch-track::before { content: ''; position: absolute; left: 4px; top: 12px; width: 36px; height: 20px; border-radius: 999px; background: #dedddb; transition: background var(--base) ease; }
+.switch-track .knob { position: absolute; left: 6px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: transform var(--base) var(--ease); }
+.switch-track[aria-checked='true']::before { background: #9c9b96; }
+.switch-track[aria-checked='true'] .knob { transform: translateX(16px); }

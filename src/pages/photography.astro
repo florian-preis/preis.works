@@ -87,15 +87,6 @@ const tileSizes = '(max-width: 700px) calc((100vw - 36px) / 3), (max-width: 1100
   }
   .loc.on { opacity: 1; transform: translateY(-50%); filter: blur(0); }
 
-  .switch { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .switch-label { min-height: 44px; padding: 0 2px; border: 0; background: transparent; cursor: pointer; color: var(--muted); transition: color var(--fast) ease; }
-  .switch-label.is-on { color: var(--text); font-weight: 500; }
-  .switch-track { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-  .switch-track::before { content: ''; position: absolute; left: 4px; top: 12px; width: 36px; height: 20px; border-radius: 999px; background: #dedddb; transition: background var(--base) ease; }
-  .switch-track .knob { position: absolute; left: 6px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: transform var(--base) var(--ease); }
-  .switch-track[aria-checked='true']::before { background: #9c9b96; }
-  .switch-track[aria-checked='true'] .knob { transform: translateX(16px); }
-
   .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(6px, 1.4vw, 18px); }
   .tile { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--panel); }
   .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--slow) cubic-bezier(0.25, 0.46, 0.45, 0.94); }

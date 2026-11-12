@@ -36,6 +36,8 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 
 **How gowiththeflo is built.** Unlike the other apps, it is an Astro page (`src/pages/projects/travel-diary/app/index.astro`, code in `src/travel/`), so it can read the travel content at build time. The map is MapLibre with self-hosted Natural Earth data: relief tiles in `public/projects/travel-diary/map/relief/` and country shapes in `src/travel/countries.topo.json`, both made by `scripts/travel/build-map.py` (only needed if the map's look or borders change).
 
+**Change the About photos.** The About page has two portraits with a switch between them: `src/assets/portrait.jpg` (professional, shown first) and `src/assets/portrait-personal.jpg` (personal). Replace a file with one of the same name, in a 2:3 portrait shape. The page never shows them wider than 640 px, so 640 × 960 is enough.
+
 **Change contact details.** Edit `src/data/site.ts`.
 
 **Link previews.** The picture shown when a page is shared: the site uses `public/assets/social-card.jpg`; each project page and its app use the project's mockup, cropped to 1200 × 630 automatically when the site builds (`scripts/build-og.mjs`). Nothing to do when you add a project.

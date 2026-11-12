@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import veil from '../../content/veil.json';
 import { Content as About } from '../../content/about.md';
 import portrait from '../assets/portrait.jpg';
+import portraitPersonal from '../assets/portrait-personal.jpg';
 import { site } from '../data/site';
 import { photos, viewOf } from '../data/photos';
 import { fogName } from '../data/veil-names.mjs';
@@ -116,7 +117,22 @@ const jsonLd = {
   </section>
 
   <main class="about wrap" id="main">
-    <Image class="portrait" src={portrait} alt="Florian Preis" widths={[320, 640]} sizes="(max-width: 700px) 60vw, 320px" />
+    <!-- Two portraits, professional by default. The personal one is kept at 640 × 960, the largest size
+         the page shows, so no sharper copy exists on the site -->
+    <div class="portrait" data-view="professional">
+      <Image class="photo professional" src={portrait} alt="Florian Preis" widths={[320, 640]} sizes="(max-width: 700px) 60vw, 320px" />
+      <Image class="photo personal" src={portraitPersonal} alt="Florian Preis, off duty" widths={[320, 640]} sizes="(max-width: 700px) 60vw, 320px" aria-hidden="true" />
+      <div class="switch portrait-switch glass">
+        <button type="button" class="switch-label is-on" data-view="professional" aria-label="Professional photo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7M3 12.5h18"/></svg>
+        </button>
+        <button type="button" class="switch-track" role="switch" aria-checked="false" aria-label="Personal photo"><span class="knob"></span></button>
+        <button type="button" class="switch-label" data-view="personal" aria-label="Personal photo">
+          <!-- The smiley from under the handwritten name, drawn as a line icon -->
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle class="dot" cx="8.6" cy="6.6" r="1.35"/><circle class="dot" cx="15" cy="6" r="1.35"/><path d="M4.3 13.4C4.6 16 6.6 18.6 10 19c3.6.4 7.3-2.2 9.8-5.7"/></svg>
+        </button>
+      </div>
+    </div>
     <div class="about-text">
       <About />
       <ul class="contact">
@@ -211,7 +227,20 @@ const jsonLd = {
   /* Top space: once the page snaps past the veil, the menu sits in it (72 px tall), so the portrait
      starts 48 px below the menu on computers and 32 px below it on phones */
   .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 120px; }
-  .portrait { flex: 1 1 260px; max-width: 320px; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: top; border-radius: 16px; }
+  .portrait { position: relative; flex: 1 1 260px; max-width: 320px; aspect-ratio: 2 / 3; overflow: hidden; border-radius: 16px; background: var(--panel); }
+  /* The personal photo lies on top of the professional one and fades in over it */
+  .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .personal { opacity: 0; transition: opacity var(--base) var(--ease); }
+  .portrait[data-view='personal'] .personal { opacity: 1; }
+  /* Switch: a frosted-glass pill in the photo's bottom-left corner, icons instead of words.
+     Only shown when scripts run, since it does nothing without them */
+  .portrait-switch { position: absolute; left: 12px; bottom: 12px; gap: 2px; height: 40px; padding: 0 6px; border-radius: 999px; }
+  .portrait-switch .switch-label { display: grid; place-items: center; width: 32px; min-height: 40px; padding: 0; }
+  .portrait-switch .switch-track { height: 40px; }
+  .portrait-switch .switch-track::before { top: 10px; }
+  .portrait-switch .switch-track .knob { top: 12px; }
+  :global(html:not(.js)) .portrait-switch { display: none; }
+  @media (prefers-reduced-motion: reduce) { .personal { transition: none; } }
   .about-text { flex: 999 1 400px; min-width: 0; max-width: 62ch; line-height: 1.75; }
   .about-text :global(p) { margin: 0 0 18px; }
   .contact { list-style: none; margin: 32px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
@@ -299,6 +328,23 @@ const jsonLd = {
     reactions.forEach((t) => window.addEventListener(t, stop, { passive: true }));
     document.addEventListener('visibilitychange', resume);
     resume();
+  }
+
+  // Portrait switch: the professional photo by default, the personal one on request. Starts fresh on every visit.
+  const portraitBox = document.querySelector<HTMLElement>('.portrait');
+  if (portraitBox) {
+    const track = portraitBox.querySelector<HTMLButtonElement>('.switch-track')!;
+    const labels = Array.from(portraitBox.querySelectorAll<HTMLButtonElement>('.switch-label'));
+    const photos = Array.from(portraitBox.querySelectorAll<HTMLImageElement>('.photo'));
+    const setView = (view: 'professional' | 'personal') => {
+      portraitBox.dataset.view = view;
+      track.setAttribute('aria-checked', String(view === 'personal'));
+      labels.forEach((l) => l.classList.toggle('is-on', l.dataset.view === view));
+      // Screen readers only hear the photo that is showing
+      photos.forEach((img) => img.toggleAttribute('aria-hidden', !img.classList.contains(view)));
+    };
+    track.addEventListener('click', () => setView(track.getAttribute('aria-checked') === 'true' ? 'professional' : 'personal'));
+    labels.forEach((l) => l.addEventListener('click', () => setView(l.dataset.view as 'professional' | 'personal')));
   }
 
   // Phone number: never in the page source. It is stored as character codes and only written
