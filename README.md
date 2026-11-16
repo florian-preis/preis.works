@@ -10,6 +10,7 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 |---|---|---|
 | `photography/` | Every photo on the Photography page | Adding or removing a photo |
 | `content/about.md` | The about text on the home page | Changing your introduction |
+| `content/work.md` | Every word on the Work page: the opening, the focus areas and interfaces around the value chain, the phone lines beside each box, therapeutic areas, modalities, the selected work cards, experience, and education | Editing your professional profile or adding a card |
 | `content/veil.json` | Home page veil settings: colour or black and white, seconds per photo, photos to leave out, crop points for phones | Changing the veil |
 | `content/projects/` | One file per project: name, category, description, "Why I made it", year, picture | Editing or adding a project |
 | `content/projects/images/<name>/` | Project pictures: `mockup.jpg` (card and top of the page) and `screen-1.jpg`, `screen-2.jpg`, and so on (screens at the bottom, as many as you like; list each one in the project file) | Swapping a project picture |
@@ -35,6 +36,10 @@ Your content sits in three top-level folders. Everything under `src/` is the sit
 **Country facts in gowiththeflo.** Population, GDP, and the Human Development Index come from the World Bank and the UN (UNDP). On the 3rd of each month, the "Update country facts" workflow fetches the latest figures and, if anything changed, opens a pull request with a report of the changes and anything unusual. Merging it publishes the figures. You can also start it from the Actions tab. Names, capitals, and which places count towards the 197 are hand-kept in `content/travel/facts/reference.yml`; figures for places the sources skip (Taiwan, Vatican City) go in `content/travel/facts/overrides.yml`. One-time setting for the pull requests: Settings > Actions > General > Workflow permissions > "Allow GitHub Actions to create and approve pull requests".
 
 **How gowiththeflo is built.** Unlike the other apps, it is an Astro page (`src/pages/projects/travel-diary/app/index.astro`, code in `src/travel/`), so it can read the travel content at build time. The map is MapLibre with self-hosted Natural Earth data: relief tiles in `public/projects/travel-diary/map/relief/` and country shapes in `src/travel/countries.topo.json`, both made by `scripts/travel/build-map.py` (only needed if the map's look or borders change).
+
+**Edit the Work page.** All its text is in `content/work.md`; the opening paragraphs are the text below the header. To add a reference, copy one entry under `cards:` and fill in `tag`, `title`, `situation`, and `done`. Cards appear in a random order on every visit, and the filter above them lists every tag in use, so a new tag needs nothing else. The value chain drawing is made from Florian's own sketches (traced into `src/data/work-drawings.json`); its layout lives in `src/pages/work.astro`. It has room for exactly four focus areas and six boxes, and the build stops with a message if the file says otherwise.
+
+**Links in the About text.** Write them as `[words](/work/)` in `content/about.md`; they show with a fine underline that darkens on hover.
 
 **Change the About photos.** The About page has two portraits with a switch between them: `src/assets/portrait.jpg` (professional, shown first) and `src/assets/portrait-personal.jpg` (personal). Replace a file with one of the same name, in a 2:3 portrait shape. The page never shows them wider than 640 px, so 640 × 960 is enough.
 

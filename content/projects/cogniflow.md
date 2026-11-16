@@ -2,7 +2,7 @@
 # The project page lives at /projects/cogniflow/ (the filename decides the address)
 name: cogniflow
 category: Reading tool
-order: 4
+order: 5
 # "What it is" on the project page. Its first sentence is also the description search engines show
 summary: A word-by-word reader for articles and short texts. Paste a text, send an article straight from your browser with a bookmark, or drop in a TXT, Word, or PDF file, and read at your own speed. Each word is lined up on the letter your eye should land on, marked in coral, so your eyes can stay still while the text moves. Pause to see the surrounding paragraphs and tap any word to jump there. The timing follows the text, slowing down for long words, commas, and the end of each sentence. Every text is saved automatically with your place in it, and your library stays in your browser.
 app: /projects/cogniflow/app/

@@ -1,0 +1,427 @@
+---
+// Work: what Florian does, as a value chain drawn from his own sketches, then therapeutic areas and
+// modalities, selected work, and background. Every word comes from content/work.md.
+// The boxes are drawn here; the arrows, curves, and bracket are placed by the script below once the
+// page knows its width (they need the boxes' positions), and redrawn when the window changes size.
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import drawings from '../data/work-drawings.json';
+
+const entry = (await getEntry('work', 'work'))!;
+const w = entry.data;
+const { Content: Intro } = await render(entry);
+
+// Which drawing each box uses: three different solid boxes, one dashed box for both stages outside
+// the focus, and the hatched box for Commercial
+const solidFor: Record<string, number> = { rd: 0, cmc: 1, med: 2 };
+const shape = (key: string, kind: string) => (kind === 'core' ? drawings.hatched : kind === 'dashed' ? drawings.dashed[0] : drawings.solid[solidFor[key]]);
+const interfaces = w.stages.filter((s) => s.note);
+const tags = [...new Set(w.cards.map((c) => c.tag))];
+
+// A short machine-readable description for search engines and AI tools. It only repeats what the
+// page shows, and adds to the description of Florian on the home page (same id)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'ProfilePage', '@id': 'https://preis.works/work/#page', url: 'https://preis.works/work/', name: 'Work', inLanguage: 'en-GB', isPartOf: { '@id': 'https://preis.works/#website' }, mainEntity: { '@id': 'https://preis.works/#florian' } },
+    {
+      '@type': 'Person', '@id': 'https://preis.works/#florian', name: 'Florian Preis',
+      jobTitle: 'Life science strategy consultant',
+      homeLocation: { '@type': 'Place', name: 'Copenhagen, Denmark' },
+      worksFor: { '@type': 'Organization', name: w.experience[0].name },
+      alumniOf: w.education.map((e) => ({ '@type': 'CollegeOrUniversity', name: e.name })),
+      knowsAbout: [...w.core.map((c) => c.title), ...interfaces.map((s) => s.note!.title), ...w.therapeuticAreas, ...w.modalities],
+    },
+  ],
+};
+---
+<Base title="Work" active="work" description={w.description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <main class="work wrap" id="main">
+    <h1 class="visually-hidden">Work</h1>
+    <section class="intro"><Intro /></section>
+
+    <!-- The value chain. Computers: left to right, the four focus areas above, the interfaces below.
+         Phones and tablets: top to bottom, a headline beside each box, the full text in two groups beneath -->
+    <section class="chain" id="chain" aria-label="Where my work sits along the value chain">
+      <svg class="overlay" aria-hidden="true"></svg>
+      <div class="areas">
+        {w.core.map((c) => <div class="block"><h3>{c.title}</h3><p>{c.text}</p></div>)}
+      </div>
+      <div class="bracket-gap" id="bracket-gap"></div>
+      <ol class="row stages">
+        {w.stages.map((s) => {
+          const b = shape(s.key, s.kind);
+          return (
+            <li class="cell">
+              <div class={`stage ${s.kind}`} data-k={s.key}>
+                <svg viewBox={`0 0 ${b.w} ${b.h}`} preserveAspectRatio="none" aria-hidden="true"><path d={b.d} /></svg>
+                <span class="label">{s.label}</span>
+              </div>
+              <div class="ph">{s.phone && s.kind !== 'dashed' && <><h3>{s.phone.title}</h3><p>{s.phone.text}</p></>}</div>
+            </li>
+          );
+        })}
+      </ol>
+      <div class="row notes">
+        {w.stages.map((s) => <div class="cell">{s.note && <div class="block"><h3>{s.note.title}</h3><p>{s.note.text}</p></div>}</div>)}
+      </div>
+      <div class="stack">
+        <div>
+          <p class="group-label">At the commercial core</p>
+          <div class="list">{w.core.map((c) => <div class="block"><h3>{c.title}</h3><p>{c.text}</p></div>)}</div>
+        </div>
+        <div>
+          <p class="group-label">At the commercial interfaces</p>
+          <div class="list">{interfaces.map((s) => <div class="block"><h3>{s.note!.title}</h3><p>{s.note!.text}</p></div>)}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tas">
+      <div class="tag-group">
+        <h2 class="section-label">Therapeutic areas</h2>
+        <ul class="tags">{w.therapeuticAreas.map((t, i) => <li class={i === 0 ? 'lead' : undefined}>{t}</li>)}</ul>
+      </div>
+      <div class="tag-group">
+        <h2 class="section-label">Modalities</h2>
+        <ul class="tags">{w.modalities.map((t) => <li>{t}</li>)}</ul>
+      </div>
+    </section>
+
+    <section class="refs" aria-labelledby="refs-h">
+      <div class="refs-head">
+        <h2 class="section-label" id="refs-h">Selected work</h2>
+        <div class="refs-tools">
+          <div class="filter">
+            <button type="button" class="filter-btn" aria-expanded="false" aria-controls="filter-menu">
+              <span class="filter-label">All areas</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="filter-menu" id="filter-menu" role="group" aria-label="Show work in these areas" hidden>
+              {tags.map((t) => (
+                <label class="filter-row"><input type="checkbox" value={t} /><span class="check" aria-hidden="true"></span><span>{t}</span></label>
+              ))}
+              <button type="button" class="filter-clear" hidden>Show all</button>
+            </div>
+          </div>
+          <div class="refs-nav">
+            <button type="button" class="refs-btn" data-dir="-1" aria-label="Previous" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <button type="button" class="refs-btn" data-dir="1" aria-label="Next">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <ul class="track" tabindex="0" aria-label="Selected work">
+        {w.cards.map((c) => (
+          <li class="card" data-tag={c.tag}>
+            <span class="tag">{c.tag}</span>
+            <h3>{c.title}</h3>
+            <div class="part"><span>Situation</span><p>{c.situation}</p></div>
+            <div class="part"><span>What we did</span><p>{c.done}</p></div>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="background">
+      <div class="bg-col">
+        <h2 class="section-label">Experience</h2>
+        <div class="rows">{w.experience.map((e) => <div class="index-row"><span>{e.name}</span><span class="meta">{e.years}</span></div>)}</div>
+      </div>
+      <div class="bg-col edu">
+        <h2 class="section-label">Education</h2>
+        <div class="rows">{w.education.map((e) => <div class="index-row"><span>{e.name}</span><span class="meta">{e.detail}</span></div>)}</div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .work { padding-top: 40px; }
+  .intro { max-width: 62ch; line-height: 1.75; }
+  .intro :global(p) { margin: 0 0 18px; }
+  .intro :global(p:last-child) { margin-bottom: 0; }
+  .section-label, .group-label { margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
+
+  /* ── Value chain ───────────────────────────────────────────────────────── */
+  .chain { position: relative; margin-top: 96px; }
+  .overlay { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .stages { list-style: none; margin: 0; padding: 0; }
+  .stage { position: relative; display: grid; place-items: center; text-align: center; }
+  .stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .stage > svg path { vector-effect: non-scaling-stroke; }
+  .stage .label { position: relative; font-size: 13px; line-height: 1.3; padding: 0 10px; }
+  /* Outside the focus: outline and label in the muted grey */
+  .stage.dashed .label { color: var(--muted); }
+  .stage.dashed > svg { stroke: var(--muted); }
+  /* Commercial: the label sits on a small patch of paper over the hatching */
+  .stage.core .label { padding: 3px 10px; border-radius: 999px; background: var(--paper); font-weight: 600; }
+  .block h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .block p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+
+  /* Computers: the chain runs left to right */
+  @media (min-width: 1100px) {
+    .areas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; }
+    .areas .block { padding: 0 20px; }
+    .bracket-gap { height: 52px; }
+    .row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .row .cell { display: flex; justify-content: center; }
+    .stage { width: min(100% - 60px, 188px); aspect-ratio: 1.75; }
+    .notes { margin-top: 118px; }
+    .notes .cell { justify-content: flex-start; }
+    .notes .block { margin-left: calc((100% - min(100% - 60px, 188px)) / 2); padding-right: 12px; }
+    .stack, .ph { display: none; }
+  }
+
+  /* Phones and tablets: a compact chain top to bottom, the full text in two groups beneath it */
+  @media (max-width: 1099px) {
+    .areas, .bracket-gap, .row.notes { display: none; }
+    .row { display: flex; flex-direction: column; gap: 24px; padding-left: 44px; }
+    .row .cell { display: grid; grid-template-columns: 116px minmax(0, 1fr); align-items: center; column-gap: 16px; }
+    .stage { width: 116px; height: 66px; }
+    .stage .label { padding: 0 6px; }
+    .ph :global(h3) { margin: 0 0 2px; font-size: 13px; font-weight: 600; line-height: 1.35; }
+    .ph :global(p) { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+    .stack { display: grid; gap: 40px; margin-top: 52px; }
+    .stack .group-label { margin-bottom: 14px; }
+    .stack .list { display: flex; flex-direction: column; gap: 18px; }
+    .stack .block h3 { font-size: 14px; }
+    .stack .block p { font-size: 14px; line-height: 1.6; }
+  }
+  @media (min-width: 701px) and (max-width: 1099px) {
+    .stack { grid-template-columns: 1fr 1fr; gap: 48px; }
+  }
+
+  /* ── Therapeutic areas and modalities: quiet tags ──────────────────────── */
+  .tas { margin-top: 104px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  .tag-group { display: flex; flex-direction: column; gap: 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+  .tags li { padding: 6px 14px; border-radius: 999px; background: var(--panel); font-size: 13px; line-height: 1.4; }
+  .tags li.lead { font-weight: 600; }
+
+  /* ── Selected work: the carousel from the project pages, with text cards ─ */
+  .refs { margin-top: 120px; display: flex; flex-direction: column; gap: 12px; --per: 3.25; --gap: 16px; }
+  .refs-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .refs-tools { display: flex; align-items: center; gap: 12px; margin-right: -12px; }
+  .refs-nav { display: flex; gap: 4px; }
+  .refs-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--text); cursor: pointer; transition: opacity var(--fast) ease, background var(--fast) ease; }
+  .refs-btn:hover:not(:disabled) { background: var(--hover); }
+  .refs-btn:disabled { opacity: 0.3; cursor: default; }
+  .refs-btn[hidden] { display: none; }
+  .track { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .track::-webkit-scrollbar { display: none; }
+  .card { flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); scroll-snap-align: start; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px 26px; border-radius: 16px; background: var(--panel); }
+  .card[hidden] { display: none; }
+  .card .tag { font-size: 12px; color: var(--muted); }
+  .card h3 { margin: -8px 0 0; font-size: 15px; font-weight: 600; line-height: 1.45; }
+  .card .part span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .card .part p { margin: 0; font-size: 14px; line-height: 1.65; }
+  @media (max-width: 1100px) { .refs { --per: 2.2; } }
+
+  /* Filter: a quiet text button that opens a small panel of areas to tick */
+  .filter { position: relative; }
+  .filter-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; color: var(--muted); cursor: pointer; transition: color var(--fast) ease, background var(--fast) ease; }
+  .filter-btn:hover, .filter-btn[aria-expanded='true'] { color: var(--text); background: var(--hover); }
+  .filter-btn.active { color: var(--text); font-weight: 600; }
+  .filter-btn svg { transition: transform var(--base) var(--ease); }
+  .filter-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
+  .filter-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 300px; padding: 6px; border-radius: 14px; background: var(--paper); box-shadow: 0 0 0 1px var(--line), 0 12px 32px rgba(0, 0, 0, 0.08); }
+  .filter-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: background var(--fast) ease; }
+  .filter-row:hover { background: var(--hover); }
+  .filter-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .check { flex: none; width: 16px; height: 16px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--faint); display: grid; place-items: center; transition: background var(--fast) ease, box-shadow var(--fast) ease; }
+  .check::after { content: ''; width: 8px; height: 4px; margin-top: -2px; border-left: 1.5px solid var(--paper); border-bottom: 1.5px solid var(--paper); transform: rotate(-45deg); opacity: 0; }
+  .filter-row input:checked + .check { background: var(--text); box-shadow: none; }
+  .filter-row input:checked + .check::after { opacity: 1; }
+  .filter-row input:focus-visible + .check { outline: 2px solid var(--text); outline-offset: 2px; }
+  .filter-clear { display: block; width: 100%; min-height: 40px; margin-top: 4px; padding: 0 12px; border: 0; border-top: 1px solid var(--line-soft); border-radius: 0 0 10px 10px; background: transparent; font-size: 13px; color: var(--muted); text-align: left; cursor: pointer; }
+  .filter-clear:hover { color: var(--text); }
+  .filter-clear[hidden] { display: none; }
+  :global(html:not(.js)) .filter { display: none; }
+
+  /* ── Background: experience and education side by side ───────────────── */
+  .background { margin-top: 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .bg-col { display: flex; flex-direction: column; gap: 12px; }
+  .rows { display: flex; flex-direction: column; }
+  .index-row { cursor: default; }
+  .index-row:hover { background: transparent; }
+
+  @media (max-width: 700px) {
+    .work { padding-top: 16px; }
+    .chain { margin-top: 64px; }
+    .tas { margin-top: 72px; grid-template-columns: 1fr; gap: 32px; }
+    .refs, .background { margin-top: 88px; }
+    .refs { --gap: 10px; }
+    .refs-nav { display: none; }
+    .refs-tools { margin-right: -14px; }
+    .track { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+    .card { flex-basis: 86%; }
+    .background { grid-template-columns: 1fr; gap: 40px; }
+    /* Education: school and degree one above the other, so neither gets cut short */
+    .edu .index-row { grid-template-columns: minmax(0, 1fr); padding: 10px 8px; row-gap: 2px; }
+    .edu .index-row .meta { text-align: left; }
+  }
+</style>
+
+<script>
+  import D from '../data/work-drawings.json';
+
+  type Pt = [number, number];
+  type Lines = number[][][];
+  const P = (p: Pt) => p[0].toFixed(1) + ',' + p[1].toFixed(1);
+  const poly = (pts: Pt[]) => 'M' + pts.map(P).join(' L');
+  const add = (a: Pt, b: Pt, s = 1): Pt => [a[0] + b[0] * s, a[1] + b[1] * s];
+  const unit = (v: Pt): Pt => { const l = Math.hypot(v[0], v[1]); return [v[0] / l, v[1] / l]; };
+  const rot90 = (v: Pt): Pt => [-v[1], v[0]];
+
+  // A drawn arrowhead (its last 28 px, as traced), set on the end of a line arriving at E in direction t
+  function head(piece: Lines, E: Pt, t: Pt, k: number) {
+    const n = rot90(t);
+    return piece.filter((l) => l.length > 1).map((l) => poly(l.map(([u, v]) => [E[0] + k * (u * t[0] + v * n[0]), E[1] + k * (u * t[1] + v * n[1])] as Pt)));
+  }
+  // Straight arrow between two boxes: Florian's drawn arrow exactly as traced, turned to run from S to E.
+  // The head keeps scale k; only the shaft behind it is shortened to fit
+  function straight(A: { L: number; lines: Lines }, S: Pt, E: Pt, k: number) {
+    const len = Math.hypot(E[0] - S[0], E[1] - S[1]), c = unit([E[0] - S[0], E[1] - S[1]]), n = rot90(c);
+    const H = 28, headLen = H * k, shaftSrc = A.L - H, shaftDst = Math.max(len - headLen, 4);
+    const map = ([u, v]: number[]): Pt => {
+      const d = u >= -H ? u * k : -headLen - ((-u - H) / shaftSrc) * shaftDst;
+      const vv = v * (u >= -H ? k : Math.min(k, (shaftDst / shaftSrc) * 1.2));
+      return [E[0] + d * c[0] + vv * n[0], E[1] + d * c[1] + vv * n[1]];
+    };
+    return A.lines.filter((l) => l.length > 1).map((l) => poly(l.map(map)));
+  }
+  // Curved arrow back from Commercial: a smooth curve. All three start from one point and leave in the
+  // same direction, so they only part gradually. side = the direction the curve bows into; f scales the bow
+  function curvePts(S: Pt, E: Pt, depth: number, side: Pt, f = 1): Pt[] {
+    const span = Math.hypot(E[0] - S[0], E[1] - S[1]);
+    const along = unit([E[0] - S[0], E[1] - S[1]]);
+    const start = unit(add([along[0] * 0.42, along[1] * 0.42], side, 0.9));
+    const L1 = Math.min(span * 0.34, 46 + depth * 1.3);
+    const c1 = add(add(S, along, (start[0] * along[0] + start[1] * along[1]) * L1), side, (start[0] * side[0] + start[1] * side[1]) * L1 * f);
+    const c2 = add(add(E, along, -span * 0.3), side, depth * 1.25 * f);
+    return [S, c1, c2, E];
+  }
+  // How far a curve reaches in the side direction, measured from its start
+  function bow(pts: Pt[], side: Pt) {
+    const [p0, p1, p2, p3] = pts; let m = 0;
+    for (let i = 0; i <= 40; i++) {
+      const t = i / 40, a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, c = 3 * (1 - t) * t * t, d = t ** 3;
+      const x = a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], y = a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1];
+      m = Math.max(m, (x - p0[0]) * side[0] + (y - p0[1]) * side[1]);
+    }
+    return m;
+  }
+  function curved(pts: Pt[], piece: Lines, k: number) {
+    const [S, c1, c2, E] = pts; const t = unit([E[0] - c2[0], E[1] - c2[1]]);
+    return [`M${P(S)} C${P(c1)} ${P(c2)} ${P(E)}`, ...head(piece, E, t, k)];
+  }
+  // Bracket: Florian's drawn line between two points (its wobble reduced) and his drawn ticks
+  const rotT = (p: Pt, dir: string): Pt => (dir === 'up' ? p : dir === 'down' ? [-p[0], -p[1]] : dir === 'right' ? [-p[1], p[0]] : [p[1], -p[0]]);
+  function bracketLine(A: Pt, B: Pt, wob = 0.25) {
+    const dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy), n = rot90([dx / len, dy / len]);
+    return poly(D.bracket.line.map(([u, v]) => [A[0] + u * dx + v * wob * n[0], A[1] + u * dy + v * wob * n[1]] as Pt));
+  }
+  function tick(at: Pt, dir: string, length: number, which = 0) {
+    const t = D.bracket.ticks[which % 2];
+    const s = length / Math.abs(t.pts[t.pts.length - 1][1]);
+    return poly(t.pts.map(([x, y]) => { const q = rotT([x * 0.5, y * s], dir); return [at[0] + q[0], at[1] + q[1]] as Pt; }));
+  }
+
+  const chain = document.getElementById('chain')!;
+  const overlay = chain.querySelector<SVGSVGElement>('.overlay')!;
+  // Commercial's three curved arrows: target, which drawn head, bow on computers, bow on phones
+  const backs: [string, number, number, number][] = [['med', 0, 22, 12], ['cmc', 1, 50, 22], ['rd', 2, 78, 32]];
+
+  function layout() {
+    const R = chain.getBoundingClientRect();
+    const rel = (el: Element) => { const r = el.getBoundingClientRect(); return { l: r.left - R.left, r: r.right - R.left, t: r.top - R.top, b: r.bottom - R.top, cx: (r.left + r.right) / 2 - R.left, cy: (r.top + r.bottom) / 2 - R.top }; };
+    const stages = [...chain.querySelectorAll<HTMLElement>('.stage')];
+    const box: Record<string, ReturnType<typeof rel>> = {};
+    stages.forEach((s) => (box[s.dataset.k!] = rel(s)));
+    const keys = stages.map((s) => s.dataset.k!);
+    const wide = matchMedia('(min-width: 1100px)').matches;
+    const d: string[] = [];
+    // Straight arrows between neighbouring boxes
+    for (let i = 0; i < keys.length - 1; i++) {
+      const a = box[keys[i]], b = box[keys[i + 1]], A = D.straight[i % D.straight.length];
+      if (wide) d.push(...straight(A, [a.r + 12, a.cy], [b.l - 12, a.cy], 0.44));
+      else { const m = (a.b + b.t) / 2; d.push(...straight(A, [a.cx, m - 8], [a.cx, m + 7], 0.36)); }
+    }
+    // Curved arrows from Commercial back into Medical, CMC, and R&D
+    const com = box.com;
+    const side: Pt = wide ? [0, 1] : [-1, 0];
+    const S: Pt = wide ? [com.cx, com.b + 10] : [com.l - 10, com.cy];
+    const ends = backs.map(([k]) => (wide ? [box[k].cx, box[k].b + 10] : [box[k].l - 10, box[k].cy]) as Pt);
+    let curves = backs.map(([, , dep, depP], i) => curvePts(S, ends[i], wide ? dep : depP, side));
+    // Phones: the outermost curve must stay on the page, so all three bows shrink together if needed
+    if (!wide) {
+      const room = S[0] - 4, reach = Math.max(...curves.map((c) => bow(c, side)));
+      if (reach > room) { const f = room / reach; curves = backs.map(([, , , depP], i) => curvePts(S, ends[i], depP, side, f)); }
+    }
+    curves.forEach((c, i) => d.push(...curved(c, D.heads[backs[i][1]], wide ? 0.44 : 0.36)));
+    // Bracket from the four focus areas into Commercial (computers only)
+    if (wide) {
+      const xs = [...chain.querySelectorAll('.areas .block')].map((a) => rel(a).cx);
+      const y = rel(document.getElementById('bracket-gap')!).t + 24;
+      d.push(bracketLine([xs[0], y], [xs[3], y]));
+      xs.forEach((x, i) => d.push(tick([x, y], 'up', 13, i)));
+      d.push(tick([com.cx, y], 'down', com.t - y - 8, 1));
+    }
+    overlay.innerHTML = d.map((p) => `<path d="${p}"/>`).join('');
+  }
+  let frame = 0;
+  addEventListener('resize', () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(layout); });
+  document.fonts.ready.then(layout);
+  layout();
+
+  // ── Selected work ────────────────────────────────────────────────────────
+  const track = document.querySelector<HTMLElement>('.track')!;
+  const [prev, next] = document.querySelectorAll<HTMLButtonElement>('.refs-btn');
+  // A different order on every visit
+  const cards = [...track.querySelectorAll<HTMLElement>('.card')];
+  for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
+  cards.forEach((c) => track.appendChild(c));
+  // Snapping can carry the old first card along while the cards move; start at the beginning
+  track.scrollLeft = 0;
+  requestAnimationFrame(() => (track.scrollLeft = 0));
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const step = () => { const first = cards.find((c) => !c.hidden); return first ? first.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0') : track.clientWidth; };
+  const update = () => {
+    const max = track.scrollWidth - track.clientWidth;
+    prev.disabled = track.scrollLeft <= 2;
+    next.disabled = track.scrollLeft >= max - 2;
+    prev.hidden = next.hidden = max <= 2;
+  };
+  [prev, next].forEach((b) => b.addEventListener('click', () => track.scrollBy({ left: Number(b.dataset.dir) * step(), behavior: still ? 'auto' : 'smooth' })));
+  track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  addEventListener('resize', update);
+  update();
+
+  // Filter by area: tick one or more; nothing ticked shows everything
+  const btn = document.querySelector<HTMLButtonElement>('.filter-btn')!;
+  const menu = document.getElementById('filter-menu')!;
+  const label = btn.querySelector('.filter-label')!;
+  const boxes = [...menu.querySelectorAll<HTMLInputElement>('input')];
+  const clear = menu.querySelector<HTMLButtonElement>('.filter-clear')!;
+  const setOpen = (open: boolean) => { menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
+  const apply = () => {
+    const on = boxes.filter((b) => b.checked).map((b) => b.value);
+    cards.forEach((c) => (c.hidden = on.length > 0 && !on.includes(c.dataset.tag!)));
+    label.textContent = on.length === 0 ? 'All areas' : on.length === 1 ? on[0] : `${on.length} areas`;
+    btn.classList.toggle('active', on.length > 0);
+    clear.hidden = on.length === 0;
+    track.scrollLeft = 0;
+    update();
+  };
+  btn.addEventListener('click', () => setOpen(menu.hidden));
+  boxes.forEach((b) => b.addEventListener('change', apply));
+  clear.addEventListener('click', () => { boxes.forEach((b) => (b.checked = false)); apply(); });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !(e.target as Element).closest('.filter')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+</script>

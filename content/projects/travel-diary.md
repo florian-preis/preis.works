@@ -1,7 +1,7 @@
 ---
 name: gowiththeflo
 category: Travel diary
-order: 3
+order: 4
 # "What it is" on the project page. Its first sentence is also the description search engines show
 summary: An interactive world map of every country I have visited, with the rest of the world under fog. As the map opens, the fog lifts from the countries I have been to. Click any country for a few key facts, such as its capital, population, and GDP, and the stories from my trips there. The diary lists all trips by year, and every country and trip has its own link to share. On a computer, the cursor turns into a small plane, and a right-click measures the distance between two places.
 app: /projects/travel-diary/app/

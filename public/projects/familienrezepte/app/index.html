@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F2EF">
+<title>Familienrezepte</title>
+<meta name="description" content="Lena's handwritten book of our family's favourite recipes, as a notebook on the screen. Opens with a password.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Familienrezepte">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/cover-front.webp" as="image">
+<style>
+/* The site's own Inter, so nothing loads from elsewhere */
+@font-face { font-family: 'Inter Variable'; src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; font-display: block;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Variable'; src: url('/fonts/inter-latin-ext-wght-normal.woff2') format('woff2'); font-weight: 100 900; font-display: block;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+:root {
+  --paper: #f3f2ef; --line: #dedddb; --text: #2b2b29; --muted: #6e6d69; --faint: #a9a8a3; --ink: #252523;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1); --fast: 0.25s; --base: 0.45s;
+  /* --u is the size of one pixel of the notebook photo on screen. Everything in the book is measured in it */
+  --u: min(calc((100vw - 168px) / 1283), calc((100dvh - 112px) / 1006));
+  --spine: 50vw;                      /* where the middle of the book sits */
+  --top: calc((100dvh - 1006 * var(--u)) / 2 - 14px);
+  --fs: calc(var(--u) * 18.5);        /* recipe text */
+  --fs-s: calc(var(--u) * 15);        /* small text on the page */
+}
+/* Tall screens: only the right-hand page, the fold at the left edge of the screen */
+@media (max-aspect-ratio: 1/1), (max-width: 700px) {
+  :root {
+    --u: min(calc((100vw - 14px) / 643), calc((100dvh - 96px) / 1006));
+    --spine: calc((100vw - 643 * var(--u)) / 2 + 3px);
+    --top: calc((100dvh - 1006 * var(--u)) / 2 - 22px);
+    --fs: calc(var(--u) * 22.5); --fs-s: calc(var(--u) * 17);
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--paper); background-image: radial-gradient(circle, #d6d5d0 1px, transparent 1.2px); background-size: 24px 24px;
+  color: var(--text); font-family: 'Inter Variable', Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; touch-action: pan-y pinch-zoom; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 4px; }
+[hidden] { display: none !important; }
+
+.book { position: absolute; left: calc(var(--spine) - 640 * var(--u)); top: var(--top); width: calc(1283 * var(--u)); height: calc(1006 * var(--u)); }
+.book img { position: absolute; display: block; user-select: none; -webkit-user-drag: none; }
+/* The book's shadow on the desk: a tight contact shadow and a wide soft one. Closed, it covers the right half only */
+.shadow { z-index: 0; position: absolute; left: calc(9 * var(--u)); right: calc(16 * var(--u)); top: calc(10 * var(--u)); height: calc(982 * var(--u)); border-radius: calc(26 * var(--u));
+  box-shadow: 0 calc(1.5 * var(--u)) calc(3 * var(--u)) rgba(30, 28, 24, 0.34), calc(3 * var(--u)) calc(10 * var(--u)) calc(22 * var(--u)) rgba(30, 28, 24, 0.20), calc(8 * var(--u)) calc(34 * var(--u)) calc(70 * var(--u)) rgba(30, 28, 24, 0.16);
+  transform-origin: 100% 50%; }
+.base-l { left: 0; top: 0; width: calc(640 * var(--u)); height: calc(1006 * var(--u)); }
+.base-r { left: calc(640 * var(--u)); top: 0; width: calc(643 * var(--u)); height: calc(1006 * var(--u)); }
+.base-l, .base-r { z-index: 1; }
+.slot { z-index: 2; position: absolute; top: calc(3 * var(--u)); width: calc(608 * var(--u)); height: calc(994 * var(--u)); }
+.slot-l { left: calc(32 * var(--u)); } .slot-r { left: calc(640 * var(--u)); }
+
+/* One sheet of paper: the photographed page with the recipe set on it */
+.sheet { position: absolute; left: 0; top: 0; width: calc(608 * var(--u)); height: calc(994 * var(--u)); overflow: hidden; background-size: calc(643 * var(--u)) calc(1006 * var(--u)); background-repeat: no-repeat; color: var(--ink); }
+.sheet.r { background-image: var(--img-r); background-position: 0 calc(-3 * var(--u)); border-radius: 0 calc(13 * var(--u)) calc(13 * var(--u)) 0; }
+.sheet.l { background-image: var(--img-l); background-size: calc(640 * var(--u)) calc(1006 * var(--u)); background-position: calc(-32 * var(--u)) calc(-3 * var(--u)); border-radius: calc(13 * var(--u)) 0 0 calc(13 * var(--u)); }
+.sheet .in { position: absolute; top: 0; bottom: 0; width: calc(505 * var(--u)); font-size: var(--fs); line-height: calc(29 * var(--u)); font-weight: 400; letter-spacing: -0.003em; }
+.sheet.r .in { left: calc(62 * var(--u)); } .sheet.l .in { left: calc(41 * var(--u)); }
+/* Text sits on the photographed ruling: row n is the nth printed line of the page */
+.row { position: absolute; left: 0; right: 0; top: calc(var(--u) * (58.3 + 29 * var(--k)) - var(--fs) * 0.3635); }
+.row.s { top: calc(var(--u) * (58.3 + 29 * var(--k)) - var(--fs-s) * 0.3635); font-size: var(--fs-s); }
+.hand { position: absolute; mix-blend-mode: multiply; opacity: 0.93; }
+.label { font-weight: 500; }
+.li { position: relative; padding-left: calc(var(--fs) * 1.25); }
+.li > b { position: absolute; left: 0; font-weight: 400; }
+.li.bul > b { left: calc(var(--fs) * 0.3); }
+.muted { color: #77756f; }
+.sub { display: flex; gap: calc(14 * var(--u)); align-items: baseline; }
+.sub .en { flex: 1 1 50%; text-align: right; color: #77756f; white-space: nowrap; }
+.sub .by { flex: 1 1 50%; }
+.pageno { position: absolute; bottom: calc(20 * var(--u)); font-size: var(--fs-s); color: #8a8882; }
+.sheet.r .pageno { right: calc(34 * var(--u)); } .sheet.l .pageno { left: calc(34 * var(--u)); }
+.illus { position: absolute; mix-blend-mode: multiply; }
+.toc { position: absolute; display: flex; gap: calc(10 * var(--u)); left: 0; right: 0; font-size: var(--fs-s); }
+.toc > div:first-child { flex: 0 0 calc(226 * var(--u)); } .toc > div:last-child { flex: 1; min-width: 0; }
+.toc a { display: flex; gap: calc(var(--fs-s) * 0.55); color: inherit; text-decoration: none; cursor: pointer; }
+.toc a > i { font-style: normal; flex: 0 0 calc(var(--fs-s) * 1.35); text-align: right; color: #8a8882; font-variant-numeric: tabular-nums; }
+.toc a > span > em { font-style: normal; color: #77756f; }
+@media (hover: hover) { .toc a:hover > span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.22em; } }
+@media (max-aspect-ratio: 1/1), (max-width: 700px) { .toc > div:first-child { flex-basis: calc(246 * var(--u)); } .ded { padding: 0 calc(20 * var(--u)); } }
+.cols { column-count: 2; column-gap: calc(18 * var(--u)); }
+.cols > div { break-inside: avoid; }
+.cols > .label { break-after: avoid; }
+.hand-in { display: inline-block; vertical-align: baseline; mix-blend-mode: multiply; opacity: 0.93; }
+.center { text-align: center; }
+/* Everything that lifts off the page lives here, so it is drawn in perspective */
+.three { z-index: 6; position: absolute; inset: 0; perspective: calc(var(--u) * 4600); perspective-origin: 50% 46%; pointer-events: none; }
+@media (max-aspect-ratio: 1/1), (max-width: 700px) { .three { perspective-origin: 75% 46%; } }
+.pivot { position: absolute; left: calc(640 * var(--u)); top: 0; width: 0; height: 100%; transform-style: preserve-3d; }
+.strip { position: absolute; top: calc(3 * var(--u)); left: 0; height: calc(994 * var(--u)); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform-origin: 0 0; will-change: transform; }
+.strip > .shade { position: absolute; inset: 0; }
+.cast { z-index: 3; position: absolute; left: calc(32 * var(--u)); top: calc(3 * var(--u)); width: calc(1216 * var(--u)); height: calc(994 * var(--u)); border-radius: calc(13 * var(--u)); pointer-events: none; }
+.cover-face { position: absolute; top: 0; left: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+/* The cover photo is placed so that the cover reaches a hair past the pages on every side, as a real cover does */
+.cover-front { width: calc(703.5 * var(--u)); height: calc(1016.6 * var(--u)); left: calc(-23.7 * var(--u)); top: calc(-6.1 * var(--u)); }
+.cover-front img { width: 100%; height: 100%; left: 0; top: 0; }
+.cover-front .label-img { width: 53.2%; height: auto; left: 14.2%; top: 23.5%; }
+.cover-front .elastic { left: 79.44%; width: 6.314%; height: 100%; top: 0; transition: transform 0.42s cubic-bezier(0.5, 0, 0.75, 0.4), opacity 0.3s 0.14s linear; }
+.cover-front.off .elastic { transform: translateX(160%); opacity: 0; }
+.cover-back { width: calc(640 * var(--u)); height: calc(1006 * var(--u)); transform: rotateY(180deg); }
+.cover-back img { width: 100%; height: 100%; }
+.cover-face > .shade { position: absolute; inset: 0; pointer-events: none; }
+.spine-hold { z-index: 5; position: absolute; left: calc(640 * var(--u)); top: calc(4 * var(--u)); width: calc(17 * var(--u)); height: calc(993 * var(--u)); background: linear-gradient(to right, #1c1c1c, #0e0e0e 35%, #151515); border-radius: calc(12 * var(--u)) 0 0 calc(12 * var(--u)); pointer-events: none; }
+body.lidded #baseR, body.lidded #slotR { clip-path: inset(calc(4.5 * var(--u)) 0 calc(9.5 * var(--u)) calc(1 * var(--u)) round calc(12 * var(--u)) 0 0 calc(12 * var(--u))); }
+.pass.busy .go { opacity: 0.35; }
+/* The back board: lies under the last right-hand page, and closes over the left when the book is shut from the back */
+.back-inside { width: calc(643 * var(--u)); height: calc(1006 * var(--u)); left: 0; }
+.back-inside img { width: 100%; height: 100%; }
+.back-outside { width: calc(707 * var(--u)); height: calc(1016.6 * var(--u)); left: calc(-48.7 * var(--u)); top: calc(-6.1 * var(--u)); transform: rotateY(180deg); }
+.back-outside img { width: 100%; height: 100%; }
+.spine-hold-back { z-index: 5; position: absolute; left: calc(623 * var(--u)); top: calc(4 * var(--u)); width: calc(17 * var(--u)); height: calc(993 * var(--u)); background: linear-gradient(to left, #1c1c1c, #0e0e0e 35%, #151515); border-radius: 0 calc(12 * var(--u)) calc(12 * var(--u)) 0; pointer-events: none; visibility: hidden; }
+body.backlid #baseL, body.backlid #slotL { clip-path: inset(calc(4.5 * var(--u)) calc(1 * var(--u)) calc(9.5 * var(--u)) 0 round 0 calc(12 * var(--u)) calc(12 * var(--u)) 0); }
+body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
+@media (min-aspect-ratio: 1/1) and (min-width: 701px) { body.backshut .bar { right: calc(100vw - var(--spine)); } }
+.sheet.e { background-image: var(--img-e); }
+.groups { display: grid; grid-template-columns: 1fr 1fr; column-gap: calc(18 * var(--u)); }
+.illus { pointer-events: none; }
+.pass .tick { display: none; color: var(--text); }
+.pass.ok .go { display: none; } .pass.ok .tick { display: block; }
+.pass.ok input { border-bottom-color: transparent; color: var(--muted); }
+.pass .tick path { stroke-dasharray: 24; stroke-dashoffset: 24; }
+.pass.ok .tick path { animation: tick 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) 0.05s forwards; }
+@keyframes tick { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .pass.ok .tick path { animation: none; stroke-dashoffset: 0; } }
+.ded { text-align: center; color: #55534e; padding: 0 calc(46 * var(--u)); }
+.pass-msg { font-size: 12px; color: var(--muted); margin-left: 6px; }
+.hit { z-index: 4; position: absolute; top: 0; height: 100%; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hit-l { left: 0; width: calc(640 * var(--u)); } .hit-r { left: calc(640 * var(--u)); width: calc(643 * var(--u)); }
+.sheet a { position: relative; z-index: 2; }
+
+/* Controls: on the desk, never on the book */
+.ctl { position: absolute; color: var(--faint); background: transparent; border: 0; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color var(--fast) ease, opacity var(--base) ease; }
+.ctl:hover { color: var(--text); }
+.ctl svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.prev { left: calc(var(--spine) - 640 * var(--u) - 60px); top: calc(var(--top) + 503 * var(--u) - 22px); }
+.next { left: calc(var(--spine) + 643 * var(--u) + 16px); top: calc(var(--top) + 503 * var(--u) - 22px); }
+.bar { position: absolute; left: calc(var(--spine) - 640 * var(--u)); right: calc(100vw - var(--spine) - 641 * var(--u)); top: calc(var(--top) + 1006 * var(--u) + 6px); height: 44px; display: flex; align-items: center; justify-content: space-between; }
+.bar .ctl { position: static; margin-left: -12px; }
+.switch { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.switch-label { min-height: 44px; padding: 0 2px; border: 0; background: transparent; cursor: pointer; color: var(--muted); transition: color var(--fast) ease; }
+#lblEN { padding-right: 0; }
+.switch-label.is-on { color: var(--text); font-weight: 500; }
+.switch-track { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.switch-track::before { content: ''; position: absolute; left: 4px; top: 12px; width: 36px; height: 20px; border-radius: 999px; background: #dedddb; transition: background var(--base) ease; }
+.switch-track .knob { position: absolute; left: 6px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); transition: transform var(--base) var(--ease); }
+.switch-track[aria-checked='true']::before { background: #9c9b96; }
+.switch-track[aria-checked='true'] .knob { transform: translateX(16px); }
+.gone { opacity: 0; pointer-events: none; }
+.pass { display: flex; align-items: center; gap: 2px; transition: opacity var(--base) ease; }
+.pass input { width: 150px; height: 32px; border: 0; border-bottom: 1px solid #c9c8c3; background: transparent; font: inherit; font-size: 13px; color: var(--text); padding: 0 2px; border-radius: 0; outline: none; }
+.pass input::placeholder { color: var(--muted); }
+.pass input:focus { border-bottom-color: var(--text); }
+.pass .ctl { margin-left: 0; }
+@media (max-aspect-ratio: 1/1), (max-width: 700px) {
+  .prev, .next { display: none; }
+  .bar { left: 14px; }
+}
+body.closed #baseR, body.closed #slotR { visibility: hidden; }
+@media (min-aspect-ratio: 1/1) and (min-width: 701px) { body.closed .bar, body.opening .bar { left: var(--spine); } }
+</style>
+</head>
+<body class="closed">
+<div class="book" id="book">
+  <div class="shadow" id="shadow"></div>
+  <img class="base-l" id="baseL" alt="" hidden>
+  <img class="base-r" id="baseR" alt="">
+  <div class="slot slot-l" id="slotL"></div>
+  <div class="slot slot-r" id="slotR"></div>
+  <div class="cast" id="cast"></div>
+  <div class="hit hit-l" id="hitL"></div>
+  <div class="hit hit-r" id="hitR"></div>
+  <div class="spine-hold" id="spineHold"></div>
+  <div class="spine-hold-back" id="spineHoldBack"></div>
+  <div class="three">
+    <div class="pivot" id="leaf"></div>
+    <div class="pivot" id="cover">
+      <div class="cover-face cover-front" id="coverFront"><img id="imgCover" alt=""><img class="label-img" id="imgLabel" alt="Familienrezepte"><img class="elastic" id="imgElastic" alt=""><div class="shade"></div></div>
+      <div class="cover-face cover-back"><img id="imgEnd" alt=""><div class="shade" id="coverBackShade"></div></div>
+    </div>
+    <div class="pivot" id="back" hidden>
+      <div class="cover-face back-inside"><img id="imgEndR" alt=""><div class="shade" id="backInShade"></div></div>
+      <div class="cover-face back-outside"><img id="imgBack" alt=""><div class="shade" id="backOutShade"></div></div>
+    </div>
+  </div>
+</div>
+<button class="ctl prev gone" id="prev" type="button" aria-label="Zurückblättern"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+<button class="ctl next gone" id="next" type="button" aria-label="Weiterblättern"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+<div class="bar">
+  <div style="display:flex;align-items:center">
+    <button class="ctl gone" id="home" type="button" aria-label="Inhaltsverzeichnis" hidden><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h10M9 12h10M9 17h10"/><path d="M5 7h.01M5 12h.01M5 17h.01"/></svg></button>
+    <div class="pass" id="pass"><input id="pw" type="password" autocomplete="off" enterkeyhint="go" placeholder="Passwort" aria-label="Passwort"><button class="ctl" id="passGo" type="button" aria-label="Öffnen"><svg class="go" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="tick" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.6 4.6L19 7.4"/></svg></button><span class="pass-msg" id="passMsg" role="status"></span></div>
+  </div>
+  <div class="switch" role="group" aria-label="Sprache">
+    <button class="switch-label is-on" id="lblDE" type="button">DE</button>
+    <button class="switch-track" id="lang" type="button" role="switch" aria-checked="false" aria-label="English"><span class="knob"></span></button>
+    <button class="switch-label" id="lblEN" type="button">EN</button>
+  </div>
+</div>
+<script>
+const CRYPT = {"salt": "4rOm0FHjzOXBd4EACUOaZQ==", "iter": 600000};     // how the password becomes a key (the salt is not secret)
+const V = {"assets/page-right.webp":"e3e555f344","assets/page-left.webp":"25c81d3fe6","assets/endpaper-left.webp":"120a2b33d1","assets/endpaper-right.webp":"9504551b95","assets/cover-front.webp":"5a2a9ef9ca","assets/cover-elastic.webp":"0c87351be9","assets/cover-label.webp":"2dc7b9cd39","assets/cover-back.webp":"e483d3bad3","data/core.bin":"e2e4e96dd6","data/ill-01.bin":"30367101ea","data/ill-02.bin":"ef0ee4df75","data/ill-03.bin":"ccb0c56b58","data/ill-04.bin":"49f38e2feb","data/ill-05.bin":"83f9e9dc3d","data/ill-06.bin":"6dab3c3c45","data/ill-07.bin":"101475d097","data/ill-08.bin":"00ab6a3f26","data/ill-09.bin":"b4147b5146","data/ill-10.bin":"313c322a6a","data/ill-11.bin":"fa70176018","data/ill-12.bin":"b50f373d02","data/ill-13.bin":"3883d53f97","data/ill-14.bin":"3a684fb673","data/ill-15.bin":"8603c5669d","data/ill-16.bin":"4c2880d7e7","data/ill-17.bin":"b4801fa8d8","data/ill-18.bin":"db6f69e2a5","data/ill-19.bin":"df80327a31","data/ill-20.bin":"1e08d451c6","data/ill-21.bin":"3850b1a678","data/ill-22.bin":"f65a607a65","data/ill-23.bin":"78758dfef0","data/ill-24.bin":"912ddb68af","data/ill-25.bin":"4e2c370149","data/ill-26.bin":"d5cd5dc127","data/ill-27.bin":"3afdbea406","data/ill-28.bin":"c8c54a1792","data/ill-29.bin":"a3a0dd7fbc","data/ill-30.bin":"0e48b5bd8c","data/ill-31.bin":"326076659d","data/ill-32.bin":"b2e3a804a6","data/ill-33.bin":"e5b1c50c91","app.js":"9367553004"};      // file versions, so an updated book is fetched fresh
+const ILL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33];         // pages that have illustrations
+</script>
+<script src="app.js?v=9367553004"></script>
+</body>
+</html>

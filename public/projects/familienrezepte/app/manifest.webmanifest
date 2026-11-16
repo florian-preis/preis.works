@@ -1,0 +1,16 @@
+{
+  "name": "Familienrezepte",
+  "short_name": "Familienrezepte",
+  "description": "Lena's handwritten book of our family's favourite recipes",
+  "lang": "de",
+  "start_url": "/projects/familienrezepte/app/",
+  "scope": "/projects/familienrezepte/app/",
+  "display": "standalone",
+  "background_color": "#F3F2EF",
+  "theme_color": "#F3F2EF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

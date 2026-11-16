@@ -1,7 +1,7 @@
 ---
 name: zine maker
 category: Photo zines
-order: 1
+order: 2
 # "What it is" on the project page. Its first sentence is also the description search engines show
 summary: Turns your photos into printable zines and booklets. Pick a format, from a single sheet folded into eight pages to a stapled booklet of up to 128 pages, on A4 or A3. Design a cover with a colour gradient, shapes, and grain, arrange your photos across the pages, and add captions and page numbers. The export is a PDF with the pages already in the right order for your printer, ready to print and fold at home, and a short guide shows you how to fold it.
 app: /projects/zine-maker/app/

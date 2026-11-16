@@ -80,4 +80,27 @@ const factOverrides = defineCollection({
   }),
 });
 
-export const collections = { projects, trips, visited, countryReference, factOverrides };
+// ── Work page ────────────────────────────────────────────────────────────────
+// Everything written on preis.works/work/, in one file: content/work.md
+const block = z.object({ title: z.string(), text: z.string() });
+const work = defineCollection({
+  loader: glob({ pattern: 'work.md', base: './content' }),
+  schema: z.object({
+    description: z.string(),
+    core: z.array(block).length(4, 'The drawing has room for exactly four focus areas'),
+    stages: z.array(z.object({
+      key: z.enum(['rd', 'cmc', 'reg', 'med', 'com', 'mkt']),
+      label: z.string(),
+      kind: z.enum(['solid', 'dashed', 'core']),
+      note: block.optional(),
+      phone: block.optional(),
+    })).length(6),
+    therapeuticAreas: z.array(z.string()).min(1),
+    modalities: z.array(z.string()).min(1),
+    cards: z.array(z.object({ tag: z.string(), title: z.string(), situation: z.string(), done: z.string() })).min(1),
+    experience: z.array(z.object({ name: z.string(), years: z.string() })),
+    education: z.array(z.object({ name: z.string(), detail: z.string() })),
+  }),
+});
+
+export const collections = { projects, trips, visited, countryReference, factOverrides, work };

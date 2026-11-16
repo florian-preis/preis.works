@@ -1,7 +1,7 @@
 ---
 name: knowhere
 category: Geography quiz
-order: 2
+order: 3
 # "What it is" on the project page. Its first sentence is also the description search engines show
 summary: A geography quiz for the flags, capitals, and map locations of all 197 countries. It tracks how well you know each country and brings back the ones you keep missing until they stick, and the progress page shows a world map shaded by how well you know each country. Once you know a country, questions also run the other way round, and you can type your answers instead of picking them. A daily round of ten questions is the same for everyone, so you can compare results with friends. The marathon mode keeps running until you make a mistake.
 app: /projects/knowhere/app/

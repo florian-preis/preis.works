@@ -13,6 +13,7 @@ export const site = {
 
 export const nav = [
   { key: 'about', label: 'About', href: '/' },
+  { key: 'work', label: 'Work', href: '/work/' },
   { key: 'photography', label: 'Photography', href: '/photography/' },
   { key: 'projects', label: 'Projects', href: '/projects/' },
 ];

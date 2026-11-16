@@ -10,3 +10,11 @@ public/og/
 Thumbs.db
 # Files Claude shares in Cowork (mock-ups, previews): kept on this computer, never committed
 Claude outputs/
+
+# Family cookbook source material (plaintext recipes, private photos): never committed
+temp_Familienrezepte/
+temp_familienrezepte/
+# Private source of the family cookbook (recipes, photos, lettering, illustrations): never committed
+private/
+# Python caches from running the build tools
+__pycache__/
