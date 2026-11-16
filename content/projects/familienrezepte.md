@@ -11,6 +11,4 @@ image: ./images/familienrezepte/mockup.jpg
 focus: 50% 52%
 ---
 
-The recipes in the book belong to the whole family. I wanted everyone to be able to open it, wherever they happen to be cooking.
-
-What mattered most was keeping the look and feel my sister gave it: her handwriting, her illustrations, and the experience of turning a page. So the book on the screen is a black notebook that opens like the real thing, and the recipes inside are hers, down to the dialect words and the dishes that never had exact measurements. Now the whole family can cook from it, and it is still the book she made for me.
+The recipes in the book belong to the whole family. I wanted everyone to be able to open it, wherever they happen to be cooking. What mattered most was keeping the look and feel my sister gave it: her handwriting, her illustrations, and the experience of turning a page. So the book on the screen is a black notebook that opens like the real thing, and the recipes inside are hers, down to the dialect words and the dishes that never had exact measurements. Now the whole family can cook from it, and it is still the book she made for me.

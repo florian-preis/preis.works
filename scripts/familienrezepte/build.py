@@ -68,36 +68,28 @@ core = dict(dedication=C['meta']['dedication'],
 sizes = {'core': seal('core.bin', core)}
 
 # ---------- illustrations: one file per recipe page, so pages fill in as they arrive ----------
-num = re.compile(r'-?\d+\.?\d*')
-def compact(d, k=2):
-    """Absolute M/L/C path in units -> relative path in half units, whole numbers only (about half the size)"""
-    out, cx, cy, sx, sy = [], 0, 0, 0, 0
-    for cmd, args in re.findall(r'([MLCZ])([^MLCZ]*)', d):
-        v = [round(float(x) * k) for x in num.findall(args)]
-        if cmd == 'M':
-            out.append(f'm{v[0]-cx} {v[1]-cy}'); cx, cy = v[0], v[1]; sx, sy = cx, cy
-        elif cmd == 'L':
-            out.append(f'l{v[0]-cx} {v[1]-cy}'); cx, cy = v[0], v[1]
-        elif cmd == 'C':
-            out.append('c' + ' '.join(str(v[i] - (cx if i % 2 == 0 else cy)) for i in range(6))); cx, cy = v[4], v[5]
-        else:
-            out.append('z'); cx, cy = sx, sy
-    s = ''.join(out)
-    return re.sub(r' -', '-', s)
+# Lena's illustrations, redrawn as transparent pictures (work/ill-new/PP_NN.webp), with their roles in
+# work/illustrations.json. Each page file is: 4-byte length, a small JSON index, then the WebP pictures one after
+# another, all encrypted together.
+import struct, glob
+SIZE = {'hero': 228, 'med': 150, 'small': 112}      # longest side, in units of the page (the text column is 505 wide)
+roles = json.load(open(os.path.join(work, 'illustrations.json')))
 for r in C['recipes']:
-    n = r['no']; f = os.path.join(work, 'ill', f'ill_{n}.json')
-    if not os.path.exists(f): continue
-    d = json.load(open(f)); items = d['items']
-    if n == 31 and os.path.exists(os.path.join(work, 'ill', 'ill_31b.json')):
-        b = json.load(open(os.path.join(work, 'ill', 'ill_31b.json')))
-        for it in b['items']:                       # the cheesecake slice from the back of the page: belongs at the foot
-            it = dict(it); it['y'] = d['card'][1] * 0.86 - it['h']; it['x'] = d['card'][0] * 0.5 - it['w'] / 2; items.append(it)
-    out = []
-    for it in items:
-        o = dict(x=it['x'], y=it['y'], w=it['w'], h=it['h'], layers=[dict(d=compact(l['d']), c=l['c']) for l in it['layers']])
-        if it.get('white'): o['white'] = compact(it['white'])
-        out.append(o)
-    sizes[n] = seal(f'ill-{n:02d}.bin', dict(card=d['card'], items=out))
+    n = r['no']; files = sorted(glob.glob(os.path.join(work, 'ill-new', f'{n:02d}_*.webp')))
+    if not files: continue
+    idx, blobs = [], []
+    for i, f in enumerate(files):
+        im = Image.open(f).convert('RGBA'); im.thumbnail((480, 480), Image.LANCZOS)
+        buf = io.BytesIO(); im.save(buf, 'WEBP', quality=86, method=6, alpha_quality=90); data = buf.getvalue()
+        role = roles[f'{n:02d}'][i] if i < len(roles.get(f'{n:02d}', [])) else 'small'
+        idx.append(dict(w=im.width, h=im.height, role=role, size=SIZE[role], len=len(data))); blobs.append(data)
+    head = json.dumps(dict(items=idx), separators=(',', ':')).encode()
+    plain = struct.pack('>I', len(head)) + head + b''.join(blobs)
+    iv = hashlib.sha256(key + plain).digest()[:12]
+    blob = iv + AESGCM(key).encrypt(iv, plain, None)
+    path = os.path.join(app, 'data', f'ill-{n:02d}.bin'); open(path, 'wb').write(blob)
+    versions[f'data/ill-{n:02d}.bin'] = hashlib.sha256(blob).hexdigest()[:10]
+    sizes[n] = len(blob)
 
 # ---------- the page ----------
 versions['app.js'] = hashlib.sha256(open(os.path.join(app, 'app.js'), 'rb').read()).hexdigest()[:10]
@@ -106,6 +98,6 @@ html = open(os.path.join(here, 'index.template.html')).read()
 html = html.replace('__CRYPT__', json.dumps(dict(salt=__import__('base64').b64encode(SALT).decode(), iter=ITER)))
 html = html.replace('__APPV__', versions['app.js'])
 html = html.replace('__VERSIONS__', json.dumps(versions, separators=(',', ':')))
-html = html.replace('__ILL__', json.dumps([r['no'] for r in C['recipes'] if os.path.exists(os.path.join(work, 'ill', f'ill_{r["no"]}.json'))]))
+html = html.replace('__ILL__', json.dumps([r['no'] for r in C['recipes'] if glob.glob(os.path.join(work, 'ill-new', f'{r["no"]:02d}_*.webp'))]))
 open(os.path.join(app, 'index.html'), 'w').write(html)
 print('built:', {k: f'{v//1024} KB' for k, v in list(sizes.items())[:3]}, '... total', sum(sizes.values())//1024, 'KB encrypted')

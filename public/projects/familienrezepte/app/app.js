@@ -31,9 +31,6 @@ function svgUrl(key, svg) { return urls[key] || (urls[key] = URL.createObjectURL
 function handUrl(key, p) {
   return svgUrl('h' + key, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${p.w} ${p.h}" fill="#1d1d1c"><path d="${p.d}"/>${p.d2 ? `<path transform="translate(${p.dx},${p.dy})" d="${p.d2}"/>` : ''}</svg>`);
 }
-function illusUrl(key, it) {   // paths are stored in half units
-  return svgUrl('i' + key, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${it.w * 2} ${it.h * 2}">${it.white ? `<path d="${it.white}" fill="#fcfbf7"/>` : ''}${it.layers.map(l => `<path d="${l.d}" fill="${l.c}"/>`).join('')}</svg>`);
-}
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const U = n => `calc(${n} * var(--u))`;
@@ -89,7 +86,7 @@ function recipePage(r, bare) {
     inn.appendChild(body(r, f && f.two));
     const il = ILLD[r.no];
     if (il && !bare && f && f.place) for (const p of f.place) {
-      const it = il.items[p.i], img = el('img', 'illus'); img.src = illusUrl(r.no + '-' + p.i, it); img.alt = '';
+      const it = il.items[p.i], img = el('img', 'illus'); img.src = it.url; img.alt = '';
       img.style.left = U(p.x); img.style.top = U(p.y); img.style.width = U(it.w * p.k); img.style.height = U(it.h * p.k);
       inn.appendChild(img);
     }
@@ -118,9 +115,10 @@ function textRects(sheet, u) {
   return out;
 }
 function place(r, rects) {
-  // Each page gets a small composed still life: the main dish centred in the free space below the text, its
-  // companions beside it on the same baseline. Where the page is too full, companions move to the empty space
-  // beside the ingredient list, and as a last resort anything goes wherever it fits.
+  // Each page is composed around Lena's main dish. Below the text it stands in the middle of the free space with
+  // its companions beside it on one line, smaller, with air around them. If there is not room for all of them
+  // there, the companions go in the open space beside the ingredients; on the fullest pages the dish goes there
+  // too. Nothing ever touches the text.
   const il = ILLD[r.no]; if (!il || !il.items.length) return null;
   const cols = Math.ceil((X1 - X0) / GRID), rows = Math.ceil(Y1 / GRID);
   const occ = new Uint8Array(cols * rows);
@@ -130,75 +128,78 @@ function place(r, rects) {
     for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) occ[y * cols + x] = 1;
   };
   let textBottom = 0;
-  for (const q of rects) { mark(q[0], q[1], q[2], q[3], 8); if (q[3] < Y1) textBottom = Math.max(textBottom, q[3]); }
+  for (const q of rects) { mark(q[0], q[1], q[2], q[3], 10); if (q[3] < Y1) textBottom = Math.max(textBottom, q[3]); }
   const free = (x0, y0, w, h) => {
     if (x0 < X0 || y0 < 0 || x0 + w > X1 || y0 + h > Y1) return false;
     const a = Math.floor((x0 - X0) / GRID), b = Math.ceil((x0 + w - X0) / GRID) - 1, c = Math.floor(y0 / GRID), d = Math.ceil((y0 + h) / GRID) - 1;
     for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) if (occ[y * cols + x]) return false;
     return true;
   };
-  const items = il.items.map((it, i) => ({ i, w: it.w, h: it.h })).sort((p, q) => q.w * q.h - p.w * p.h);
-  const hero = items[0], rest = items.slice(1);
-  const K0 = clamp(250 / Math.max(hero.w, hero.h), 0.28, 0.62);
-  const sizeOf = (it, k, isHero) => {
-    let kk = k;
-    if (!isHero) kk = Math.min(k, 0.72 * Math.max(hero.w, hero.h) * k / Math.max(it.w, it.h));   // companions stay smaller than the dish
-    return { w: it.w * kk, h: it.h * kk, k: kk };
-  };
-  // the still life: hero in the middle, companions alternately right and left, standing on the same line
-  const compose = (k, list) => {
-    const H = sizeOf(hero, k, true), parts = [{ it: hero, ...H, x: 0, y: 0 }];
-    let left = 0, right = H.w; const gap = 14, base = H.h * 0.96;
+  const items = il.items.map((it, i) => ({ i, ...it }));
+  const hero = items.find(it => it.role === 'hero') || items[0];
+  const rest = items.filter(it => it !== hero).sort((p, q) => q.size - p.size);
+  const dims = (it, f) => { const k = it.size * f / Math.max(it.w, it.h); return { w: it.w * k, h: it.h * k, k }; };
+  const out = [];
+  const commit = (it, d, x, y) => { out.push({ i: it.i, x, y, k: d.k }); mark(x, y, x + d.w, y + d.h, 16); };
+  const GAP = 26;
+  // the still life: dish in the middle, companions alternately right and left, resting on a common line
+  const compose = (f, list) => {
+    const H = dims(hero, f), parts = [{ it: hero, d: H, x: 0, y: 0 }];
+    let left = 0, right = H.w; const base = H.h * 0.9;
     list.forEach((it, n) => {
-      const S = sizeOf(it, k, false);
-      if (n % 2 === 0) { parts.push({ it, ...S, x: right + gap, y: base - S.h }); right += gap + S.w; }
-      else { left -= gap + S.w; parts.push({ it, ...S, x: left, y: base - S.h }); }
+      const d = dims(it, f), y = Math.max(0, base - d.h);
+      if (n % 2 === 0) { parts.push({ it, d, x: right + GAP, y }); right += GAP + d.w; }
+      else { left -= GAP + d.w; parts.push({ it, d, x: left, y }); }
     });
-    const minY = Math.min(...parts.map(p => p.y)), maxY = Math.max(...parts.map(p => p.y + p.h));
+    const minY = Math.min(...parts.map(p => p.y)), maxY = Math.max(...parts.map(p => p.y + p.d.h));
     parts.forEach(p => { p.x -= left; p.y -= minY; });
     return { parts, w: right - left, h: maxY - minY };
   };
-  const out = [];
-  const commit = (p, x, y) => { out.push({ i: p.it.i, x, y, k: p.k }); mark(x, y, x + p.w, y + p.h, 12); };
-  const bandTop = textBottom + 30, bandH = Y1 - bandTop;
-  // where in the band: centred across the text, a little above the middle of the space
-  const tryBand = (C) => {
-    if (C.w > X1 - X0 || C.h > bandH) return null;
+  const bandTop = textBottom + 34, bandH = Y1 - bandTop;
+  const inBand = C => {
+    if (C.w > X1 - X0 - 20 || C.h > bandH) return null;
     const cx = 252.5 - C.w / 2;
-    const yIdeal = bandTop + (bandH - C.h) * (bandH > 1.8 * C.h ? 0.42 : 0.5);
-    for (const dy of [0, -15, 15, -30, 30, -50, 50]) for (const dx of [0, -20, 20, -40, 40, -70, 70]) {
+    const yIdeal = bandTop + (bandH - C.h) * 0.45;                   // optically centred, a touch above the middle
+    for (const dy of [0, -12, 12, -25, 25, -40, 40]) for (const dx of [0, -15, 15, -30, 30, -50, 50]) {
       const x = cx + dx, y = clamp(yIdeal + dy, bandTop, Y1 - C.h);
-      if (C.parts.every(p => free(x + p.x, y + p.y, p.w, p.h))) return { x, y };
+      if (C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) return { x, y };
     }
     return null;
   };
-  let placed = false;
-  for (const f of [1, 0.9, 0.8, 0.7]) {                  // everything together, shrinking a little if needed
-    const C = compose(K0 * f, rest), at = tryBand(C);
-    if (at) { C.parts.forEach(p => commit(p, at.x + p.x, at.y + p.y)); placed = true; break; }
-  }
-  let left = placed ? [] : rest;
-  if (!placed) {                                         // the dish alone below the text, companions elsewhere
-    for (const f of [1, 0.9, 0.8, 0.7, 0.6]) {
-      const C = compose(K0 * f, []), at = tryBand(C);
-      if (at) { commit(C.parts[0], at.x, at.y); placed = true; break; }
-    }
-    left = placed ? rest : items;
-  }
-  // the rest: beside the ingredients (top right), then anywhere that fits, as close to that corner as possible
-  for (const it of left) {
-    let best = null;
-    for (const f of [1, 0.85, 0.7, 0.55, 0.45]) {
-      const S = sizeOf(it, K0 * f, it === hero && !placed);
-      for (let y = 40; y + S.h <= Y1; y += GRID) for (let x = X0; x + S.w <= X1; x += GRID) {
-        if (!free(x, y, S.w, S.h)) continue;
-        const score = Math.hypot((x + S.w) - 520, (y - 150) * 0.7) + 400 * (1 - f);
-        if (!best || score < best.score) best = { score, x, y, S };
+  // a single picture in the open space beside the ingredients (top right), as large as fits up to its size
+  const beside = (it, maxF, yMin = 170, fs = [1, 0.85, 0.7, 0.58]) => {
+    for (const f of fs.map(q => q * maxF)) {
+      const d = dims(it, f); let best = null;
+      for (let y = yMin; y + d.h <= Y1; y += GRID) for (let x = X1 - d.w; x >= X0; x -= GRID) {   // below the title, never beside it
+        if (!free(x, y, d.w, d.h)) continue;
+        const score = (X1 - x - d.w) * 1.2 + Math.abs(y - 150) * 0.6;
+        if (!best || score < best.score) best = { score, x, y };
+        break;
       }
-      if (best) break;
+      if (best) { commit(it, d, best.x, best.y); return true; }
     }
-    if (best) commit({ it, ...best.S }, best.x, best.y);
+    return false;
+  };
+  // 1. everything together below the text
+  for (const f of [1, 0.9, 0.8, 0.72]) {
+    const C = compose(f, rest), at = inBand(C);
+    if (at) { C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y)); return out; }
   }
+  // 2. the dish with as many companions as fit below; the others beside the ingredients
+  for (let keep = rest.length - 1; keep >= 0; keep--) {
+    for (const f of [1, 0.88, 0.76, 0.66]) {
+      const C = compose(f, rest.slice(0, keep)), at = inBand(C);
+      if (at) {
+        C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y));
+        for (const it of rest.slice(keep)) beside(it, 0.9);
+        return out;
+      }
+    }
+  }
+  // 3. a full page: everything beside the ingredients, the dish first and largest
+  // the dish always gets a place: smaller if it must, and on the very fullest pages in the corner by the title
+  if (!beside(hero, 0.85) && !beside(hero, 0.85, 170, [0.48, 0.4]) ) beside(hero, 0.85, 0, [0.4, 0.34]);
+  for (const it of rest) beside(it, 0.8);
   return out;
 }
 function fitOne(r, box, u) {
@@ -428,6 +429,18 @@ async function fetchSealed(name) {
   const text = await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
   return JSON.parse(text);
 }
+// A page of illustrations: a small index, then the pictures themselves
+async function fetchPictures(name) {
+  const r = await fetch(`${name}?v=${V[name] || ''}`); if (!r.ok) throw new Error(name);
+  const buf = new Uint8Array(await r.arrayBuffer());
+  const plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, KEY, buf.slice(12)));
+  const n = new DataView(plain.buffer).getUint32(0);
+  const idx = JSON.parse(new TextDecoder().decode(plain.subarray(4, 4 + n)));
+  let at = 4 + n;
+  for (const it of idx.items) { it.url = URL.createObjectURL(new Blob([plain.subarray(at, at + it.len)], { type: 'image/webp' })); at += it.len; }
+  await Promise.all(idx.items.map(it => new Promise(res => { const im = new Image(); im.onload = im.onerror = res; im.src = it.url; })));
+  return idx;
+}
 async function useKey(bits) {
   KEY = await crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['decrypt']);
   D = await fetchSealed('data/core.json'.replace('.json', '.bin'));
@@ -451,7 +464,7 @@ async function loadIllustrations() {
   while (todo.length) {
     todo.sort((a, b) => Math.abs(a - here()) - Math.abs(b - here()));
     const n = todo.shift();
-    try { ILLD[n] = await fetchSealed(`data/ill-${String(n).padStart(2, '0')}.bin`); } catch (e) { continue; }
+    try { ILLD[n] = await fetchPictures(`data/ill-${String(n).padStart(2, '0')}.bin`); } catch (e) { continue; }
     const box = measureBox(); fitOne(D.recipes[n - 1], box, px()); box.remove();
     if (visible(n) && !busy) show();
   }
