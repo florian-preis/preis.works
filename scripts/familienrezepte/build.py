@@ -36,7 +36,7 @@ def seal(name, obj):
     return len(blob)
 
 # ---------- pictures of the notebook (public) ----------
-for f in ['page-right', 'page-left', 'endpaper-left', 'endpaper-right', 'cover-front', 'cover-elastic', 'cover-label', 'cover-back']:
+for f in ['sheet-right', 'sheet-left', 'page-right', 'page-left', 'endpaper-left', 'endpaper-right', 'cover-front', 'cover-elastic', 'cover-label', 'cover-back']:
     im = Image.open(os.path.join(work, 'assets', f + '.png'))
     out = os.path.join(app, 'assets', f + '.webp')
     im.save(out, 'WEBP', quality=90, method=6)

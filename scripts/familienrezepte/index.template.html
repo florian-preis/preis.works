@@ -27,18 +27,18 @@
   --paper: #f3f2ef; --line: #dedddb; --text: #2b2b29; --muted: #6e6d69; --faint: #a9a8a3; --ink: #252523;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1); --fast: 0.25s; --base: 0.45s;
   /* --u is the size of one pixel of the notebook photo on screen. Everything in the book is measured in it */
-  --u: min(calc((100vw - 168px) / 1283), calc((100dvh - 112px) / 1006));
+  --u: min(calc((100vw - 168px) / 1283), calc((100dvh - 150px) / 1006));
   --spine: 50vw;                      /* where the middle of the book sits */
-  --top: calc((100dvh - 1006 * var(--u)) / 2 - 14px);
+  --top: calc((100dvh - 1006 * var(--u)) / 2 - 32px);
   --fs: calc(var(--u) * 18.5);        /* recipe text */
   --fs-s: calc(var(--u) * 15);        /* small text on the page */
 }
 /* Tall screens: only the right-hand page, the fold at the left edge of the screen */
 @media (max-aspect-ratio: 1/1), (max-width: 700px) {
   :root {
-    --u: min(calc((100vw - 14px) / 643), calc((100dvh - 96px) / 1006));
+    --u: min(calc((100vw - 14px) / 643), calc((100dvh - 132px) / 1006));
     --spine: calc((100vw - 643 * var(--u)) / 2 + 3px);
-    --top: calc((100dvh - 1006 * var(--u)) / 2 - 22px);
+    --top: calc((100dvh - 1006 * var(--u)) / 2 - 40px);
     --fs: calc(var(--u) * 22.5); --fs-s: calc(var(--u) * 17);
   }
 }
@@ -127,6 +127,16 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
 .sheet.e { background-image: var(--img-e); }
 .groups { display: grid; grid-template-columns: 1fr 1fr; column-gap: calc(18 * var(--u)); }
 .illus { pointer-events: none; }
+/* A page in motion is plain paper to its edges, so no cover or page-block edge travels with it */
+.strip .sheet.r:not(.e) { background-image: var(--img-sr); background-size: 100% 100%; background-position: 0 0; }
+.strip .sheet.l { background-image: var(--img-sl); background-size: 100% 100%; background-position: 0 0; }
+/* Footer: the same quiet line as in every preis.works app */
+.app-foot { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  font-size: 11px; line-height: 1.4; color: var(--muted); }
+.app-foot nav { display: flex; gap: 16px; }
+.app-foot a { color: inherit; text-decoration: none; }
+.app-foot a:hover { color: var(--text); }
 .pass .tick { display: none; color: var(--text); }
 .pass.ok .go { display: none; } .pass.ok .tick { display: block; }
 .pass.ok input { border-bottom-color: transparent; color: var(--muted); }
@@ -208,6 +218,7 @@ body.closed #baseR, body.closed #slotR { visibility: hidden; }
     <button class="switch-label" id="lblEN" type="button">EN</button>
   </div>
 </div>
+<footer class="app-foot"><span>© <span id="year">2026</span> Lena Preis and Florian Preis</span><nav aria-label="Links"><a href="/projects/familienrezepte/">About</a><a href="/">preis.works</a></nav></footer>
 <script>
 const CRYPT = __CRYPT__;     // how the password becomes a key (the salt is not secret)
 const V = __VERSIONS__;      // file versions, so an updated book is fetched fresh

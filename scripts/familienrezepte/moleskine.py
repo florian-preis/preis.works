@@ -30,6 +30,14 @@ fill[..., :3] = fill[..., :3] * (1 - page_rows * (1 - shade[None, :, None]))
 fill[1004:, :, 3] = 0         # the ribbon's tail below the book
 fill[:1, :, 3] = np.minimum(fill[:1, :, 3], s[:1, 600:601, 3])
 fill = np.clip(fill, 0, 255)[:1006]
+# above and below the pages the gutter shows the cover's edge: interpolate it across from either side of the ribbon
+fill[988:996, 616:666] = fill[987, 616:666]                         # the last rows of the fold: carry the fold down
+fill[3:8, 616:666] = fill[8, 616:666]
+for y in list(range(0, 3)) + list(range(996, 1006)):
+    a, b = s[y, 596].copy(), s[y, 690].copy()
+    for x in range(597, 690):
+        t = (x - 596) / 94.0
+        fill[y, x] = a * (1 - t) + b * t
 
 def defringe(im, px=2):
     """The product photos carry a pale halo along the cut-out edge: pull the edge in by a couple of pixels."""
@@ -115,3 +123,61 @@ donor = np.roll(b, 70, axis=0)                                                  
 b = b*(1-mask) + donor*mask
 cv2.imwrite(f'{out}/cover-back.png', np.clip(defringe(b[:1004]), 0, 255).astype(np.uint8))
 print('ok', spread.shape)
+
+
+# ---------- paper for a page in motion: no cover, no page-block lines, paper to every edge ----------
+def clean_sheet(page, x0, x1, src_cols, dst_cols):
+    sh = page[3:997, x0:x1, :3].astype(np.float32).copy()
+    a, b = src_cols; c, d = dst_cols
+    w = d - c
+    sh[:, c:d] = sh[:, a:a+w]                                       # carry the plain paper (and its ruling) to the edge
+    lum = sh.mean(2)
+    bad = (lum < 175).astype(np.uint8)
+    bad[40:-40, 40:-40] = 0                                         # only at the very edges: the cover and its shadow
+    bad = cv2.dilate(bad, np.ones((3, 3), np.uint8))
+    return cv2.inpaint(np.clip(sh, 0, 255).astype(np.uint8), bad, 4, cv2.INPAINT_TELEA)
+pr = cv2.imread(f'{out}/page-right.png', cv2.IMREAD_UNCHANGED)
+pl = cv2.imread(f'{out}/page-left.png', cv2.IMREAD_UNCHANGED)
+cv2.imwrite(f'{out}/sheet-right.png', clean_sheet(pr, 0, 608, (555, 580), (583, 608)))
+cv2.imwrite(f'{out}/sheet-left.png', clean_sheet(pl, 32, 640, (50, 75), (0, 25)))
+
+# ---------- covers: a clean rounded outline instead of the photo's cut-out edge ----------
+def rounded_mask(shape, box, radii, ss=8):
+    """box = (x0, y0, x1, y1); radii = (top-left, top-right, bottom-right, bottom-left), drawn supersampled"""
+    H, W = shape; m = np.zeros((H*ss, W*ss), np.uint8)
+    x0, y0, x1, y1 = [v*ss for v in box]
+    tl, tr, br, bl = [r*ss for r in radii]
+    pts = []
+    def arc(cx, cy, r, a0, a1):
+        for t in np.linspace(a0, a1, 40): pts.append((cx + r*np.cos(t), cy + r*np.sin(t)))
+    arc(x0+tl, y0+tl, tl, np.pi, 1.5*np.pi); arc(x1-tr, y0+tr, tr, 1.5*np.pi, 2*np.pi)
+    arc(x1-br, y1-br, br, 0, 0.5*np.pi); arc(x0+bl, y1-bl, bl, 0.5*np.pi, np.pi)
+    cv2.fillPoly(m, [np.array(pts, np.int32)], 255, lineType=cv2.LINE_AA)
+    return cv2.resize(m, (W, H), interpolation=cv2.INTER_AREA).astype(np.float32)
+def fit_corners(a, box):
+    """the corner radius that best matches the photo's own outline, per corner"""
+    x0, y0, x1, y1 = box; best = []
+    for corner in range(4):
+        scores = []
+        for r in range(2, 60):
+            radii = [3, 3, 3, 3]; radii[corner] = r
+            m = rounded_mask(a.shape, box, radii, ss=2) > 127
+            cx = slice(x0, x0+70) if corner in (0, 3) else slice(x1-70, x1)
+            cy = slice(y0, y0+70) if corner in (0, 1) else slice(y1-70, y1)
+            scores.append(((m[cy, cx] != (a[cy, cx] > 127)).sum(), r))
+        best.append(min(scores)[1])
+    return best
+for name in ['cover-front', 'cover-back']:
+    im = cv2.imread(f'{out}/{name}.png', cv2.IMREAD_UNCHANGED)
+    a = im[..., 3]
+    ys, xs = np.where(a > 200)
+    box = (int(xs.min()), int(ys.min()), int(xs.max())+1, int(ys.max())+1)
+    radii = fit_corners(a, box)
+    m = rounded_mask(a.shape, box, radii)
+    # every pixel that is not solid cover in the photo is rebuilt from the cover itself, so no halo bleeds in
+    holes = (a < 250).astype(np.uint8)
+    holes = cv2.dilate(holes, np.ones((5, 5), np.uint8))
+    rgb = cv2.inpaint(im[..., :3], holes, 6, cv2.INPAINT_TELEA)
+    im = np.dstack([rgb, m.astype(np.uint8)])
+    cv2.imwrite(f'{out}/{name}.png', im)
+    print(name, 'outline', box, 'corners', radii)

@@ -180,10 +180,12 @@ const views = await Promise.all(
     .back { margin: 0 0 0 -2px; }
     .back-long { display: none; }
     .back-short { display: inline; }
-    .head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 20px 16px; }
-    .head h1 { font-size: 30px; transform: none; }
-    .head .open { order: 0; grid-column: 1 / -1; grid-row: 2; margin-left: 0; }
-    .head .meta { order: 0; margin-left: 0; }
+    /* Title and category share a line where they fit; a long title (familienrezepte) moves the
+       category onto its own line just below, so the two never overlap. Open app is always full width */
+    .head { flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+    .head h1 { font-size: 30px; transform: none; flex: 1 0 auto; }
+    .head .meta { order: 1; margin-left: 0; }
+    .head .open { order: 2; flex: 1 1 100%; margin: 14px 0 0; }
     .open { width: 100%; justify-content: center; min-height: 48px; }
     /* One screen at a time with the next peeking in, swiped across the full width */
     .screens { --gap: 10px; }

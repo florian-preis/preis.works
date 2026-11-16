@@ -253,6 +253,15 @@ const jsonLd = {
   .contact li { display: flex; align-items: center; gap: 14px; min-height: 28px; }
   .contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .phone { min-width: 9em; }
+  /* Computers: once the page snaps past the veil, the profile and the footer fit on one screen.
+     On shorter screens (most laptops) the photo gives way, down to 220 px wide, instead of the footer
+     being cut off. 287 px is everything else in the photo's column: the space above it (120), the
+     switch (50), the gap to the footer (48), and the footer (69). The text column needs about 650 px of
+     screen height; below that it can't fit, and the page scrolls as usual */
+  @media (min-width: 701px) {
+    .portrait-col { max-width: clamp(220px, calc((100svh - 287px) * 2 / 3), 320px); }
+    :global(.after-lead .site-footer) { margin-top: 48px; }
+  }
   @media (max-width: 700px) {
     .about { gap: 32px; padding-top: 104px; }
     /* Phones: the switch sits beside the photo, level with its bottom edge, in the space that would

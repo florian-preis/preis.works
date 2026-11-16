@@ -11,10 +11,11 @@ const entry = (await getEntry('work', 'work'))!;
 const w = entry.data;
 const { Content: Intro } = await render(entry);
 
-// Which drawing each box uses: three different solid boxes, one dashed box for both stages outside
-// the focus, and the hatched box for Commercial
+// Which drawing each box uses: three different solid boxes, two different dashed boxes for the stages
+// outside the focus, and the hatched box for Commercial
 const solidFor: Record<string, number> = { rd: 0, cmc: 1, med: 2 };
-const shape = (key: string, kind: string) => (kind === 'core' ? drawings.hatched : kind === 'dashed' ? drawings.dashed[0] : drawings.solid[solidFor[key]]);
+const dashedFor: Record<string, number> = { reg: 0, mkt: 1 };
+const shape = (key: string, kind: string) => (kind === 'core' ? drawings.hatched : kind === 'dashed' ? drawings.dashed[dashedFor[key] ?? 0] : drawings.solid[solidFor[key]]);
 const interfaces = w.stages.filter((s) => s.note);
 const tags = [...new Set(w.cards.map((c) => c.tag))];
 
@@ -81,7 +82,7 @@ const jsonLd = {
     <section class="tas">
       <div class="tag-group">
         <h2 class="section-label">Therapeutic areas</h2>
-        <ul class="tags">{w.therapeuticAreas.map((t, i) => <li class={i === 0 ? 'lead' : undefined}>{t}</li>)}</ul>
+        <ul class="tags">{w.therapeuticAreas.map((t) => <li>{t}</li>)}</ul>
       </div>
       <div class="tag-group">
         <h2 class="section-label">Modalities</h2>
@@ -159,7 +160,7 @@ const jsonLd = {
   .stage.dashed .label { color: var(--muted); }
   .stage.dashed > svg { stroke: var(--muted); }
   /* Commercial: the label sits on a small patch of paper over the hatching */
-  .stage.core .label { padding: 3px 10px; border-radius: 999px; background: var(--paper); font-weight: 600; }
+  .stage.core .label { padding: 4px 14px; border-radius: 999px; background: var(--paper); font-weight: 600; }
   .block h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
   .block p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
 
@@ -167,11 +168,11 @@ const jsonLd = {
   @media (min-width: 1100px) {
     .areas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; }
     .areas .block { padding: 0 20px; }
-    .bracket-gap { height: 52px; }
+    .bracket-gap { height: 72px; }
     .row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
     .row .cell { display: flex; justify-content: center; }
     .stage { width: min(100% - 60px, 188px); aspect-ratio: 1.75; }
-    .notes { margin-top: 118px; }
+    .notes { margin-top: 130px; }
     .notes .cell { justify-content: flex-start; }
     .notes .block { margin-left: calc((100% - min(100% - 60px, 188px)) / 2); padding-right: 12px; }
     .stack, .ph { display: none; }
@@ -201,7 +202,6 @@ const jsonLd = {
   .tag-group { display: flex; flex-direction: column; gap: 12px; }
   .tags { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
   .tags li { padding: 6px 14px; border-radius: 999px; background: var(--panel); font-size: 13px; line-height: 1.4; }
-  .tags li.lead { font-weight: 600; }
 
   /* ── Selected work: the carousel from the project pages, with text cards ─ */
   .refs { margin-top: 120px; display: flex; flex-direction: column; gap: 12px; --per: 3.25; --gap: 16px; }
@@ -350,7 +350,8 @@ const jsonLd = {
     for (let i = 0; i < keys.length - 1; i++) {
       const a = box[keys[i]], b = box[keys[i + 1]], A = D.straight[i % D.straight.length];
       if (wide) d.push(...straight(A, [a.r + 12, a.cy], [b.l - 12, a.cy], 0.44));
-      else { const m = (a.b + b.t) / 2; d.push(...straight(A, [a.cx, m - 8], [a.cx, m + 7], 0.36)); }
+      else if (b.t >= a.b) { const m = (a.b + b.t) / 2; d.push(...straight(A, [a.cx, m - 8], [a.cx, m + 7], 0.36)); }
+      else { const m = (b.b + a.t) / 2; d.push(...straight(A, [a.cx, m + 8], [a.cx, m - 7], 0.36)); }
     }
     // Curved arrows from Commercial back into Medical, CMC, and R&D
     const com = box.com;
@@ -367,7 +368,7 @@ const jsonLd = {
     // Bracket from the four focus areas into Commercial (computers only)
     if (wide) {
       const xs = [...chain.querySelectorAll('.areas .block')].map((a) => rel(a).cx);
-      const y = rel(document.getElementById('bracket-gap')!).t + 24;
+      const y = rel(document.getElementById('bracket-gap')!).t + 36;
       d.push(bracketLine([xs[0], y], [xs[3], y]));
       xs.forEach((x, i) => d.push(tick([x, y], 'up', 13, i)));
       d.push(tick([com.cx, y], 'down', com.t - y - 8, 1));

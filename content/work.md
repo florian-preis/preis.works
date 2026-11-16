@@ -8,13 +8,13 @@ description: I'm a life science strategy consultant based in Copenhagen, working
 # The commercial core: above the value chain on computers, under "At the commercial core" on phones
 core:
   - title: Corporate, portfolio, and TA strategy
-    text: Where to play, in which order, and with which assets, including what to stop. Choices global leadership teams make to translate into priorities for regions and affiliates.
+    text: Where to play, how to win, and must-have capabilities. Choices global leadership teams make to translate into priorities for regions and affiliates.
   - title: Commercial assessments
-    text: Clear answers on assets, indications, and markets ahead of a gate, board, or investment decision, from patient waterfalls and pricing to access and competition.
+    text: Clear answers on assets, indications, and markets for gate, board, and investment decisions, from patient waterfalls and pricing to access and competition.
   - title: Launch readiness
-    text: Assets and organisations ready for launch, especially first launches into a new therapeutic area, modality, or geography, where commercial, medical, access, and supply have to move together.
+    text: Assets and organisations ready for first launches into a new therapeutic area, modality, or geography, with commercial, medical, access, and supply aligned.
   - title: Go-to-market and customer strategy
-    text: Which customers to win and how, grounded in what HCPs, patients, and payers say, and turned into initiatives the teams own.
+    text: Which customers to prioritise and how to engage them, grounded in what HCPs, patients, and payers say, and turned into initiatives the teams own.
 
 # The boxes of the value chain, left to right (top to bottom on phones). key ties a box to its drawing;
 # kind: solid, dashed (outside my focus), or core (the hatched box).
@@ -31,7 +31,7 @@ stages:
       title: Commercial lens
       text: Which assets, indications, and partners to pursue
   - key: cmc
-    label: CMC and supply chain
+    label: CMC & supply chain
     kind: solid
     note:
       title: Manufacturing economics
@@ -61,7 +61,7 @@ stages:
     label: In-market execution
     kind: dashed
 
-# Tags under the value chain. The first therapeutic area is set in bold
+# Tags under the value chain, most important first
 therapeuticAreas:
   - Cardio-kidney-metabolic, including obesity
   - Gastroenterology and microbiome
@@ -83,7 +83,7 @@ cards:
   - tag: Portfolio strategy
     title: A franchise at a crossroads
     situation: A specialty pharma company with a market-leading franchise under pressure from a changing treatment landscape and limited traction for its latest innovation.
-    done: Strategic options tested for attractiveness and ability to win, from geographic focus to what to stop, continue, or grow. The new direction was chosen with leadership and adopted by the executive committee and board.
+    done: Strategic options tested for attractiveness and ability to win, from geographic focus to what to stop, continue, or grow. The new direction was adopted by the executive committee and board.
   - tag: Portfolio strategy
     title: Building a new therapeutic area across a region
     situation: A regional organisation preparing its markets to move into a therapeutic area new to the company, with readiness varying widely between affiliates.
@@ -107,7 +107,7 @@ cards:
   - tag: External innovation & partnerships
     title: An external pipeline for a global pharma
     situation: A global pharma company's research organisation looking to build a focused external pipeline and to decide how to engage with a leading life science hub.
-    done: An ecosystem assessment built on 20+ interviews, and a pipeline strategy across research collaborations, venture investments, and M&A, focused on areas that strengthen and complement the existing portfolio.
+    done: An ecosystem assessment built on 20+ interviews, and a pipeline strategy across research collaborations, venture investments, and M&A that strengthens and complements the portfolio.
   - tag: External innovation & partnerships
     title: Diagnostic partnerships ahead of a launch
     situation: A launch whose uptake relied on partners in diagnostics, with a test available in most markets but used inconsistently.
@@ -154,4 +154,4 @@ education:
 
 I'm a life science strategy consultant based in Copenhagen, with a global perspective. I work with pharma and biotech companies on the commercial choices that shape therapeutics, from early assets to launch.
 
-My work sits at the commercial core, from portfolio and therapeutic area choices to launch and go-to-market. It extends into the commercial interfaces with R&D, CMC, and medical, where choices on indications, manufacturing economics, and evidence generation set an asset's value long before launch. Across both, I help leadership teams make the commercial case a driver of decisions along the value chain.
+Most of my work sits at the commercial core, from portfolio and therapeutic area choices to launch and go-to-market strategy. It extends into the commercial interfaces with R&D, CMC, and medical, where choices on indications, manufacturing economics, and evidence generation set an asset's value long before launch. Across both, I help leadership teams make the commercial case a driver of decisions along the value chain.

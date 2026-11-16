@@ -5,11 +5,13 @@
 const $ = id => document.getElementById(id);
 const root = document.documentElement;
 const asset = f => `assets/${f}.webp?v=${V['assets/' + f + '.webp'] || ''}`;
-const A = { pageR: asset('page-right'), pageL: asset('page-left'), endL: asset('endpaper-left'), endR: asset('endpaper-right'),
+const A = { sheetR: asset('sheet-right'), sheetL: asset('sheet-left'), pageR: asset('page-right'), pageL: asset('page-left'), endL: asset('endpaper-left'), endR: asset('endpaper-right'),
             cover: asset('cover-front'), elastic: asset('cover-elastic'), label: asset('cover-label'), back: asset('cover-back') };
 root.style.setProperty('--img-r', `url(${A.pageR})`);
 root.style.setProperty('--img-l', `url(${A.pageL})`);
 root.style.setProperty('--img-e', `url(${A.endR})`);
+root.style.setProperty('--img-sr', `url(${A.sheetR})`);      // clean paper for a page in motion: white to every edge
+root.style.setProperty('--img-sl', `url(${A.sheetL})`);
 $('baseR').src = A.pageR; $('imgCover').src = A.cover; $('imgLabel').src = A.label; $('imgElastic').src = A.elastic; $('imgEnd').src = A.endL;
 $('imgEndR').src = A.endR; $('imgBack').src = A.back;
 for (const [id, img] of [['coverBackShade', A.endL], ['backInShade', A.endR], ['backOutShade', A.back]]) {   // shading only where the board is
@@ -115,8 +117,11 @@ function textRects(sheet, u) {
   const pn = sheet.querySelector('.pageno').getBoundingClientRect(); out.push([(pn.left - o.left) / u - 20, (pn.top - o.top) / u - 10, X1, Y1 + 50]);
   return out;
 }
-function place(r, rects, inLeft) {
-  const il = ILLD[r.no]; if (!il) return null;
+function place(r, rects) {
+  // Each page gets a small composed still life: the main dish centred in the free space below the text, its
+  // companions beside it on the same baseline. Where the page is too full, companions move to the empty space
+  // beside the ingredient list, and as a last resort anything goes wherever it fits.
+  const il = ILLD[r.no]; if (!il || !il.items.length) return null;
   const cols = Math.ceil((X1 - X0) / GRID), rows = Math.ceil(Y1 / GRID);
   const occ = new Uint8Array(cols * rows);
   const mark = (x0, y0, x1, y1, pad) => {
@@ -124,35 +129,75 @@ function place(r, rects, inLeft) {
     const c = Math.max(0, Math.floor((y0 - pad) / GRID)), d = Math.min(rows - 1, Math.floor((y1 + pad) / GRID));
     for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) occ[y * cols + x] = 1;
   };
-  for (const q of rects) mark(q[0], q[1], q[2], q[3], 7);
-  const sat = () => {   // summed-area table: is a rectangle of cells free? in constant time
-    const S = new Int32Array((cols + 1) * (rows + 1));
-    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) S[(y + 1) * (cols + 1) + x + 1] = occ[y * cols + x] + S[y * (cols + 1) + x + 1] + S[(y + 1) * (cols + 1) + x] - S[y * (cols + 1) + x];
-    return S;
+  let textBottom = 0;
+  for (const q of rects) { mark(q[0], q[1], q[2], q[3], 8); if (q[3] < Y1) textBottom = Math.max(textBottom, q[3]); }
+  const free = (x0, y0, w, h) => {
+    if (x0 < X0 || y0 < 0 || x0 + w > X1 || y0 + h > Y1) return false;
+    const a = Math.floor((x0 - X0) / GRID), b = Math.ceil((x0 + w - X0) / GRID) - 1, c = Math.floor(y0 / GRID), d = Math.ceil((y0 + h) / GRID) - 1;
+    for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) if (occ[y * cols + x]) return false;
+    return true;
   };
-  const order = il.items.map((it, i) => i).sort((a, b) => il.items[b].w * il.items[b].h - il.items[a].w * il.items[a].h);
+  const items = il.items.map((it, i) => ({ i, w: it.w, h: it.h })).sort((p, q) => q.w * q.h - p.w * p.h);
+  const hero = items[0], rest = items.slice(1);
+  const K0 = clamp(250 / Math.max(hero.w, hero.h), 0.28, 0.62);
+  const sizeOf = (it, k, isHero) => {
+    let kk = k;
+    if (!isHero) kk = Math.min(k, 0.72 * Math.max(hero.w, hero.h) * k / Math.max(it.w, it.h));   // companions stay smaller than the dish
+    return { w: it.w * kk, h: it.h * kk, k: kk };
+  };
+  // the still life: hero in the middle, companions alternately right and left, standing on the same line
+  const compose = (k, list) => {
+    const H = sizeOf(hero, k, true), parts = [{ it: hero, ...H, x: 0, y: 0 }];
+    let left = 0, right = H.w; const gap = 14, base = H.h * 0.96;
+    list.forEach((it, n) => {
+      const S = sizeOf(it, k, false);
+      if (n % 2 === 0) { parts.push({ it, ...S, x: right + gap, y: base - S.h }); right += gap + S.w; }
+      else { left -= gap + S.w; parts.push({ it, ...S, x: left, y: base - S.h }); }
+    });
+    const minY = Math.min(...parts.map(p => p.y)), maxY = Math.max(...parts.map(p => p.y + p.h));
+    parts.forEach(p => { p.x -= left; p.y -= minY; });
+    return { parts, w: right - left, h: maxY - minY };
+  };
   const out = [];
-  for (const i of order) {
-    const it = il.items[i];
-    let k0 = Math.min(BASE_K, MAXS / Math.max(it.w, it.h));
-    // where Lena put it: the same spot on our page, measured from the page's edges
-    const px = (it.x + it.w / 2) / il.card[0] * 608 - inLeft, py = (it.y + it.h / 2) / il.card[1] * 994;
-    const S = sat(); let best = null;
-    for (const f of [1, 0.88, 0.76, 0.64, 0.52, 0.42]) {
-      const k = k0 * f, w = Math.ceil(it.w * k / GRID), h = Math.ceil(it.h * k / GRID);
-      if (w > cols || h > rows) continue;
-      for (let y = 0; y + h <= rows; y++) for (let x = 0; x + w <= cols; x++) {
-        const s = S[(y + h) * (cols + 1) + x + w] - S[y * (cols + 1) + x + w] - S[(y + h) * (cols + 1) + x] + S[y * (cols + 1) + x];
-        if (s) continue;
-        const cx = X0 + (x + w / 2) * GRID, cy = (y + h / 2) * GRID;
-        const score = Math.hypot(cx - px, (cy - py) * 0.8) + 520 * (1 - f);
-        if (!best || score < best.score) best = { score, x: X0 + x * GRID, y: y * GRID, k, w, h };
-      }
-      if (best && best.score < 520 * (1 - f) + 60) break;     // close to her spot at this size: good enough
+  const commit = (p, x, y) => { out.push({ i: p.it.i, x, y, k: p.k }); mark(x, y, x + p.w, y + p.h, 12); };
+  const bandTop = textBottom + 30, bandH = Y1 - bandTop;
+  // where in the band: centred across the text, a little above the middle of the space
+  const tryBand = (C) => {
+    if (C.w > X1 - X0 || C.h > bandH) return null;
+    const cx = 252.5 - C.w / 2;
+    const yIdeal = bandTop + (bandH - C.h) * (bandH > 1.8 * C.h ? 0.42 : 0.5);
+    for (const dy of [0, -15, 15, -30, 30, -50, 50]) for (const dx of [0, -20, 20, -40, 40, -70, 70]) {
+      const x = cx + dx, y = clamp(yIdeal + dy, bandTop, Y1 - C.h);
+      if (C.parts.every(p => free(x + p.x, y + p.y, p.w, p.h))) return { x, y };
     }
-    if (!best) continue;
-    out.push({ i, x: best.x + (best.w * GRID - it.w * best.k) / 2, y: best.y + (best.h * GRID - it.h * best.k) / 2, k: best.k });
-    mark(best.x, best.y, best.x + best.w * GRID, best.y + best.h * GRID, 9);
+    return null;
+  };
+  let placed = false;
+  for (const f of [1, 0.9, 0.8, 0.7]) {                  // everything together, shrinking a little if needed
+    const C = compose(K0 * f, rest), at = tryBand(C);
+    if (at) { C.parts.forEach(p => commit(p, at.x + p.x, at.y + p.y)); placed = true; break; }
+  }
+  let left = placed ? [] : rest;
+  if (!placed) {                                         // the dish alone below the text, companions elsewhere
+    for (const f of [1, 0.9, 0.8, 0.7, 0.6]) {
+      const C = compose(K0 * f, []), at = tryBand(C);
+      if (at) { commit(C.parts[0], at.x, at.y); placed = true; break; }
+    }
+    left = placed ? rest : items;
+  }
+  // the rest: beside the ingredients (top right), then anywhere that fits, as close to that corner as possible
+  for (const it of left) {
+    let best = null;
+    for (const f of [1, 0.85, 0.7, 0.55, 0.45]) {
+      const S = sizeOf(it, K0 * f, it === hero && !placed);
+      for (let y = 40; y + S.h <= Y1; y += GRID) for (let x = X0; x + S.w <= X1; x += GRID) {
+        if (!free(x, y, S.w, S.h)) continue;
+        const score = Math.hypot((x + S.w) - 520, (y - 150) * 0.7) + 400 * (1 - f);
+        if (!best || score < best.score) best = { score, x, y, S };
+      }
+      if (best) break;
+    }
+    if (best) commit({ it, ...best.S }, best.x, best.y);
   }
   return out;
 }
@@ -165,7 +210,7 @@ function fitOne(r, box, u) {
     const f = fit[key] = { one, two: one > LINES && r[l].ingredients.length === 1 };
     if (f.two) { s = recipePage(r, true)('r'); box.replaceChildren(s); }
     f.now = Math.round(s.querySelector('.body').getBoundingClientRect().height / (29 * u));
-    f.place = place(r, textRects(s, u), 62);
+    f.place = place(r, textRects(s, u));
   }
   lang = keep;
 }
@@ -220,26 +265,29 @@ function setCast(tipX, lift, reach) {
 }
 
 // ---------- turning a page ----------
-const N = 36, SW = 608 / N;
-function buildLeaf(frontIdx, backIdx) {
-  leaf.replaceChildren(); const u = px(); const fr = [], bk = [];
+// A leaf is a sheet of paper cut into vertical strips, each its own plane in 3D, so the sheet can bend.
+const N = 36;
+const three = document.querySelector('.three');
+function buildLeaf(frontIdx, backIdx, pivot, n) {
+  n = n || N; const sw = 608 / n;
+  pivot.replaceChildren(); const u = px(); const fr = [], bk = [];
   const front = make(frontIdx, 'r'), back = make(backIdx, 'l');
-  for (let i = 0; i < N; i++) {
-    for (const [arr, src, off] of [[fr, front, -i * SW], [bk, back, -(N - 1 - i) * SW]]) {
-      const s = el('div', 'strip'); s.style.width = (SW * u + 0.6) + 'px';
+  for (let i = 0; i < n; i++) {
+    for (const [arr, src, off] of [[fr, front, -i * sw], [bk, back, -(n - 1 - i) * sw]]) {
+      const s = el('div', 'strip'); s.style.width = (sw * u + 0.6) + 'px';
       const c = src.cloneNode(true); c.style.left = (off * u) + 'px'; s.appendChild(c);
-      const sh = el('div', 'shade'); s.appendChild(sh); s._sh = sh; leaf.appendChild(s); arr.push(s);
+      const sh = el('div', 'shade'); s.appendChild(sh); s._sh = sh; pivot.appendChild(s); arr.push(s);
     }
   }
-  return { fr, bk, u };
+  return { fr, bk, u, n, pivot };
 }
 // The sheet bends: the free edge leads, the part by the fold follows, and it lands with a soft bulge that flattens
-function poseLeaf(L, p) {
-  const { fr, bk, u } = L; const w = SW * u;
+function poseLeaf(L, p, noCast) {
+  const { fr, bk, u, n } = L; const w = 608 / n * u;
   const tip = Math.PI * ease(clamp(p / 0.86, 0, 1)), sp = Math.PI * ease(clamp((p - 0.14) / 0.86, 0, 1));
   let x = 0, z = 0, zmax = 0; const th = [];
-  for (let i = 0; i <= N; i++) th.push(sp + (tip - sp) * Math.pow(i / N, 1.35));
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i <= n; i++) th.push(sp + (tip - sp) * Math.pow(i / n, 1.35));
+  for (let i = 0; i < n; i++) {
     const a = (th[i] + th[i + 1]) / 2, deg = (-a * 180 / Math.PI).toFixed(3);
     const base = `translate3d(${x.toFixed(2)}px,0,${z.toFixed(2)}px) rotateY(${deg}deg)`;
     fr[i].style.transform = base;
@@ -248,7 +296,8 @@ function poseLeaf(L, p) {
     bk[i]._sh.style.background = `linear-gradient(to left, ${tint(lit(th[i], true))}, ${tint(lit(th[i + 1], true))})`;
     x += w * Math.cos(a); z += w * Math.sin(a); zmax = Math.max(zmax, z);
   }
-  setCast(x / u, zmax / (608 * u), 300);
+  if (!noCast) setCast(x / u, zmax / (608 * u), 300);
+  return { tip: x / u, lift: zmax / (608 * u) };
 }
 async function turn(dir) {
   if (busy) return;
@@ -260,20 +309,49 @@ async function turn(dir) {
   busy = true;
   const n = dir > 0 ? pos : to;                       // the leaf between position n and n + 1
   if (reduce.matches) { pos = to; show(); busy = false; return; }
-  const L = buildLeaf(rightIdx(n), leftIdx(n + 1));
+  const L = buildLeaf(rightIdx(n), leftIdx(n + 1), leaf);
   poseLeaf(L, dir > 0 ? 0 : 1);
   if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else slotL.replaceChildren(); leftBase(to); }
   await animate(1050, t => poseLeaf(L, dir > 0 ? t : 1 - t));
   pos = to; show(); leaf.replaceChildren(); cast.style.background = 'none'; busy = false;
 }
+// Going further than one page: the pages riffle past under the thumb, a handful of real leaves in quick
+// succession, and the book lands open at the destination. One page away is an ordinary turn.
+async function riffle(to) {
+  const from = pos, dir = Math.sign(to - from), steps = Math.abs(to - from);
+  if (!steps) return;
+  if (steps === 1 || reduce.matches) { if (reduce.matches) { pos = to; show(); return; } return turn(dir); }
+  busy = true;
+  const m = Math.min(steps, 7), ns = [];
+  for (let j = 0; j < m; j++) {
+    const k = Math.round(j * (steps - 1) / (m - 1));
+    ns.push(dir > 0 ? from + k : from - 1 - k);       // leaf between n and n + 1: forwards from the top of the right stack, backwards from the top of the left
+  }
+  const Ls = ns.map(n => { const pv = el('div', 'pivot'); three.insertBefore(pv, leaf); return buildLeaf(rightIdx(n), leftIdx(n + 1), pv, 18); });
+  Ls.forEach(L => poseLeaf(L, dir > 0 ? 0 : 1, true));
+  // underneath: the destination, on the side the leaves are leaving
+  if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else slotL.replaceChildren(); leftBase(to); }
+  const ONE = 560, GAP = steps > 4 ? 85 : 110, T = ONE + (m - 1) * GAP;
+  await animate(T, t => {
+    let top = null;
+    Ls.forEach((L, j) => {
+      const q = clamp((t * T - j * GAP) / ONE, 0, 1);
+      const r = poseLeaf(L, dir > 0 ? q : 1 - q, true);
+      // on the side it leaves, the earlier leaf lies on top; on the side it lands, the later one does
+      L.pivot.style.zIndex = q < 0.5 ? 100 - j : 200 + j;
+      if (q > 0 && q < 1 && (!top || r.lift > top.lift)) top = r;
+    });
+    if (top) setCast(top.tip, top.lift * 0.8, 260); else cast.style.background = 'none';
+  });
+  Ls.forEach(L => L.pivot.remove());
+  pos = to; show(); cast.style.background = 'none'; busy = false;
+}
 async function go(pageIdx) {
   if (busy) return;
-  if (shutBack) { await openBack(); }
-  if (!open) return;
-  const to = posOf(pageIdx); if (to === pos) return;
-  const dir = Math.sign(to - pos);
-  if (Math.abs(to - pos) > 1) pos = to - dir;          // far jumps: one page turn straight to the target
-  show(); await turn(dir);
+  const to = posOf(pageIdx);
+  if (shutBack) return openBack(to);
+  if (!open || to === pos) return;
+  await riffle(to);
 }
 
 // ---------- opening and closing at the front ----------
@@ -326,11 +404,13 @@ async function closeBack() {
   if (!reduce.matches) await animate(2100, t => poseBack(swing(t)));
   poseBack(1); cast.style.background = 'none'; shutBack = true; busy = false; updateControls();
 }
-async function openBack() {
+async function openBack(to) {
   if (busy || !shutBack) return; busy = true; shutBack = false;
-  if (!reduce.matches) { poseBack(1); await animate(1800, t => poseBack(1 - swing(t))); }
+  const onward = to != null && to < lastPos();
+  if (!reduce.matches) { poseBack(1); await animate(onward ? 1300 : 1800, t => poseBack(1 - swing(t))); }
   poseBack(0); backB.hidden = true; document.body.classList.remove('backshut', 'backlid'); $('spineHoldBack').style.visibility = 'hidden';
   shadow.style.transform = 'none'; cast.style.background = 'none'; open = true; pos = lastPos(); show(); busy = false;
+  if (onward) await riffle(to);                         // straight on, without stopping on the last page
 }
 poseCover(0);
 
@@ -404,6 +484,7 @@ $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDef
 
 // ---------- controls ----------
 $('next').onclick = () => turn(1); $('prev').onclick = () => turn(-1); $('home').onclick = () => go(0);
+$('year').textContent = new Date().getFullYear();   // the year in the footer keeps itself current
 const goRecipe = n => go(Number(n));
 function hit(e, side) {
   if (!open) return tryOpen();
@@ -444,4 +525,4 @@ tall.addEventListener('change', async () => {
 });
 updateControls();
 // for checking the book in a test browser
-window.__book = { forget: () => store.set(null), unlock, tryOpen, data: () => D, ill: () => ILLD, fit, setLang, recipePage, openBook, closeBook, closeBack, openBack, turn, go, poseLeaf, buildLeaf, poseCover, poseBack, setSlot, rightIdx, leftIdx, coverFront, state: () => ({ pos, open, busy, shutBack, last: lastPos() }) };
+window.__book = { riffle, forget: () => store.set(null), unlock, tryOpen, data: () => D, ill: () => ILLD, fit, setLang, recipePage, openBook, closeBook, closeBack, openBack, turn, go, poseLeaf, buildLeaf, poseCover, poseBack, setSlot, rightIdx, leftIdx, coverFront, state: () => ({ pos, open, busy, shutBack, last: lastPos() }) };
