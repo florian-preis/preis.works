@@ -88,6 +88,7 @@ function recipePage(r, bare) {
     if (il && !bare && f && f.place) for (const p of f.place) {
       const it = il.items[p.i], img = el('img', 'illus'); img.src = it.url; img.alt = '';
       img.style.left = U(p.x); img.style.top = U(p.y); img.style.width = U(it.w * p.k); img.style.height = U(it.h * p.k);
+      if (p.r) img.style.transform = `rotate(${p.r}deg)`;
       inn.appendChild(img);
     }
     s.appendChild(el('div', 'pageno', String(r.no)));
@@ -114,11 +115,52 @@ function textRects(sheet, u) {
   const pn = sheet.querySelector('.pageno').getBoundingClientRect(); out.push([(pn.left - o.left) / u - 20, (pn.top - o.top) / u - 10, X1, Y1 + 50]);
   return out;
 }
+// Florian's layout for each page (from his annotated sheets and his review, 17 November): for each picture, by
+// its number on the page, where it goes and how large. 'b' = below the text, composed in the order given and
+// centred together; 's' = beside the ingredient list, stacked from the top in the order given; 'sr' = beside the
+// ingredients as one small row; 'c' / 'cl' = the open corner at the bottom right / left, for pages whose text
+// runs nearly to the foot; 'hl' = a small accent in the top left corner, by the title.
+// Scale is relative to the picture's usual size. Optional fine-tuning: dy / dx (nudge
+// down / right), snug (beside: as close to the text as it fits instead of centred in the gap), top (beside:
+// may start this high, e.g. next to the title), rot (degrees clockwise), gap (extra space before it in a row),
+// min (smallest scale it may shrink to), down (beside: lowered this much once placed), bx / by (below: the
+// whole group shifted right / down), rise (below: may rise beside the last
+// short lines when the space is tight). Pages not listed are laid out automatically.
+const LAYOUT = {
+  1: [[1, 'b', 0.8], [2, 'b', 1]],
+  2: [[1, 'b', 0.9], [2, 'b', 1.3]],
+  3: [[3, 's', 1], [1, 's', 1.12, { down: 15 }], [2, 'b', 0.97, { rise: 1 }]],
+  4: [[2, 's', 1, { dy: 115, snug: 1 }], [3, 'b', 1.25], [1, 'b', 1.25]],
+  5: [[3, 'b', 1, 26], [2, 'b', 1], [1, 's', 1], [4, 's', 1]],
+  7: [[1, 's', 0.9, { top: 145 }], [2, 's', 0.9], [3, 's', 1]],
+  8: [[3, 'b', 0.8], [2, 'b', 1.12], [1, 's', 0.8]],
+  9: [[1, 'b', 1], [2, 'b', 0.8]],
+  10: [[2, 'b', 1], [3, 's', 1], [1, 's', 1]],
+  11: [[1, 's', 1, { dy: 150, snug: 1, dx: 25 }]],
+  12: [[1, 'b', 1], [2, 's', 1, { dy: 18, dx: -25 }]],
+  13: [[2, 'b', 1], [1, 'b', 0.8]],
+  14: [[3, 'b', 1], [2, 's', 1], [1, 's', 1]],
+  15: [[1, 'b', 1], [2, 's', 1.5, { dy: 6, snug: 1, dx: 15 }]],
+  16: [[3, 's', 1.3], [1, 's', 1], [2, 'b', 1]],
+  17: [[1, 's', 1.12], [3, 'b', 1.7], [2, 'b', 1, { gap: 22 }]],
+  19: [[1, 'b', 1], [2, 's', 1.1, { down: 15 }]],
+  20: [[2, 'b', 1], [1, 's', 1], [3, 's', 1.15, { down: 18 }]],
+  21: [[2, 's', 1.15], [1, 'b', 1]],
+  22: [[2, 's', 1.2], [4, 'c', 1, 20], [1, 'c', 1], [3, 'cl', 1, { rot: 220 }]],
+  23: [[3, 's', 1.3], [2, 'b', 1.22, { rot: -45 }], [1, 'b', 1]],
+  24: [[1, 's', 1], [3, 'b', 1], [2, 'b', 1, { gap: 40 }]],
+  25: [[2, 'hl', 0.72], [1, 's', 1.15, { min: 0.95 }], [3, 's', 0.72, { dx: 20 }]],
+  27: [[3, 'b', 1], [2, 'sr', 1], [1, 'sr', 0.88, { dy: 14 }]],
+  28: [[2, 'b', 1], [3, 's', 1.15], [1, 's', 1, { dx: -35 }]],
+  29: [[1, 'b', 1], [2, 's', 1.3]],
+  32: [[3, 'b', 1], [2, 'b', 1], [1, 's', 1]],
+  33: [[2, 'b', 1], [1, 'b', 1], [3, 's', 1, { top: 120, snug: 1, min: 0.55 }]],
+};
 function place(r, rects) {
   // Each page is composed around Lena's main dish. Below the text it stands in the middle of the free space with
-  // its companions beside it on one line, smaller, with air around them. If there is not room for all of them
-  // there, the companions go in the open space beside the ingredients; on the fullest pages the dish goes there
-  // too. Nothing ever touches the text.
+  // its companions beside it on one line, smaller, with air around them. Pictures meant for the side sit in the
+  // open space beside the ingredients, centred in that gap. Nothing ever touches the text: if a picture does not
+  // fit where it is meant to go, it is made a little smaller, and only then moves to the other place.
   const il = ILLD[r.no]; if (!il || !il.items.length) return null;
   const cols = Math.ceil((X1 - X0) / GRID), rows = Math.ceil(Y1 / GRID);
   const occ = new Uint8Array(cols * rows);
@@ -135,71 +177,129 @@ function place(r, rects) {
     for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) if (occ[y * cols + x]) return false;
     return true;
   };
-  const items = il.items.map((it, i) => ({ i, ...it }));
-  const hero = items.find(it => it.role === 'hero') || items[0];
-  const rest = items.filter(it => it !== hero).sort((p, q) => q.size - p.size);
-  const dims = (it, f) => { const k = it.size * f / Math.max(it.w, it.h); return { w: it.w * k, h: it.h * k, k }; };
+  const items = il.items.map((it, i) => ({ i, ...it, scale: 1, dy: 0, o: {} }));
+  const dims = (it, f) => {
+    const k = it.size * it.scale * f / Math.max(it.w, it.h), w = it.w * k, h = it.h * k, a = (it.o.rot || 0) * Math.PI / 180;
+    if (!a) return { w, h, k, iw: w, ih: h };
+    const c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));   // a turned picture takes the box around it
+    return { w: w * c + h * s, h: w * s + h * c, k, iw: w, ih: h };
+  };
   const out = [];
-  const commit = (it, d, x, y) => { out.push({ i: it.i, x, y, k: d.k }); mark(x, y, x + d.w, y + d.h, 16); };
+  const commit = (it, d, x, y) => { out.push({ i: it.i, x: x + (d.w - d.iw) / 2, y: y + (d.h - d.ih) / 2, k: d.k, r: it.o.rot || 0 }); mark(x, y, x + d.w, y + d.h, 16); };
   const GAP = 26;
-  // the still life: dish in the middle, companions alternately right and left, resting on a common line
+  // the still life below the text: in the order given, centred, resting on a common line
   const compose = (f, list) => {
-    const H = dims(hero, f), parts = [{ it: hero, d: H, x: 0, y: 0 }];
-    let left = 0, right = H.w; const base = H.h * 0.9;
-    list.forEach((it, n) => {
-      const d = dims(it, f), y = Math.max(0, base - d.h);
-      if (n % 2 === 0) { parts.push({ it, d, x: right + GAP, y }); right += GAP + d.w; }
-      else { left -= GAP + d.w; parts.push({ it, d, x: left, y }); }
-    });
+    let x = 0; const parts = [];
+    const H = Math.max(...list.map(it => dims(it, f).h)), base = H * 0.95;
+    list.forEach((it, n) => { const d = dims(it, f); if (n) x += it.o.gap || 0; parts.push({ it, d, x, y: Math.max(0, base - d.h) + it.dy }); x += d.w + GAP; });
     const minY = Math.min(...parts.map(p => p.y)), maxY = Math.max(...parts.map(p => p.y + p.d.h));
-    parts.forEach(p => { p.x -= left; p.y -= minY; });
-    return { parts, w: right - left, h: maxY - minY };
+    parts.forEach(p => { p.y -= minY; });
+    return { parts, w: x - GAP, h: maxY - minY };
   };
   const bandTop = textBottom + 34, bandH = Y1 - bandTop;
   const inBand = C => {
     if (C.w > X1 - X0 - 20 || C.h > bandH) return null;
-    const cx = 252.5 - C.w / 2;
-    const yIdeal = bandTop + (bandH - C.h) * 0.45;                   // optically centred, a touch above the middle
+    const sh = (C.parts.find(p => p.it.o.bx || p.it.o.by) || { it: { o: {} } }).it.o;
+    const cx = 252.5 - C.w / 2 + (sh.bx || 0);
+    const yIdeal = bandTop + (bandH - C.h) * 0.45 + (sh.by || 0);    // optically centred, a touch above the middle
     for (const dy of [0, -12, 12, -25, 25, -40, 40]) for (const dx of [0, -15, 15, -30, 30, -50, 50]) {
       const x = cx + dx, y = clamp(yIdeal + dy, bandTop, Y1 - C.h);
       if (C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) return { x, y };
     }
     return null;
   };
-  // a single picture in the open space beside the ingredients (top right), as large as fits up to its size
-  const beside = (it, maxF, yMin = 170, fs = [1, 0.85, 0.7, 0.58]) => {
-    for (const f of fs.map(q => q * maxF)) {
-      const d = dims(it, f); let best = null;
-      for (let y = yMin; y + d.h <= Y1; y += GRID) for (let x = X1 - d.w; x >= X0; x -= GRID) {   // below the title, never beside it
-        if (!free(x, y, d.w, d.h)) continue;
-        const score = (X1 - x - d.w) * 1.2 + Math.abs(y - 150) * 0.6;
-        if (!best || score < best.score) best = { score, x, y };
-        break;
+  // a group too tall for the space below the text may rise beside its last short lines, resting at the foot and
+  // as near the middle as the text allows
+  const rise = C => {
+    const y = Y1 - C.h - 12;
+    for (let n = 0; n < 60; n++) for (const s of [-1, 1]) {
+      const x = 252.5 - C.w / 2 + s * n * GRID;
+      if (C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) return { x, y };
+    }
+    return null;
+  };
+  const below = (list, fs) => {
+    if (!list.length) return true;
+    if (list.some(it => it.o.rise)) for (const f of fs) { const C = compose(f, list); if (C.h <= bandH) break; const at = rise(C); if (at) { C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y)); return true; } }
+    for (const f of fs) { const C = compose(f, list), at = inBand(C); if (at) { C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y)); return true; } }
+    return false;
+  };
+  // beside the ingredients: the highest open spot below the title, centred in the gap between text and page edge
+  const beside = (it, fs, yMin = 170) => {
+    const group = Array.isArray(it) ? it : [it], lead = group[0], o = lead.o;
+    if (o.min) fs = fs.filter(f => f >= o.min).concat(fs.some(f => f < o.min) ? [o.min] : []);
+    if (o.top != null) yMin = o.top;
+    for (const f of fs) {
+      const C = compose(f, group), d = { w: C.w, h: C.h };
+      for (let y = yMin + lead.dy; y + d.h <= Y1; y += GRID) {
+        let x1 = X1; while (x1 - d.w >= X0 && !free(x1 - d.w, y, d.w, d.h)) x1 -= GRID;
+        if (x1 - d.w < X0) continue;
+        let x0 = x1 - d.w; while (x0 - GRID >= X0 && free(x0 - GRID, y, x1 - x0 + GRID, d.h)) x0 -= GRID;
+        if (x1 < X1 - 40) continue;                                      // only the open space at the right, not a hole in the text
+        let x = o.snug ? x0 + 4 : Math.max(x0 + (x1 - x0 - d.w) / 2, x1 - d.w - 60);
+        if (o.dx) { const nx = clamp(x + o.dx, x0, x1 - d.w); x = nx; }
+        if (!C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) x = x1 - d.w;
+        if (o.down) for (let k = o.down; k > 0; k -= GRID) if (y + k + d.h <= Y1 && C.parts.every(p => free(x + p.x, y + k + p.y, p.d.w, p.d.h))) { y += k; break; }
+        C.parts.forEach(p => commit(p.it, p.d, x + p.x, y + p.y)); return true;
       }
-      if (best) { commit(it, d, best.x, best.y); return true; }
     }
     return false;
   };
-  // 1. everything together below the text
+  // the open corner at the foot of the page: the group rests as low and as far right as it fits
+  const corner = (list, fs, left) => {
+    for (const f of fs) {
+      const C = compose(f, list);
+      for (let y = Y1 - C.h; y >= textBottom * 0.55; y -= GRID) for (let n = 0, x; (x = left ? X0 + 30 + n * GRID : X1 - C.w - 10 - n * GRID) >= X0 && x + C.w <= X1; n++)
+        if (C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) { C.parts.forEach(p => commit(p.it, p.d, x + p.x, y + p.y)); return true; }
+    }
+    return false;
+  };
+  const spec = LAYOUT[r.no];
+  if (spec) {
+    const b = [], s = [], c = [], cl = [], row = [], hl = [];
+    for (const [n, zone, sc, opt] of spec) {
+      const it = items[n - 1]; if (!it) continue;
+      it.scale = sc; it.o = typeof opt === 'object' ? opt : {}; it.dy = typeof opt === 'number' ? opt : (it.o.dy || 0);
+      ({ b, s, c, cl, hl, sr: row })[zone].push(it);
+    }
+    const CF = [1, 0.9, 0.8, 0.72, 0.64, 0.56];
+    for (const it of hl) {                                               // a small accent in the top left corner, by the title
+      let done = false;
+      for (const f of [1, 0.88, 0.76]) { const d = dims(it, f);
+        for (let y = 8; y < 120 && !done; y += GRID) for (let x = X0 + 30; x < 120 && !done; x += GRID) if (free(x, y, d.w, d.h)) { commit(it, d, x, y); done = true; }
+        if (done) break; }
+      if (!done) s.push(it);
+    }
+    if (c.length && !corner(c, CF)) b.push(...c);
+    if (cl.length && !corner(cl, CF, true)) b.push(...cl);
+    const spare = [];
+    if (row.length && !beside(row, [1, 0.9, 0.8, 0.72])) spare.push(...row);
+    for (const it of s) if (!beside(it, [1, 0.88, 0.76])) spare.push(it);
+    if (!below([...b, ...spare], [1, 0.9, 0.8, 0.72, 0.64]) && !corner([...b, ...spare], [0.9, 0.8, 0.72, 0.64])) {
+      // not everything fits below: the largest stays, the rest tries the side
+      const all = [...b, ...spare].sort((p, q) => q.size * q.scale - p.size * p.scale);
+      for (let keep = all.length - 1; keep >= 1; keep--) {
+        const kept = [...b, ...spare].filter(it => all.slice(0, keep).includes(it));
+        if (below(kept, [1, 0.88, 0.76, 0.66])) { for (const it of all.slice(keep)) beside(it, [0.9, 0.76, 0.6]); return out; }
+      }
+      for (const it of all) beside(it, [0.85, 0.7, 0.58, 0.48]) || corner([it], [0.7, 0.6, 0.5, 0.42]) || beside(it, [0.4, 0.34], 0);
+    }
+    return out;
+  }
+  // automatic: the dish with its companions below; what does not fit goes beside the ingredients
+  const hero = items.find(it => it.role === 'hero') || items[0];
+  const rest = items.filter(it => it !== hero).sort((p, q) => q.size - p.size);
   for (const f of [1, 0.9, 0.8, 0.72]) {
-    const C = compose(f, rest), at = inBand(C);
+    const list = [...rest.filter((_, n) => n % 2 === 1).reverse(), hero, ...rest.filter((_, n) => n % 2 === 0)];
+    const C = compose(f, list), at = inBand(C);
     if (at) { C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y)); return out; }
   }
-  // 2. the dish with as many companions as fit below; the others beside the ingredients
   for (let keep = rest.length - 1; keep >= 0; keep--) {
-    for (const f of [1, 0.88, 0.76, 0.66]) {
-      const C = compose(f, rest.slice(0, keep)), at = inBand(C);
-      if (at) {
-        C.parts.forEach(p => commit(p.it, p.d, at.x + p.x, at.y + p.y));
-        for (const it of rest.slice(keep)) beside(it, 0.9);
-        return out;
-      }
-    }
+    const kept = rest.slice(0, keep), list = [...kept.filter((_, n) => n % 2 === 1).reverse(), hero, ...kept.filter((_, n) => n % 2 === 0)];
+    if (below(list, [1, 0.88, 0.76, 0.66])) { for (const it of rest.slice(keep)) beside(it, [0.9, 0.76, 0.62]); return out; }
   }
-  // 3. a full page: everything beside the ingredients, the dish first and largest
-  // the dish always gets a place: smaller if it must, and on the very fullest pages in the corner by the title
-  if (!beside(hero, 0.85) && !beside(hero, 0.85, 170, [0.48, 0.4]) ) beside(hero, 0.85, 0, [0.4, 0.34]);
-  for (const it of rest) beside(it, 0.8);
+  if (!beside(hero, [0.85, 0.72, 0.6, 0.48]) && !corner([hero], [0.7, 0.6, 0.5, 0.42])) beside(hero, [0.4, 0.34], 0);
+  for (const it of rest) beside(it, [0.8, 0.68, 0.56]);
   return out;
 }
 function fitOne(r, box, u) {
@@ -490,7 +590,7 @@ $('pw').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDef
 (async () => {
   const k = store.get(); if (!k || !window.crypto || !crypto.subtle) return;
   $('pass').classList.add('gone');
-  try { await useKey(raw(k)); passDone = true; $('pass').hidden = true; }
+  try { await useKey(raw(k)); passDone = true; $('pass').hidden = true; resume(); }
   catch (e) { D = null; KEY = null; store.set(null); $('pass').classList.remove('gone'); }
   updateControls();
 })();
@@ -523,6 +623,51 @@ $('book').addEventListener('touchend', e => {
   if (sx == null) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
   if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy) * 1.4) { e.preventDefault(); if (!open && !shutBack) { if (dx < 0) tryOpen(); } else turn(dx < 0 ? 1 : -1); }
 });
+// ---------- pulling down to reload (phones) ----------
+// The page itself does not scroll, so the browser's own pull-to-refresh never starts, and a home-screen app has
+// none. A downward drag from anywhere draws a small reload sign from the top; let go past the mark and the app
+// reloads, opening again on the same page and language.
+const RESUME = 'familienrezepte.resume';
+const ptr = el('div', 'ptr'); ptr.setAttribute('aria-hidden', 'true');
+ptr.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>';
+document.body.appendChild(ptr);
+let px0 = null, py0 = 0, pull = 0, pulling = false;
+const PULL = 90;
+addEventListener('touchstart', e => {
+  if (e.touches.length !== 1 || busy || e.target.closest('input, a, button')) { px0 = null; return; }
+  px0 = e.touches[0].clientX; py0 = e.touches[0].clientY; pull = 0; pulling = false; ptr.classList.remove('settle');
+}, { passive: true });
+addEventListener('touchmove', e => {
+  if (px0 == null) return;
+  const dx = e.touches[0].clientX - px0, dy = e.touches[0].clientY - py0;
+  if (!pulling) { if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) { px0 = null; return; } if (dy < 14 || dy < Math.abs(dx) * 1.5) return; pulling = true; }
+  pull = Math.max(0, dy - 14);
+  const d = Math.min(pull, PULL * 1.6) * 0.6;          // the sign follows the finger, with some resistance
+  ptr.style.opacity = Math.min(1, pull / (PULL * 0.6)).toFixed(2);
+  ptr.style.transform = `translateY(${(d - 48 + 12).toFixed(1)}px) rotate(${(pull * 2.4).toFixed(0)}deg)`;
+  ptr.classList.toggle('ready', pull >= PULL);
+}, { passive: true });
+addEventListener('touchend', () => {
+  if (px0 == null) return; px0 = null;
+  if (!pulling) return; pulling = false;
+  ptr.classList.add('settle');
+  if (pull >= PULL) {
+    ptr.style.transform = 'translateY(28px)'; ptr.classList.add('spin');
+    try { sessionStorage.setItem(RESUME, JSON.stringify({ open, page: open ? Math.max(rightIdx(pos), 0) : -1, lang })); } catch (e) {}
+    setTimeout(() => location.reload(), 250);
+  } else { ptr.style.transform = 'translateY(-48px)'; ptr.style.opacity = '0'; }
+}, { passive: true });
+// after such a reload: straight back to the page that was open, without the cover opening again
+function resume() {
+  let r = null; try { r = JSON.parse(sessionStorage.getItem(RESUME)); sessionStorage.removeItem(RESUME); } catch (e) {}
+  if (!r) return;
+  if (r.lang && r.lang !== lang) setLang(r.lang);
+  if (!r.open || !D || open || busy) return;
+  document.body.classList.remove('closed', 'lidded'); $('pass').classList.add('gone');
+  cover.hidden = true; $('spineHold').style.visibility = 'hidden'; $('baseL').hidden = false; shadow.style.transform = 'none'; cast.style.background = 'none';
+  open = true; pos = Math.min(posOf(r.page), lastPos()); show(); updateControls();
+}
+
 function setLang(l) {
   lang = l; root.lang = l; $('lang').setAttribute('aria-checked', String(l === 'en'));
   $('lblDE').classList.toggle('is-on', l === 'de'); $('lblEN').classList.toggle('is-on', l === 'en');

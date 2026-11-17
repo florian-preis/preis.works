@@ -44,7 +44,10 @@
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { background: var(--paper); background-image: radial-gradient(circle, #d6d5d0 1px, transparent 1.2px); background-size: 24px 24px;
+/* the desk: soft light behind the book, a little darker towards the edges, with a fine paper grain */
+body { background: var(--paper); background-attachment: fixed;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.33 0 0 0 0 0.3 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), radial-gradient(ellipse 70% 65% at 50% 45%, #faf9f6 0%, #f3f2ef 55%, #e6e4de 100%);
+  background-size: 160px 160px, auto;
   color: var(--text); font-family: 'Inter Variable', Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; touch-action: pan-y pinch-zoom; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 4px; }
@@ -131,6 +134,13 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
 .strip .sheet.r:not(.e) { background-image: var(--img-sr); background-size: 100% 100%; background-position: 0 0; }
 .strip .sheet.l { background-image: var(--img-sl); background-size: 100% 100%; background-position: 0 0; }
 /* Footer: the same quiet line as in every preis.works app */
+.ptr { position: fixed; z-index: 60; left: 50%; top: 0; width: 36px; height: 36px; margin-left: -18px; border-radius: 50%; background: #fff; color: var(--muted);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(-48px); }
+.ptr svg { width: 18px; height: 18px; transition: color var(--fast) ease; }
+.ptr.ready { color: var(--text); }
+.ptr.settle { transition: transform var(--base) var(--ease), opacity var(--base) ease; }
+.ptr.spin svg { animation: ptr-spin 0.8s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
 .app-foot { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 16px;
   padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   font-size: 11px; line-height: 1.4; color: var(--muted); }

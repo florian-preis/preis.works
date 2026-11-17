@@ -21,11 +21,12 @@ Python 3 with `opencv-python numpy potracer cairosvg pillow cryptography`. Run f
 
 | Step | Command | When |
 | --- | --- | --- |
-| Notebook pictures | `python3 moleskine.py $P/moleskine $P/work/assets` | Only if the photos change |
+| Notebook pictures | `python3 moleskine.py $P/moleskine $P/work/assets` | Only if the photos change. Makes the covers and label base; since 17 November its open-spread pictures are replaced by the next step |
+| Open notebook | `python3 notebook.py $P/moleskine/moleskine-double-spread.png $P/work/assets` | After `moleskine.py`, or if the open-spread image changes. Fits the bookmark-free spread into the book's existing geometry (page-left/right, sheet-left/right, endpapers) |
 | Cover label | `python3 label.py $P/lettering.json $P/work/assets/cover-front.png $P/work/assets/cover-label.png` | Only if the label changes |
 | Lettering | `python3 alapreis.py $P/lettering.json $P/work/title28.json` then `python3 lettering_fix.py $P/lettering.json $P/work/title28.json $P/work/lettering.json` | Only if the lettering changes |
 | Illustrations | `FR_PHOTOS=$P/photos FR_OUT=$P/work/ill python3 illus3.py 1 2 ... 33 31b` | Only if a tracing is redone. Search areas per page are in `REGIONS` |
-| Icons | `FR_PHOTOS=$P/photos python3 icon.py ../../public/projects/familienrezepte/app` | Only if the icon changes |
+| Icons | `python3 icon.py ../../../private/familienrezepte/work ../../public/projects/familienrezepte/app` | Only if the icon changes (orange apple, 25_03) |
 | **The app** | `FR_PASS='the password' python3 build.py $P/work ../../public/projects/familienrezepte/app` | After any change to recipes, lettering, illustrations, or `app.js` |
 
 The password is only ever typed into the command line; it is not stored anywhere. A rebuild with the same password keeps everyone's saved unlock working. A new password locks every browser until they enter the new one.
