@@ -39,13 +39,14 @@ mid = (NX0 + NX1) // 2; NSP = mid - 80 + int(np.argmin(g[500, mid - 80:mid + 80]
 print('new spine', NSP, 'book', NX0, NX1, NY0, NY1)
 
 # ---------- maps from the old frame to the new image ----------
-def ymap(yo):
+def ymap(yo, cut=None):
     yo = np.asarray(yo, np.float32); yn = np.empty_like(yo)
     top = yo < OLD[0]; yn[top] = NY0 + (yo[top] - OTOP) * (lines[0] - NY0) / (OLD[0] - OTOP)
     bot = yo >= OLD[-1]; yn[bot] = lines[-1] + (yo[bot] - OLD[-1]) * (NY1 - lines[-1]) / (OBOT - OLD[-1])
     mid_ = ~top & ~bot
     k = np.clip(np.floor((yo[mid_] - OLD[0]) / 29).astype(int), 0, K - 2); t = (yo[mid_] - OLD[k]) / 29
-    kn = np.where((k > MID) | ((k == MID) & (t >= 0.5)), k + CUT, k)        # past the cut: two lines further on
+    past = (k > MID) | ((k == MID) & (t >= 0.5)) if cut is None else np.full(k.shape, cut)
+    kn = np.where(past, k + CUT, k)                                         # past the cut: two lines further on
     yn[mid_] = lines[kn] + t * (lines[np.minimum(kn + 1, len(lines) - 1)] - lines[kn])
     return yn
 EDGE = 62                                                                  # page-block edge strip at either side, kept 1:1
@@ -61,15 +62,53 @@ def xmap(xo):
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
 mx = xmap(xx[0])[None, :].repeat(H, 0); my = ymap(yy[:, 0])[:, None].repeat(W, 1)
 spread = cv2.remap(s, mx, my, cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+# the crease's shading varies a little down the page, so across the cut the two sides are blended over a band
+YC = OLD[MID] + 14.5; BAND = 12
+before = cv2.remap(s, mx, ymap(yy[:, 0], False)[:, None].repeat(W, 1), cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+after = cv2.remap(s, mx, ymap(yy[:, 0], True)[:, None].repeat(W, 1), cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+w = np.clip((yy[:, :1] - (YC - BAND)) / (2 * BAND), 0, 1)[..., None]
+band = np.abs(yy[:, :1] - YC) < BAND
+spread = np.where(band[..., None], before * (1 - w) + after * w, spread)
 spread = np.clip(spread, 0, 255)
 # check: the ruling now sits on the old lines
 gg = spread[..., :3].mean(2); c = gg[:, 900:1100].mean(1); bg = cv2.GaussianBlur(c.reshape(-1, 1), (1, 0), 8).ravel()
 found = [y for y in range(60, 990) if bg[y] - c[y] > 2.5 and c[y] <= c[y - 1] and c[y] < c[y + 1]]
 print('ruling after the remap:', len(found), 'lines, worst offset %.2f' % max(abs(np.array(found)[:, None] - OLD[None, :]).min(1)))
-spread = spread.astype(np.uint8)
+# the ruling in the image is not quite level on the left page (it drifts by up to 3 px towards the outer edge), so
+# each half is levelled column by column, as for the photo (moleskine.py)
+def straighten(half):
+    """The printed ruling drifts by a few pixels across the page in the photo. Measure the drift per column and
+    slide each column up or down so every line is level; the page edges stay where they are."""
+    g = cv2.cvtColor(half[..., :3].astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(np.float32)
+    Hh, Ww = g.shape; pts = []
+    for x0 in range(14, Ww-40, 12):
+        prof = g[:, x0:x0+12].mean(1); prof = cv2.GaussianBlur(prof.reshape(-1, 1), (1, 0), 12).ravel() - prof
+        for k in range(31):
+            y = 77.5 + 29*k; seg = prof[int(y)-9:int(y)+10]; j = int(np.argmax(seg))
+            if 0 < j < 18 and seg[j] > 2:
+                d = seg[j-1] - 2*seg[j] + seg[j+1]; sub = 0.5*(seg[j-1]-seg[j+1])/d if d else 0
+                pts.append((x0+6, y, int(y)-9 + j + sub - y))
+    P = np.array(pts); X, Y, Z = P[:, 0]/Ww, P[:, 1]/Hh, P[:, 2]
+    basis = lambda X, Y: np.stack([np.ones_like(X), X, X*X, X**3, Y, X*Y, X*X*Y, X**3*Y, Y*Y, X*Y*Y], -1)
+    co, *_ = np.linalg.lstsq(basis(X, Y), Z, rcond=None)
+    for _ in range(2):                                   # refit without stray measurements
+        ok = np.abs(basis(X, Y) @ co - Z) < 1.2; co, *_ = np.linalg.lstsq(basis(X[ok], Y[ok]), Z[ok], rcond=None)
+    yy, xx = np.mgrid[0:Hh, 0:Ww].astype(np.float32)
+    dy = (basis(xx/Ww, yy/Hh) @ co).astype(np.float32)
+    print('ruling drift px (min, max, left over):', round(float(Z.min()), 2), round(float(Z.max()), 2), round(float(np.abs(basis(X[ok], Y[ok]) @ co - Z[ok]).mean()), 2))
+    yy, xx = np.mgrid[0:Hh, 0:Ww].astype(np.float32)
+    wgt = np.clip(np.minimum(yy - 20, 985 - yy)/30.0, 0, 1)
+    out_ = cv2.remap(half, xx, yy + dy*wgt, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return out_
+spread = np.hstack([straighten(spread[:, :SP]), straighten(spread[:, SP:])])
+spread = np.clip(spread, 0, 255).astype(np.uint8)
 cv2.imwrite(f'{out}/spread.png', spread)
 cv2.imwrite(f'{out}/page-right.png', spread[:, SP:])
 cv2.imwrite(f'{out}/page-left.png', spread[:, :SP])
+for nm, x0, x1 in [('left page, outer', 40, 70), ('left page', 200, 400), ('right page', 900, 1100), ('right page, outer', 1180, 1220)]:
+    c = spread[..., :3].astype(np.float32).mean(2)[:, x0:x1].mean(1); bg = cv2.GaussianBlur(c.reshape(-1, 1), (1, 0), 6).ravel()
+    f = [y for y in range(60, 990) if bg[y] - c[y] > 1.5 and c[y] <= c[y - 1] and c[y] < c[y + 1]]
+    print('ruling, %s: %d lines, worst offset %.1f' % (nm, len(f), max(np.abs(np.array(f)[:, None] - OLD[None, :]).min(1))))
 
 # ---------- inside covers: the same halves without the ruling ----------
 k = 13
@@ -90,7 +129,14 @@ def clean_sheet(page, x0, x1, src_cols, dst_cols):
     sh[:, c:d] = sh[:, a:a + w]
     lum = sh.mean(2); bad = (lum < 175).astype(np.uint8); bad[40:-40, 40:-40] = 0
     bad = cv2.dilate(bad, np.ones((3, 3), np.uint8))
-    return cv2.inpaint(np.clip(sh, 0, 255).astype(np.uint8), bad, 4, cv2.INPAINT_TELEA)
+    sh = cv2.inpaint(np.clip(sh, 0, 255).astype(np.uint8), bad, 4, cv2.INPAINT_TELEA)
+    # the image draws a bright rim where the paper meets the board, and the pages dip at the spine; a page in
+    # motion has no board, so its top and foot are rebuilt from the plain margin next to them (mirrored, so the
+    # paper runs on without a seam). Without this the turning page shows a white edge
+    T, B = 22, 16
+    sh[:T] = sh[2 * T:T:-1]
+    sh[-B:] = sh[-B - 1:-2 * B - 1:-1]
+    return sh
 cv2.imwrite(f'{out}/sheet-right.png', clean_sheet(spread[:, SP:], 0, 608, (555, 580), (583, 608)))
 cv2.imwrite(f'{out}/sheet-left.png', clean_sheet(spread[:, :SP], 32, 640, (50, 75), (0, 25)))
 print('ok')

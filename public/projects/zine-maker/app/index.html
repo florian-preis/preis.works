@@ -48,6 +48,7 @@ img { max-width: 100%; }
   --sheet: #ffffff;
   --sel: #2b2b29;
   --on-sel: #f3f2ef;
+  --warn: #a8432f;
   --shadow: 0 1px 2px rgba(43, 43, 41, 0.08), 0 6px 18px rgba(43, 43, 41, 0.08);
   --ui: "Inter", system-ui, -apple-system, sans-serif;
   --hand: "Florian Hand", "Inter", system-ui, sans-serif;
@@ -56,13 +57,13 @@ img { max-width: 100%; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #1c1c1b; --panel: #262624; --stage: #141413; --text: #ecebe7; --muted: #a3a19b; --faint: #6d6c68;
-    --line: #34332f; --glass: rgba(38, 38, 36, 0.78); --sheet: #ffffff; --sel: #ecebe7; --on-sel: #1c1c1b;
+    --line: #34332f; --glass: rgba(38, 38, 36, 0.78); --sheet: #ffffff; --sel: #ecebe7; --on-sel: #1c1c1b; --warn: #e3907b;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #1c1c1b; --panel: #262624; --stage: #141413; --text: #ecebe7; --muted: #a3a19b; --faint: #6d6c68;
-  --line: #34332f; --glass: rgba(38, 38, 36, 0.78); --sheet: #ffffff; --sel: #ecebe7; --on-sel: #1c1c1b;
+  --line: #34332f; --glass: rgba(38, 38, 36, 0.78); --sheet: #ffffff; --sel: #ecebe7; --on-sel: #1c1c1b; --warn: #e3907b;
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); color-scheme: dark;
 }
 
@@ -131,11 +132,23 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
 .seg .f-hand { font-family: var(--hand); font-size: 14px; line-height: 1; padding: 0 3px; }
 
 .unit { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.cal { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
-.cal-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.cal .unit input[type="number"] { flex: 1; width: 0; min-width: 0; }
-.cal-status { justify-content: space-between; flex-wrap: nowrap; align-items: flex-start; }
-.cal-status .hint { flex: 1; }
+.row.between { justify-content: space-between; flex-wrap: nowrap; }
+.row.between .hint { flex: 1; min-width: 0; }
+.hint.warn { color: var(--warn); }
+/* Printer setup dialog */
+.setup .step { display: grid; gap: 8px; justify-items: start; }
+.btn:disabled { opacity: .4; cursor: default; border-color: var(--line); }
+.measure { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; width: 100%; }
+.measure svg { width: 112px; height: auto; display: block; }
+.measure svg .sheet { fill: var(--sheet); stroke: var(--faint); stroke-width: 1; }
+.measure svg .gbar { fill: #c9c8c4; }
+.measure svg .ln { stroke: #2b2b29; stroke-width: 1.2; }
+.measure svg text { font: 600 8px var(--ui); fill: var(--muted); }
+.mgrid { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.mgrid .unit input[type="number"] { flex: 1; width: 0; min-width: 0; padding: 5px 7px; }
+.mgrid .unit { gap: 5px; font-size: 12px; }
+.mgrid .hd { font-size: 11.5px; }
+@media (max-width: 520px) { .measure { grid-template-columns: 1fr; } }
 .unit input[type="number"] { width: 96px; }
 input[type="text"], input[type="number"], textarea { width: 100%; border: 1px solid var(--line); background: var(--sheet); color: #2b2b29; border-radius: 8px; padding: 7px 9px; font-size: 13px; }
 textarea { resize: vertical; line-height: 1.45; }
@@ -212,6 +225,18 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 .slotrow .meta .row { justify-content: space-between; min-height: 28px; }
 .slotrow .meta.with-caption { height: 72px; display: flex; flex-direction: column; justify-content: space-between; }
 
+/* Your zines */
+.lib { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 22px 18px; align-items: start; }
+.zc { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.zc-cover { border: 0; padding: 0; background: none; cursor: pointer; display: block; width: 100%; }
+.zc-cover img { width: 100%; display: block; background: #fff; box-shadow: var(--shadow); }
+.zc.cur .zc-cover img { outline: 2px solid var(--text); outline-offset: 3px; }
+.lib { padding: 5px 5px 0; }
+@media (max-width: 520px) { .lib { grid-template-columns: 1fr 1fr; gap: 18px 12px; } }
+.zc-meta { display: grid; gap: 1px; font-size: 12px; color: var(--muted); }
+.zc-meta b { color: var(--text); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.zc-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
 /* Overlay */
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(20,20,19,.38); display: grid; place-items: center; padding: 16px; }
 .card { background: var(--paper); color: var(--text); border-radius: 14px; box-shadow: var(--shadow); width: min(520px, 100%); max-height: 86vh; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
@@ -248,8 +273,10 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
   .brand span { display: none; }
 }
 @media (max-width: 520px) {
-  .bar { gap: 8px; flex-wrap: wrap; }
-  .bar .btn { min-width: 0; }
+  .bar { gap: 6px; flex-wrap: wrap; }
+  .bar .brand { margin-right: auto; }
+  .bar .btn { min-width: 0; height: 32px; padding: 0 10px; font-size: 12px; }
+  .bar .btn + .btn { margin-left: -2px; }
   .spreads { gap: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -259,6 +286,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 <body>
 <header class="bar">
   <div class="brand"><b>zine</b><span>Print-at-home photo zines</span></div>
+  <button type="button" class="btn" id="libBtn">Your zines</button>
   <button type="button" class="btn" id="foldBtn">How to fold</button>
   <button type="button" class="btn primary" id="exportBtn">Export PDF</button>
 </header>
@@ -308,21 +336,6 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
         <input type="range" id="in-pages" min="8" max="128" step="4" data-k="bookletPages">
         <p class="hint">The inside of the front and back cover stays blank, so the cover sheet can go on card.</p>
       </div>
-      <div class="group">
-        <h3><label for="in-margin">Printer margin</label></h3>
-        <div class="unit"><input type="number" id="in-margin" min="0" max="25" step="0.5" inputmode="decimal" data-k="marginMm"><span>mm</span></div>
-        <p class="hint">10 mm is the margin of the printer I use. Set it to what your printer model needs: every page gets a white frame of this width.</p>
-      </div>
-      <div class="group">
-        <h3>Printer calibration</h3>
-        <p class="hint">Some printers shrink every page a little, so the folds miss the gaps between pages. Print the test sheet at actual size, measure lines A and B, and enter the lengths.</p>
-        <button type="button" class="btn small" id="calTest">Download test sheet</button>
-        <div class="grid2 cal-grid">
-          <label class="cal" for="in-calA"><span id="calALabel">Line A</span><span class="unit"><input type="number" id="in-calA" min="1" step="0.5" inputmode="decimal"><span>mm</span></span></label>
-          <label class="cal" for="in-calB"><span id="calBLabel">Line B</span><span class="unit"><input type="number" id="in-calB" min="1" step="0.5" inputmode="decimal"><span>mm</span></span></label>
-        </div>
-        <div class="row cal-status"><p class="hint" id="calStatus"></p><button type="button" class="btn small" id="calReset" hidden>Reset</button></div>
-      </div>
       <div class="group" data-show="format=booklet">
         <h3>Page numbers</h3>
         <div class="seg" data-k="pageNumbers" id="seg-pagenum">
@@ -356,7 +369,11 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
       </div>
       <hr>
       <div class="group">
-        <h3>Print</h3>
+        <h3>Printing</h3>
+        <label class="label" for="in-margin">White frame</label>
+        <div class="row"><div class="unit"><input type="number" id="in-margin" min="0" max="25" step="0.5" inputmode="decimal" data-k="marginMm"><span>mm</span></div><span class="hint">on every page, all four sides</span></div>
+        <div class="row between" id="frameWarn" hidden><p class="hint warn" id="frameWarnText"></p><button type="button" class="btn small" id="frameFix"></button></div>
+        <div class="row between"><p class="hint" id="printerStatus"></p><button type="button" class="btn small" id="printerBtn">Set up</button></div>
         <label class="check"><input type="checkbox" id="in-guides" data-k="guides"> Print fold and cut guides</label>
       </div>
     </section>
@@ -561,13 +578,15 @@ const POSTER = -1;                   // page id of the secret poster on the back
 const newPage = () => ({ layout: 'single', fit: 'auto',
   slots: [{ photo: null, caption: '', captionOn: false }, { photo: null, caption: '', captionOn: false }] });
 
+// ids that stay unique across visits, so zines and photos in the library never collide
+const newId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 // month and year for the date corner, e.g. 11.2026
 const monthYear = (d = new Date()) => `${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 function defaultState() {
   return {
-    v: 3, format: 'fold', paper: 'A4', bookletPages: 16, marginMm: 10, guides: true, pageNumbers: 'none',
-    // measured printer scale per paper size, along the paper's long and short side (1 = prints true to size)
-    calib: { A4: { long: 1, short: 1 }, A3: { long: 1, short: 1 } },
+    v: 3, id: newId('z'), created: Date.now(), format: 'fold', paper: 'A4', bookletPages: 16, marginMm: 10, guides: true, pageNumbers: 'none',
+    // printer setup per paper size: the eight test sheet readings, or null (see "printer setup")
+    printer: { A4: null, A3: null },
     poster: { on: false, photo: null },
     titleFont: 'inter', smallFont: 'inter', captionFont: 'inter',
     cover: {
@@ -599,8 +618,17 @@ function merge(def, src) {
 function cleanPage(p) {
   const q = merge(newPage(), p);
   q.slots = [0, 1].map(i => merge({ photo: null, caption: '', captionOn: false }, (p && p.slots && p.slots[i]) || {}));
-  q.slots.forEach(s => { s.photo = null; if (p && p.captionOn) s.captionOn = true; });   // photos are not kept; old page-wide captions carry over
+  q.slots.forEach((s, i) => { const src = p && p.slots && p.slots[i]; s.photo = src && typeof src.photo === 'string' ? src.photo : null; });
+  if (p && p.captionOn) q.slots.forEach(s => { s.captionOn = true; });   // old page-wide captions carry over
   return q;
+}
+// a saved zine (from this browser's settings or the library) made safe to use; photo ids are checked once photos load
+function hydrate(s) {
+  const st = merge(defaultState(), s);
+  st.pages = (Array.isArray(s.pages) ? s.pages : []).map(cleanPage);
+  st.back.page = cleanPage(s.back && s.back.page);
+  st.poster.photo = s.poster && typeof s.poster.photo === 'string' ? s.poster.photo : null;
+  return st;
 }
 function load() {
   try {
@@ -608,26 +636,25 @@ function load() {
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || s.v !== 3) return null;
-    const st = merge(defaultState(), s);
-    st.pages = (Array.isArray(s.pages) ? s.pages : []).map(cleanPage);
-    st.back.page = cleanPage(s.back && s.back.page);
-    st.poster.photo = null;
-    return st;
+    return hydrate(s);
   } catch (e) { return null; }
 }
+// Every change is kept twice: at once in the browser's settings (the zine open now), and a moment later in the
+// library, with its photos (see "library")
 let saveTimer = 0;
-function save() {
+function saveLocal() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
   }, 400);
 }
+function save() { saveLocal(); markDirty(); }
 
-let state = load() || defaultState();
-const photos = new Map();   // id -> { id, name, url, w, h, thumb, trayUrl }
+const stored = load();
+let state = stored || defaultState();
+const photos = new Map();   // id -> { id, name, url, w, h, thumb, trayUrl, bytes }
 let selected = 1;
 let tab = 'zine';
-let photoSeq = 0;
 
 const count = () => state.format === 'booklet' ? state.bookletPages : 8;
 const isBooklet = () => state.format === 'booklet';
@@ -664,7 +691,7 @@ function geom() {
   if (state.format === 'quarter') return { sw: a, sh: b, cols: 2, rows: 2, pw: a / 2, ph: b / 2, duplex: 'long' };
   return { sw: b, sh: a, cols: 2, rows: 1, pw: b / 2, ph: a, duplex: 'short' };
 }
-// the white frame on every page equals the printer margin set in the Layout tab (capped so photos keep some room)
+// the white frame on every page, set under Printing in the Layout tab (capped so photos keep some room)
 const frameMm = g => Math.min(Math.max(0, Number(state.marginMm) || 0), g.pw * 0.3);
 function pageSizeName() {
   const map = { fold: { A4: 'A7', A3: 'A6' }, quarter: { A4: 'A6', A3: 'A5' }, booklet: { A4: 'A5', A3: 'A4' } };
@@ -1313,9 +1340,10 @@ async function addFiles(fileList, n, slot) {
       small.width = Math.max(1, Math.round(w * k2)); small.height = Math.max(1, Math.round(h * k2));
       small.getContext('2d').drawImage(thumb, 0, 0, small.width, small.height);
       const trayUrl = small.toDataURL('image/jpeg', 0.8);
-      const id = 'p' + (++photoSeq);
-      photos.set(id, { id, name: f.name, url, w, h, thumb, trayUrl });
+      const id = newId('p'), ph = { id, name: f.name, url, w, h, thumb, trayUrl, bytes: 0 };
+      photos.set(id, ph);
       ids.push(id);
+      await keepPhoto(ph, f, img);
       if (files.length > 1) renderTray();
     } catch (e) { toast(`Could not read ${f.name}.`); }
   }
@@ -1367,7 +1395,7 @@ function removePhoto(id) {
   state.pages.forEach((p, i) => p.slots.forEach(s => { if (s.photo === id) { s.photo = null; touched.push(pageNo(i)); } }));
   state.back.page.slots.forEach(s => { if (s.photo === id) { s.photo = null; touched.push(N); } });
   if (state.poster.photo === id) { state.poster.photo = null; touched.push(POSTER); }
-  URL.revokeObjectURL(ph.url); photos.delete(id);
+  URL.revokeObjectURL(ph.url); photos.delete(id); dropPhoto(id);
   invalidate(touched); renderTray(); renderEditors(); save();
 }
 function renderTray() {
@@ -1492,7 +1520,7 @@ function bindControls() {
 }
 const fmtMm = v => (Math.round(v * 10) / 10).toString();
 function syncControls() {
-  if ($('#calStatus')) syncCalib();
+  if ($('#printerStatus')) syncPrinting();
   $$('[data-k]').forEach(c => {
     const v = getPath(c.dataset.k);
     if (c.classList.contains('seg')) c.querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(String(v) === b.dataset.v)));
@@ -1552,6 +1580,22 @@ function drawSheet(canvas, side, si, s, o) {
     }
     ctx.setLineDash([]);
   }
+  drawPrinterEdge(ctx, g, s);
+}
+// what the printer leaves out along each edge: hatched, or red where it would cut into the pages
+function drawPrinterEdge(ctx, g, s) {
+  const T = sheetMap(g); if (!T.set) return;
+  const W = g.sw * s, H = g.sh * s, m = frameMm(g), e = T.edge;
+  const tile = document.createElement('canvas'); tile.width = tile.height = Math.max(6, Math.round(1.6 * s));
+  const tc = tile.getContext('2d'); tc.strokeStyle = 'rgba(43,43,41,.28)'; tc.lineWidth = Math.max(1, 0.12 * s);
+  tc.beginPath(); tc.moveTo(0, tile.height); tc.lineTo(tile.width, 0); tc.stroke();
+  const hatch = ctx.createPattern(tile, 'repeat');
+  const bands = [['l', 0, 0, e.l * s, H], ['r', W - e.r * s, 0, e.r * s, H], ['t', e.l * s, 0, W - (e.l + e.r) * s, e.t * s], ['b', e.l * s, H - e.b * s, W - (e.l + e.r) * s, e.b * s]];
+  for (const [k, x, y, w, h] of bands) {
+    if (w <= 0 || h <= 0) continue;
+    ctx.fillStyle = m < e[k] - 1e-9 ? 'rgba(214,48,49,.38)' : hatch;
+    ctx.fillRect(x, y, w, h);
+  }
 }
 let previewRun = 0;
 async function renderSheetsInto(host) {
@@ -1572,92 +1616,169 @@ async function renderSheetsInto(host) {
 }
 
 /* ---------- PDF ---------- */
-/* ---------- printer calibration ----------
-   Some printers (e.g. managed office printers) fit every page to their printable area, so the whole sheet
-   prints about 3% small and the folds miss the gaps between pages. The test sheet has two lines of known
-   length; from what the user measures we know the printer's scale and enlarge every export by the inverse,
-   around the sheet centre, so the printer's shrink brings it back to true size. */
-const CAL_LINES = { A4: { long: 250, short: 150 }, A3: { long: 350, short: 200 } };
-const calOf = () => state.calib[state.paper];
-const calibrated = () => calOf().long !== 1 || calOf().short !== 1;
-function printerScale(g) {
-  const c = calOf();
-  return g.sw >= g.sh ? { kx: c.long, ky: c.short } : { kx: c.short, ky: c.long };
+/* ---------- printer setup ----------
+   Some print paths (managed office printers especially) leave out a band along the edge of the PDF page and
+   shrink the rest to fit the paper, so folds miss the gaps between pages and photos on the outer edges get cut.
+   The test sheet has a grey bar at the middle of each edge, running in from the page edge and ending in a black
+   line 20 mm in. Measured from the paper edge, where the grey starts is the band the printer can't print, and
+   where the line sits tells us how the printer scales and shifts the page. Readings are paper mm on the
+   landscape test sheet: x along the long side, y along the short side, y from the top. */
+const SETUP_LINE = 20;
+const EDGES = [['t', 'Top'], ['r', 'Right'], ['b', 'Bottom'], ['l', 'Left']];
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN; };
+// the printer model for one paper size, or null when the readings are missing or implausible
+function printerModel(m, paper = state.paper) {
+  if (!m || !EDGES.every(([e]) => Array.isArray(m[e]) && m[e].length === 2 && m[e].every(v => isFinite(v)))) return null;
+  const [H, W] = PAPER[paper], d = SETUP_LINE;
+  const kx = (W - m.l[1] - m.r[1]) / (W - 2 * d), ky = (H - m.t[1] - m.b[1]) / (H - 2 * d);
+  const ox = m.l[1] - d * kx, oy = m.t[1] - d * ky;
+  const edge = { l: m.l[0], r: m.r[0], t: m.t[0], b: m.b[0] };
+  const ok = [kx, ky].every(k => k > 0.85 && k < 1.05) && Object.values(edge).every(v => v >= 0 && v < 30)
+    && EDGES.every(([e]) => m[e][0] < m[e][1]);
+  return ok ? { kx, ky, ox, oy, edge } : null;
 }
-// smallest printer margin that keeps every photo on the page once the export is enlarged
-function calMinMargin(g) {
-  const { kx, ky } = printerScale(g);
-  return Math.max(0, (g.sw / 2) * (1 - kx), (g.sh / 2) * (1 - ky));
+const printerSet = () => !!printerModel(state.printer[state.paper]);
+// smallest white frame that prints evenly: the widest band the printer leaves out, plus 0.5 mm, in 0.5 mm steps
+const minFrameOf = M => Math.ceil((Math.max(...Object.values(M.edge)) + 0.5) * 2 - 1e-6) / 2;
+// The printer model in the orientation of the current sheet. Landscape sheets (fold zine, booklet) use it as
+// measured. The quarter-fold sheet is portrait: its shrink and widest band carry over, but which way the printer
+// turns it isn't known, so it is assumed to be centred.
+function sheetMap(g) {
+  const M = printerModel(state.printer[state.paper]);
+  if (!M) return { set: false, kx: 1, ky: 1, ox: 0, oy: 0, edge: { l: 0, r: 0, t: 0, b: 0 } };
+  if (g.sw >= g.sh) return { set: true, ...M };
+  const w = Math.max(...Object.values(M.edge)), kx = M.ky, ky = M.kx;
+  return { set: true, kx, ky, ox: g.sw * (1 - kx) / 2, oy: g.sh * (1 - ky) / 2, edge: { l: w, r: w, t: w, b: w } };
 }
-function syncCalib() {
-  const L = CAL_LINES[state.paper], c = calOf(), g = geom();
-  $('#calALabel').textContent = `Line A, should be ${L.long} mm`;
-  $('#calBLabel').textContent = `Line B, should be ${L.short} mm`;
-  const a = $('#in-calA'), b = $('#in-calB');
-  a.placeholder = String(L.long); b.placeholder = String(L.short);
-  if (document.activeElement !== a) a.value = c.long === 1 ? '' : fmtMm(L.long * c.long);
-  if (document.activeElement !== b) b.value = c.short === 1 ? '' : fmtMm(L.short * c.short);
-  let msg = `Not calibrated: ${state.paper} exports print as they are.`;
-  if (calibrated()) {
-    const pct = v => `${(Math.round(v * 1000) / 10).toFixed(1)}%`;
-    msg = `This printer prints ${state.paper} at ${pct(c.long)} along the long side and ${pct(c.short)} along the short side. Exports are enlarged to match.`;
-    const need = calMinMargin(g);
-    if (state.marginMm < need) msg += ` Raise the printer margin to at least ${Math.ceil(need)} mm, or photos near the edge get cut.`;
+function syncPrinting() {
+  const g = geom(), T = sheetMap(g), M = printerModel(state.printer[state.paper]);
+  $('#printerStatus').textContent = M ? `Printer set up for ${state.paper}, frames from ${fmtMm(minFrameOf(M))} mm` : `Printer not set up for ${state.paper}`;
+  $('#printerBtn').textContent = M ? 'Change' : 'Set up';
+  const need = M ? minFrameOf(M) : 0, low = !!M && frameMm(g) < need - 1e-9;
+  $('#frameWarn').hidden = !low;
+  if (low) {
+    $('#frameWarnText').textContent = `Edges get cut below ${fmtMm(need)} mm.`;
+    $('#frameFix').textContent = `Use ${fmtMm(need)} mm`;
   }
-  $('#calStatus').textContent = msg;
-  $('#calReset').hidden = !calibrated();
+  return T;
 }
-function bindCalib() {
-  const set = (key, input) => input.addEventListener('input', () => {
-    const v = parseFloat(String(input.value).replace(',', '.')), L = CAL_LINES[state.paper][key];
-    if (input.value === '') calOf()[key] = 1;
-    else if (isFinite(v) && v > L * 0.8 && v < L * 1.1) calOf()[key] = v / L;
-    else return;                                   // ignore half-typed or implausible values
-    save(); syncCalib();
+function useMinFrame() {
+  const M = printerModel(state.printer[state.paper]); if (!M) return;
+  state.marginMm = Math.max(minFrameOf(M), Number(state.marginMm) || 0); onChange('marginMm');
+}
+function bindPrinting() {
+  $('#printerBtn').addEventListener('click', printerSetup);
+  $('#frameFix').addEventListener('click', () => { useMinFrame(); if (!$('#overlay').hidden) openExport(); });
+}
+
+// a few words on what the readings say about the printer
+function describePrinter(M, paper) {
+  const [H, W] = PAPER[paper], pct = k => `${(Math.round(k * 1000) / 10).toFixed(1)}%`, parts = [];
+  if (Math.abs(M.kx - 1) > 0.002 || Math.abs(M.ky - 1) > 0.002) parts.push(`shrinks pages to ${pct(M.kx)} across and ${pct(M.ky)} down`);
+  const dx = M.ox + M.kx * W / 2 - W / 2, dy = M.oy + M.ky * H / 2 - H / 2, shift = [];
+  if (Math.abs(dx) >= 0.3) shift.push(`${fmtMm(Math.abs(dx))} mm to the ${dx > 0 ? 'right' : 'left'}`);
+  if (Math.abs(dy) >= 0.3) shift.push(`${fmtMm(Math.abs(dy))} mm ${dy > 0 ? 'low' : 'high'}`);
+  if (shift.length) parts.push(`places them ${shift.join(' and ')}`);
+  const e = Object.values(M.edge), lo = Math.min(...e), hi = Math.max(...e);
+  parts.push(hi < 0.3 ? 'prints right to the edge' : `can't print the outer ${hi - lo >= 0.5 ? `${fmtMm(lo)} to ${fmtMm(hi)}` : fmtMm(hi)} mm`);
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')}${parts.length > 2 ? ',' : ''} and ${parts[parts.length - 1]}` : parts[0];
+  return `Your printer ${list}. Exports will print at true size, with a white frame of at least ${fmtMm(minFrameOf(M))} mm.`;
+}
+function printerSetup() {
+  const paper = state.paper, saved = state.printer[paper], inputs = {};
+  const field = (e, i, ph) => {
+    const inp = el('input', { type: 'number', min: '0', max: '60', step: '0.5', inputmode: 'decimal', placeholder: ph,
+      'aria-label': `${EDGES.find(x => x[0] === e)[1]}: ${i ? 'black line' : 'grey starts'}, mm` });
+    if (saved && saved[e] && isFinite(saved[e][i])) inp.value = String(saved[e][i]);
+    inp.addEventListener('input', update);
+    (inputs[e] = inputs[e] || [])[i] = inp;
+    return el('span', { class: 'unit' }, inp, el('span', { text: 'mm' }));
+  };
+  const grid = el('div', { class: 'mgrid' }, el('span'), el('span', { class: 'hd', text: 'Grey starts' }), el('span', { class: 'hd', text: 'Black line' }),
+    EDGES.flatMap(([e, name]) => [el('span', { text: name }), field(e, 0, '0'), field(e, 1, String(SETUP_LINE))]));
+  const sketch = el('div');
+  sketch.innerHTML = `<svg viewBox="0 0 112 80" aria-hidden="true"><rect class="sheet" x="0.5" y="0.5" width="111" height="79" rx="1"/>
+    <rect class="gbar" x="1" y="37" width="12" height="6"/><line class="ln" x1="13" y1="35" x2="13" y2="45"/>
+    <rect class="gbar" x="99" y="37" width="12" height="6"/><line class="ln" x1="99" y1="35" x2="99" y2="45"/>
+    <rect class="gbar" x="53" y="1" width="6" height="12"/><line class="ln" x1="51" y1="13" x2="61" y2="13"/>
+    <rect class="gbar" x="53" y="67" width="6" height="12"/><line class="ln" x1="51" y1="67" x2="61" y2="67"/>
+    <text x="66" y="11">Top</text><text x="66" y="75">Bottom</text><text x="16" y="31">Left</text><text x="96" y="31" text-anchor="end">Right</text></svg>`;
+  const result = el('p', { class: 'note' });
+  const useBtn = el('button', { type: 'button', class: 'btn primary', text: 'Use these settings' });
+  const dl = el('button', { type: 'button', class: 'btn small', text: `Download the ${paper} test sheet`, onclick: () => testSheet(paper) });
+  let readings = null;
+  function update() {
+    const m = {}; let filled = 0;
+    EDGES.forEach(([e]) => { m[e] = inputs[e].map(x => { const v = num(x.value); if (isFinite(v)) filled++; return v; }); });
+    const M = filled === 8 ? printerModel(m, paper) : null;
+    readings = M ? m : null;
+    useBtn.disabled = !M;
+    result.textContent = filled < 8 ? 'Enter all eight readings to see what your printer does.'
+      : M ? describePrinter(M, paper)
+      : `These readings don't add up. Check that you measured from the edge of the paper: the black lines should be about ${SETUP_LINE} mm in, and the grey should start before the line.`;
+  }
+  useBtn.addEventListener('click', () => {
+    if (!readings) return;
+    state.printer[paper] = readings;
+    const M = printerModel(readings, paper), need = minFrameOf(M), raised = (Number(state.marginMm) || 0) < need;
+    if (raised) state.marginMm = need;
+    onChange('marginMm'); closeOverlay();
+    toast(`Printer set up for ${paper}.${raised ? ` White frame set to ${fmtMm(need)} mm.` : ''}`);
   });
-  set('long', $('#in-calA')); set('short', $('#in-calB'));
-  $('#calReset').addEventListener('click', () => { state.calib[state.paper] = { long: 1, short: 1 }; save(); syncCalib(); });
-  $('#calTest').addEventListener('click', testSheet);
+  const actions = [];
+  if (saved) actions.push(el('button', { type: 'button', class: 'btn', text: 'Remove setup', onclick: () => {
+    state.printer[paper] = null; onChange('marginMm'); closeOverlay(); toast(`Printer setup removed for ${paper}.`); } }));
+  actions.push(el('button', { type: 'button', class: 'btn', text: 'Cancel', onclick: closeOverlay }), useBtn);
+  overlay('Printer setup', el('div', { class: 'setup', style: 'display:grid;gap:14px' },
+    el('p', { class: 'hint', text: `Some printers leave out the edge of the page or shrink it, so folds miss the gaps and outer photos get cut. Measure yours once and every ${paper} export is corrected. The setup is saved in this browser.` }),
+    el('ol', {},
+      el('li', {}, el('div', { class: 'step' }, el('span', { text: 'Print the test sheet with the printer and settings you will use for your zine.' }), dl)),
+      el('li', {}, el('div', { class: 'step' }, el('span', { text: "At each edge, hold a ruler's 0 exactly on the edge of the paper. Read where the grey bar starts and where the black line is." }),
+        el('div', { class: 'measure' }, sketch.firstChild, grid)))),
+    result), actions);
+  update();
 }
-// One sheet in landscape: line A along the long side, line B along the short side, a cross at the centre.
-// It is never corrected, so it always shows what the printer does on its own.
-async function testSheet() {
+
+// One landscape sheet with a grey bar at the middle of each edge. It is never corrected, so it always shows
+// what the printer does on its own.
+async function testSheet(paper = state.paper) {
   await fontsReady;
-  const [shortSide, longSide] = PAPER[state.paper], L = CAL_LINES[state.paper];
-  const mmPt = 72 / 25.4, pxMm = 200 / 25.4;
+  const [H, W] = PAPER[paper], d = SETUP_LINE;
+  const mmPt = 72 / 25.4, s = 200 / 25.4;
   const cv = document.createElement('canvas');
-  cv.width = Math.round(longSide * pxMm); cv.height = Math.round(shortSide * pxMm);
+  cv.width = Math.round(W * s); cv.height = Math.round(H * s);
   const ctx = cv.getContext('2d');
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-  const s = pxMm, cx = longSide / 2, cy = shortSide / 2;
-  ctx.fillStyle = DARK_INK; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = DARK_INK; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
+  const cx = W / 2, cy = H / 2;
   ctx.font = `600 ${4.2 * s}px ${FONT_CSS.inter}`;
-  ctx.fillText(`zine maker printer test sheet, ${state.paper}`, 22 * s, 24 * s);
-  ctx.font = `400 ${3.4 * s}px ${FONT_CSS.inter}`;
-  [`1. Print this page at actual size (100%), with the printer and settings you use for your zines.`,
-   `2. Measure line A and line B from end mark to end mark.`,
-   `3. Enter both lengths under Printer calibration in the zine maker's Layout tab.`,
-   `4. Fold the sheet in half both ways. If the creases cross at the centre mark, your printer centres the page.`]
-    .forEach((l, i) => ctx.fillText(l, 22 * s, (31 + i * 5.5) * s));
-  ctx.textAlign = 'center';
-  ctx.fillText(`A  ·  ${L.long} mm`, cx * s, (cy + 22) * s);
-  ctx.save(); ctx.translate((cx + L.long / 2 - 40) * s, cy * s); ctx.rotate(-Math.PI / 2);
-  ctx.fillText(`B  ·  ${L.short} mm`, 0, 0); ctx.restore();
+  ctx.fillText(`zine maker printer test sheet, ${paper}`, cx * s, (cy - 16) * s);
+  ctx.font = `400 ${3.2 * s}px ${FONT_CSS.inter}`; ctx.textAlign = 'left';
+  const steps = ['1. Print this page with the printer and settings you will use for your zine.',
+    "2. At each edge, hold a ruler's 0 exactly on the edge of the paper.",
+    '3. Read where the grey bar starts and where the black line is, in mm.',
+    '4. Enter the eight readings under Printing, Printer setup, in the zine maker.'];
+  const x0 = cx * s - Math.max(...steps.map(l => ctx.measureText(l).width)) / 2;
+  steps.forEach((l, i) => ctx.fillText(l, x0, (cy - 6 + i * 5.4) * s));
+  ctx.font = `600 ${3.2 * s}px ${FONT_CSS.inter}`;
+  ctx.textAlign = 'left'; ctx.fillText('Left', (d + 4) * s, (cy + 1.1) * s);
+  ctx.textAlign = 'right'; ctx.fillText('Right', (W - d - 4) * s, (cy + 1.1) * s);
+  ctx.textAlign = 'left'; ctx.fillText('Top', (cx + 10) * s, (d - 2) * s); ctx.fillText('Bottom', (cx + 10) * s, (H - d + 4.4) * s);
   const jpeg = await toJpeg(cv);
-  // the lines are drawn as vectors so they print sharp and exact
-  const P = v => (v * mmPt).toFixed(3), Y = v => ((shortSide - v) * mmPt).toFixed(3);
+  // bars and lines are vectors, so they print sharp and exactly where they belong
+  const P = v => (v * mmPt).toFixed(3), Y = v => ((H - v) * mmPt).toFixed(3);
+  const rect = (x1, y1, x2, y2) => `${P(x1)} ${Y(y2)} ${P(x2 - x1)} ${P(y2 - y1)} re f\n`;
   const line = (x1, y1, x2, y2) => `${P(x1)} ${Y(y1)} m ${P(x2)} ${Y(y2)} l S\n`;
-  let ops = 'q 0 G 0.6 w\n';
-  ops += line(cx - L.long / 2, cy + 14, cx + L.long / 2, cy + 14);
-  ops += line(cx - L.long / 2, cy + 9, cx - L.long / 2, cy + 19) + line(cx + L.long / 2, cy + 9, cx + L.long / 2, cy + 19);
-  const bx = cx + L.long / 2 - 30;          // line B sits on the right, clear of the instructions
-  ops += line(bx, cy - L.short / 2, bx, cy + L.short / 2);
-  ops += line(bx - 5, cy - L.short / 2, bx + 5, cy - L.short / 2) + line(bx - 5, cy + L.short / 2, bx + 5, cy + L.short / 2);
-  ops += line(cx - 8, cy, cx + 8, cy) + line(cx, cy - 8, cx, cy + 8);
-  ops += 'Q\n';
-  const blob = buildPdf([{ w: longSide * mmPt, h: shortSide * mmPt, ops,
-    images: [{ jpeg, pxW: cv.width, pxH: cv.height, rot: false, x: 0, y: 0, w: longSide * mmPt, h: shortSide * mmPt }] }]);
-  await offerDownload(`printer-test-sheet-${state.paper}.pdf`, blob);
+  let ops = 'q 0.72 g\n' + rect(0, cy - 4, d, cy + 4) + rect(W - d, cy - 4, W, cy + 4) + rect(cx - 4, 0, cx + 4, d) + rect(cx - 4, H - d, cx + 4, H) + 'Q\n';
+  ops += 'q 0 G 0.7 w\n' + line(d, cy - 7, d, cy + 7) + line(W - d, cy - 7, W - d, cy + 7) + line(cx - 7, d, cx + 7, d) + line(cx - 7, H - d, cx + 7, H - d) + 'Q\n';
+  const blob = buildPdf([{ w: W * mmPt, h: H * mmPt, ops,
+    images: [{ jpeg, pxW: cv.width, pxH: cv.height, rot: false, x: 0, y: 0, w: W * mmPt, h: H * mmPt }] }]);
+  downloadBlob(`printer-test-sheet-${paper}.pdf`, blob);
+}
+function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob), a = el('a', { href: url, download: filename });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 function buildPdf(pages) {
@@ -1714,10 +1835,15 @@ function openExport() {
     : posterOn() ? 'Print on both sides; either flip setting works.' : 'Print on one side.';
   const empty = state.pages.filter(p => !hasPhoto(p)).length;
   const host = el('div', { class: 'sheets' });
+  const T = sheetMap(g), M = printerModel(state.printer[state.paper]), need = M ? minFrameOf(M) : 0;
+  const cut = !!M && frameMm(g) < need - 1e-9;
+  const how = T.set ? 'Use the same printer and settings as for your test sheet.' : 'Print at actual size (100%).';
   const body = el('div', { style: 'display:grid;gap:14px' },
-    el('p', { class: 'note', text: `${state.paper} ${g.sw > g.sh ? 'landscape' : 'portrait'}, ${impose().length} sheet side${impose().length > 1 ? 's' : ''}. ${dup} Print at actual size (100%), never "fit to page". The grey page numbers are only in this preview.` }),
-    calibrated() ? el('p', { class: 'hint', text: `Printer calibration is on for ${state.paper}: the PDF is enlarged slightly so your printer's shrink brings it back to true size. Use the same printer and settings as for the test sheet.` }) : null,
-    empty ? el('p', { class: 'hint', text: `${empty} of ${photoPageCount()} photo pages ${empty > 1 ? 'are' : 'is'} still empty and will print blank.` }) : null,
+    el('p', { class: 'note', text: `${state.paper} ${g.sw > g.sh ? 'landscape' : 'portrait'}, ${impose().length} sheet side${impose().length > 1 ? 's' : ''}. ${dup} ${how}` +
+      (T.set ? ' The hatched edge is what your printer leaves out.' : '') + ' The grey page numbers are only in this preview.' +
+      (empty ? ` ${empty} of ${photoPageCount()} photo pages ${empty > 1 ? 'are' : 'is'} still empty.` : '') }),
+    cut ? el('div', { class: 'row between' }, el('p', { class: 'hint warn', text: `Your printer cuts what is in red. A white frame of ${fmtMm(need)} mm keeps everything on the page.` }),
+      el('button', { type: 'button', class: 'btn small', text: `Use ${fmtMm(need)} mm`, onclick: () => { useMinFrame(); openExport(); } })) : null,
     host);
   overlay('Print preview', body, [
     el('button', { type: 'button', class: 'btn', text: 'Back to editing', onclick: closeOverlay }),
@@ -1768,12 +1894,14 @@ async function exportPdf() {
         done++; bar.style.width = `${Math.round(done / total * 100)}%`;
         await nextFrame();
       }
-      // printer calibration: enlarge everything around the sheet centre by the inverse of the printer's shrink
-      const { kx, ky } = printerScale(g), ccx = g.sw * mmPt / 2, ccy = g.sh * mmPt / 2;
-      const fx = v => ccx + (v - ccx) / kx, fy = v => ccy + (v - ccy) / ky;
+      // printer setup: place everything where the printer's shrink and shift will bring it back to true size
+      // (x in pt from the left, y in pt from the bottom; the readings are in mm from the top)
+      const T = sheetMap(g);
+      const fx = v => ((v / mmPt - T.ox) / T.kx) * mmPt;
+      const fy = v => (g.sh - (g.sh - v / mmPt - T.oy) / T.ky) * mmPt;
       for (const im of images) {
-        const x2 = fx(im.x + im.w), y2 = fy(im.y + im.h);
-        im.x = fx(im.x); im.y = fy(im.y); im.w = x2 - im.x; im.h = y2 - im.y;
+        const x1 = fx(im.x), x2 = fx(im.x + im.w), y1 = fy(im.y), y2 = fy(im.y + im.h);
+        im.x = x1; im.y = y1; im.w = x2 - x1; im.h = y2 - y1;
       }
       let ops = '';
       if (state.guides && !side.poster) {
@@ -1836,7 +1964,229 @@ function foldHelp() {
   }[state.format].filter(Boolean);
   overlay('How to fold', el('div', { style: 'display:grid;gap:12px' },
     el('ol', {}, steps.map(t => el('li', { text: t }))),
-    el('p', { class: 'note', text: `Pages are ${pageSizeName()} (${fmtMm(g.pw)} × ${fmtMm(g.ph)} mm). If your printer dialog offers "fit to page" or "shrink", turn it off. If the folds still miss the gaps between pages, your printer shrinks the page: calibrate it in the Layout tab.` })));
+    el('p', { class: 'note', text: `Pages are ${pageSizeName()} (${fmtMm(g.pw)} × ${fmtMm(g.ph)} mm). If your printer dialog offers "fit to page" or "shrink", turn it off. If the folds still miss the gaps or the outer edges get cut, set up your printer under Printing in the Layout tab.` })));
+}
+
+/* ---------- library ----------
+   Every zine is kept in this browser's database (IndexedDB) as you work: its settings and texts, a small cover
+   picture for Your zines, and a print copy of each photo (at most 3,508 px on the long edge, enough for any
+   format at 300 dpi). Nothing leaves the device. The zine open now is also kept in the settings store, so it
+   opens straight away; its photos follow from the database. The printer setup belongs to the browser, not to
+   a zine, so it stays when another zine is opened. */
+const PRINT_PX = 3508;
+const LIB = { db: null, ok: false, dirty: false, timer: 0, persisted: false };
+function idbOpen() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) { rej(new Error('no database')); return; }
+    const r = indexedDB.open('zine-maker', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('zines', { keyPath: 'id' });
+      d.createObjectStore('photos', { keyPath: 'id' }).createIndex('zine', 'zine');
+    };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error('blocked'));
+  });
+}
+function idb(store, mode, fn) {
+  return new Promise((res, rej) => {
+    const t = LIB.db.transaction(store, mode), req = fn(t.objectStore(store));
+    t.oncomplete = () => res(req ? req.result : undefined);
+    t.onerror = t.onabort = () => rej(t.error);
+  });
+}
+const idbGet = (st, k) => idb(st, 'readonly', o => o.get(k));
+const idbPut = (st, v) => idb(st, 'readwrite', o => o.put(v));
+const idbAll = st => idb(st, 'readonly', o => o.getAll());
+
+// a print copy of a new photo, kept with the zine open now
+async function keepPhoto(ph, file, img) {
+  if (!LIB.ok) return;
+  try {
+    const big = Math.max(ph.w, ph.h);
+    let blob = file;
+    if (big > PRINT_PX || !/jpe?g/i.test(file.type)) {
+      const k = Math.min(1, PRINT_PX / big), c = document.createElement('canvas');
+      c.width = Math.round(ph.w * k); c.height = Math.round(ph.h * k);
+      const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+      cx.imageSmoothingQuality = 'high'; cx.drawImage(img, 0, 0, c.width, c.height);
+      blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+      c.width = c.height = 1;
+    }
+    if (!blob) return;
+    ph.bytes = blob.size;
+    await idbPut('photos', { id: ph.id, zine: state.id, name: ph.name, w: ph.w, h: ph.h, tray: ph.trayUrl, blob });
+    if (!LIB.persisted && navigator.storage && navigator.storage.persist) { LIB.persisted = true; navigator.storage.persist().catch(() => {}); }
+  } catch (e) { /* storage full or not allowed: the photo still works for this visit */ }
+}
+function dropPhoto(id) { if (LIB.ok) idb('photos', 'readwrite', o => o.delete(id)).catch(() => {}); }
+
+function markDirty() { LIB.dirty = true; clearTimeout(LIB.timer); LIB.timer = setTimeout(flushZine, 1200); }
+async function flushZine() {
+  clearTimeout(LIB.timer);
+  if (!LIB.ok || !LIB.dirty) return;
+  LIB.dirty = false;
+  try { await idbPut('zines', zineRecord()); } catch (e) { LIB.dirty = true; }
+}
+function zineRecord() {
+  const { printer, ...rest } = state;
+  return {
+    id: state.id, created: state.created, updated: Date.now(), title: (state.cover.title || '').trim(),
+    format: state.format, paper: state.paper, pages: count(), photoIds: [...photos.keys()], placed: usedIds().size,
+    bytes: [...photos.values()].reduce((t, p) => t + (p.bytes || 0), 0), cover: coverThumb(),
+    state: JSON.parse(JSON.stringify(rest)),
+  };
+}
+function coverThumb() {
+  try {
+    const g = geom(), c = document.createElement('canvas');
+    c.width = 240; c.height = Math.round(240 * g.ph / g.pw);
+    renderPage(c.getContext('2d'), 1, c.width, c.height, { g, preview: true, img: ph => ph.thumb });
+    return c.toDataURL('image/jpeg', 0.82);
+  } catch (e) { return ''; }
+}
+
+// put a zine's kept photos back into the tray, in their order
+async function restorePhotos(zineId, order) {
+  if (!LIB.ok) return;
+  let recs = [];
+  try { recs = await idb('photos', 'readonly', o => o.index('zine').getAll(zineId)); } catch (e) { return; }
+  const byId = new Map(recs.map(r => [r.id, r])), first = (order || []).filter(id => byId.has(id));
+  const ids = [...first, ...recs.map(r => r.id).filter(id => !first.includes(id))];
+  if (ids.length > 3) progress(`Opening ${ids.length} photos…`);
+  for (const id of ids) {
+    if (state.id !== zineId) return;                        // another zine was opened meanwhile
+    const r = byId.get(id);
+    try {
+      const url = URL.createObjectURL(r.blob), img = await loadImage(url);
+      const w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, 1100 / Math.max(w, h));
+      const thumb = document.createElement('canvas');
+      thumb.width = Math.max(1, Math.round(w * k)); thumb.height = Math.max(1, Math.round(h * k));
+      const tctx = thumb.getContext('2d'); tctx.imageSmoothingQuality = 'high'; tctx.drawImage(img, 0, 0, thumb.width, thumb.height);
+      photos.set(id, { id, name: r.name, url, w, h, thumb, trayUrl: r.tray, bytes: r.blob.size });
+    } catch (e) { /* a damaged copy is skipped */ }
+  }
+  if (ids.length > 3) $('#toast').hidden = true;
+}
+// slots pointing at photos that are no longer there are emptied
+function pruneMissing() {
+  const gone = id => id && !photos.has(id);
+  state.pages.forEach(p => p.slots.forEach(s => { if (gone(s.photo)) s.photo = null; }));
+  state.back.page.slots.forEach(s => { if (gone(s.photo)) s.photo = null; });
+  if (gone(state.poster.photo)) state.poster.photo = null;
+}
+function refreshAll() {
+  if (zoomIdx !== null) closeZoom();
+  syncPages(); syncControls(); buildGrid(); renderTray(); renderEditors(); setTab(tab);
+}
+async function switchTo(next, keep) {
+  await flushZine();
+  for (const ph of photos.values()) URL.revokeObjectURL(ph.url);
+  photos.clear();
+  next.printer = state.printer;
+  state = next; selected = 1;
+  refreshAll();
+  if (keep) save(); else saveLocal();
+}
+async function openZine(id) {
+  closeOverlay();
+  if (id === state.id) return;
+  const rec = await idbGet('zines', id).catch(() => null);
+  if (!rec) { toast('That zine could not be opened.'); return; }
+  const next = hydrate(rec.state);
+  next.id = rec.id; next.created = rec.created || next.created;
+  await switchTo(next, false);
+  await restorePhotos(rec.id, rec.photoIds);
+  if (state.id !== rec.id) return;
+  pruneMissing(); renderTray(); renderEditors(); invalidate('all');
+}
+// Vol. 01 becomes Vol. 02: the last number in the text goes up by one and keeps its digits
+const nextVolume = t => String(t || '').replace(/(\d+)(?!.*\d)/, m => String(Number(m) + 1).padStart(m.length, '0'));
+// A blank zine, or the next one in a series: same format, frame, cover design, colophon, and corners,
+// with the next volume number, and no title, photos, or captions
+async function newZine(from) {
+  closeOverlay();
+  const next = defaultState();
+  if (from) {
+    const src = hydrate(from);
+    ['format', 'paper', 'bookletPages', 'marginMm', 'guides', 'pageNumbers', 'titleFont', 'smallFont', 'captionFont']
+      .forEach(k => { next[k] = src[k]; });
+    next.poster.on = src.poster.on;
+    Object.assign(next.cover, src.cover, { title: '', tl: nextVolume(src.cover.tl) });
+    ['mode', 'bg', 'ink', 'inkCustom', 'text'].forEach(k => { next.back[k] = src.back[k]; });
+  }
+  await switchTo(next, !!from);
+  if (from) toast('New zine started from the last one. Add your photos.');
+}
+async function deleteZine(id) {
+  try {
+    await idb('photos', 'readwrite', o => {
+      const cur = o.index('zine').openCursor(IDBKeyRange.only(id));
+      cur.onsuccess = () => { const c = cur.result; if (c) { c.delete(); c.continue(); } };
+      return null;
+    });
+    await idb('zines', 'readwrite', o => o.delete(id));
+  } catch (e) { toast('That zine could not be deleted.'); return; }
+  if (id !== state.id) return;
+  // the zine open now was deleted: open the most recent other one, or start a blank one
+  LIB.dirty = false;
+  const rest = (await idbAll('zines').catch(() => [])).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+  if (rest.length) await openZine(rest[0].id); else await newZine(null);
+}
+
+const fmtMB = b => b < 1048576 ? 'under 1 MB' : `${Math.round(b / 1048576)} MB`;
+function editedWhen(ts) {
+  if (!ts) return 'not saved yet';
+  const d = new Date(ts), now = new Date(), day = 86400000;
+  const days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / day);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', ...(d.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}) });
+}
+async function openLibrary() {
+  if (!LIB.ok) {
+    overlay('Your zines', el('p', { class: 'hint', text: "This browser doesn't let the zine maker keep zines, for example in a private window. The zine open now works as before, but it isn't kept." }));
+    return;
+  }
+  await flushZine();
+  let recs = await idbAll('zines').catch(() => []);
+  const current = recs.find(r => r.id === state.id) || { ...zineRecord(), updated: null };
+  recs = [current, ...recs.filter(r => r.id !== state.id).sort((a, b) => (b.updated || 0) - (a.updated || 0))];
+  const total = recs.reduce((t, r) => t + (r.bytes || 0), 0);
+  const body = el('div', { style: 'display:grid;gap:16px' },
+    el('div', { class: 'row between' },
+      el('p', { class: 'hint', text: `Kept in this browser as you work. ${recs.length} zine${recs.length > 1 ? 's' : ''}, ${fmtMB(total)}.` }),
+      el('button', { type: 'button', class: 'btn small', text: 'New zine', onclick: () => newZine(null) })),
+    el('div', { class: 'lib' }, recs.map(libCard)));
+  overlay('Your zines', body, null, true);
+}
+function libCard(r) {
+  const cur = r.id === state.id, title = r.title || 'Untitled';
+  const fmt = { fold: 'Fold zine', quarter: 'Quarter-fold zine', booklet: `Booklet, ${r.pages} pages` }[r.format] || 'Zine';
+  const n = r.placed || 0;
+  const del = el('button', { type: 'button', class: 'btn small', text: 'Delete' });
+  let armed = 0;
+  del.addEventListener('click', async () => {
+    if (!armed) { del.textContent = 'Delete for good?'; armed = setTimeout(() => { armed = 0; del.textContent = 'Delete'; }, 3500); return; }
+    clearTimeout(armed); del.disabled = true;
+    await deleteZine(r.id); openLibrary();
+  });
+  return el('article', { class: cur ? 'zc cur' : 'zc' },
+    el('button', { type: 'button', class: 'zc-cover', 'aria-label': cur ? `${title}, open now` : `Open ${title}`, onclick: () => openZine(r.id) },
+      r.cover ? el('img', { src: r.cover, alt: '' }) : null),
+    el('div', { class: 'zc-meta' },
+      el('b', { text: title }),
+      el('span', { text: `${fmt}, ${r.paper}, ${n} photo${n === 1 ? '' : 's'}` }),
+      el('span', { text: cur ? 'Open now' : `Edited ${editedWhen(r.updated)}` })),
+    el('div', { class: 'zc-actions' },
+      el('button', { type: 'button', class: 'btn small', text: 'New from this', onclick: () => newZine(r.state) }), del));
+}
+async function initLibrary() {
+  try { LIB.db = await idbOpen(); LIB.ok = true; } catch (e) { pruneMissing(); renderEditors(); return; }
+  const rec = await idbGet('zines', state.id).catch(() => null);
+  await restorePhotos(state.id, rec && rec.photoIds);
+  pruneMissing(); renderTray(); renderEditors(); invalidate('all');
+  if (!rec && stored) LIB.dirty = true;                     // the zine from before the library joins it
+  if (LIB.dirty) flushZine();
 }
 
 /* ---------- boot ---------- */
@@ -1849,13 +2199,16 @@ const fontsReady = (async () => {
 function boot() {
   bindControls(); buildPresets(); syncControls(); bindPreviewDrag();
   $$('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-  bindCalib(); syncCalib();
+  bindPrinting();
   $('#shuffleBtn').addEventListener('click', () => {
     Object.assign(state.cover, { seed: Math.floor(Math.random() * 1e9), offX: 0, offY: 0 });
     onChange('cover.seed');
   });
   $('#exportBtn').addEventListener('click', openExport);
   $('#foldBtn').addEventListener('click', foldHelp);
+  $('#libBtn').addEventListener('click', openLibrary);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushZine(); });
+  window.addEventListener('pagehide', flushZine);
   $('#ovClose').addEventListener('click', closeOverlay);
   $('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay' && !exporting) closeOverlay(); });
   document.addEventListener('keydown', e => {
@@ -1893,6 +2246,7 @@ function boot() {
   buildGrid(); renderTray(); renderEditors();
   fontsReady.then(() => invalidate('all'));
   if (document.fonts) document.fonts.addEventListener('loadingdone', () => invalidate('all'));
+  initLibrary();
 }
 boot();
 // The year in the footer keeps itself current
