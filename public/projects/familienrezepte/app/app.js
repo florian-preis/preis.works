@@ -17,6 +17,15 @@ $('imgEndR').src = A.endR; $('imgBack').src = A.back;
 for (const [id, img] of [['coverBackShade', A.endL], ['backInShade', A.endR], ['backOutShade', A.back]]) {   // shading only where the board is
   const m = $(id).style; m.webkitMaskImage = m.maskImage = `url(${img})`; m.webkitMaskSize = m.maskSize = '100% 100%';
 }
+// every notebook picture is fetched and decoded up front and kept, so the first turn or opening never waits for one
+const KEEP_IMG = Object.values(A).map(src => { const i = new Image(); i.src = src; if (i.decode) i.decode().catch(() => {}); return i; });
+const frames = n => new Promise(r => { const f = k => k ? requestAnimationFrame(() => f(k - 1)) : r(); f(n); });
+// before anything moves: the pictures in what is about to be shown are decoded, and the browser has painted it
+async function ready(nodes, cap = 400) {
+  const imgs = nodes.filter(Boolean).flatMap(n => [...n.querySelectorAll('img')]);
+  await Promise.race([Promise.all(imgs.map(i => (i.decode ? i.decode() : Promise.resolve()).catch(() => {}))), new Promise(r => setTimeout(r, cap))]);
+  await frames(2);
+}
 let D = null;                 // the book's content, once unlocked
 const ILLD = {};              // illustrations per recipe, as they arrive
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
@@ -303,6 +312,7 @@ function place(r, rects) {
   return out;
 }
 function fitOne(r, box, u) {
+  r._v = (r._v || 0) + 1;
   const keep = lang;
   for (const l of ['de', 'en']) {
     lang = l; const key = fkey(r, l); delete fit[key];
@@ -319,7 +329,7 @@ function fitAll() { const box = measureBox(), u = px(); for (const r of D.recipe
 
 // ---------- the order of pages ----------
 let pages = [];
-function buildPages() { pages = [tocPage(), ...D.recipes.map(r => recipePage(r)), insideBack]; }
+function buildPages() { layoutVer++; pages = [tocPage(), ...D.recipes.map(r => recipePage(r)), insideBack]; }
 // Which pages lie open at position n. Wide: a spread, the inside of the cover first. Tall: one right-hand page at a time
 const wide = () => !tall.matches;
 const rightIdx = n => wide() ? 2 * n : n;
@@ -331,11 +341,29 @@ const make = (i, side) => (pages[i] || blank)(side);
 // ---------- state ----------
 let pos = 0, open = false, busy = false, shutBack = false;
 const slotL = $('slotL'), slotR = $('slotR'), leaf = $('leaf'), cast = $('cast');
-function setSlot(slot, i, side) { slot.replaceChildren(); if (i >= 0 || side === 'r') slot.appendChild(make(i, side)); }
+// A page that is already showing is not built again (rebuilding it would flicker its pictures for a frame)
+let layoutVer = 0;
+const slotKey = (i, side) => `${i}|${side}|${lang}|${layoutVer}|${tall.matches}|${(D && D.recipes[i - 1] && D.recipes[i - 1]._v) || 0}`;
+function setSlot(slot, i, side) {
+  const key = slotKey(i, side); if (slot._key === key && slot.firstChild) return;
+  slot._key = key; slot.replaceChildren(); if (i >= 0 || side === 'r') slot.appendChild(make(i, side));
+}
+function clearSlot(slot) { slot._key = null; slot.replaceChildren(); }
+// When a page's illustrations arrive while it is open: the new page is built and its pictures decoded first,
+// then swapped in whole, so nothing blinks
+async function showSmooth() {
+  const jobs = [[slotR, rightIdx(pos), 'r'], [slotL, leftIdx(pos), 'l']].filter(([s, i, side]) => i >= 0 || side === 'r')
+    .map(([s, i, side]) => [s, slotKey(i, side), make(i, side)]).filter(([s, key]) => s._key !== key);
+  if (!jobs.length) return;
+  const imgs = jobs.flatMap(([, , node]) => [...node.querySelectorAll('img')]);
+  await Promise.race([Promise.all(imgs.map(im => (im.decode ? im.decode() : Promise.resolve()).catch(() => {}))), wait(500)]);
+  if (busy || !open) return;                          // something moved in the meantime; the next show() builds it
+  for (const [s, key, node] of jobs) { s._key = key; s.replaceChildren(node); }
+}
 function leftBase(n) { $('baseL').src = n === 0 ? A.endL : A.pageL; }   // inside cover first, ruled paper after that
 function show() {
   setSlot(slotR, rightIdx(pos), 'r');
-  if (leftIdx(pos) >= 0) setSlot(slotL, leftIdx(pos), 'l'); else slotL.replaceChildren();
+  if (leftIdx(pos) >= 0) setSlot(slotL, leftIdx(pos), 'l'); else clearSlot(slotL);
   leftBase(pos);
   updateControls();
 }
@@ -367,7 +395,7 @@ function setCast(tipX, lift, reach) {
 
 // ---------- turning a page ----------
 // A leaf is a sheet of paper cut into vertical strips, each its own plane in 3D, so the sheet can bend.
-const N = 36;
+const N = 40;
 const three = document.querySelector('.three');
 function buildLeaf(frontIdx, backIdx, pivot, n) {
   n = n || N; const sw = 608 / n;
@@ -375,7 +403,7 @@ function buildLeaf(frontIdx, backIdx, pivot, n) {
   const front = make(frontIdx, 'r'), back = make(backIdx, 'l');
   for (let i = 0; i < n; i++) {
     for (const [arr, src, off] of [[fr, front, -i * sw], [bk, back, -(n - 1 - i) * sw]]) {
-      const s = el('div', 'strip'); s.style.width = (sw * u + 0.6) + 'px';
+      const s = el('div', 'strip'); s.style.width = (sw * u + 1.2) + 'px';
       const c = src.cloneNode(true); c.style.left = (off * u) + 'px'; s.appendChild(c);
       const sh = el('div', 'shade'); s.appendChild(sh); s._sh = sh; pivot.appendChild(s); arr.push(s);
     }
@@ -383,14 +411,19 @@ function buildLeaf(frontIdx, backIdx, pivot, n) {
   return { fr, bk, u, n, pivot };
 }
 // The sheet bends: the free edge leads, the part by the fold follows, and it lands with a soft bulge that flattens
+// In perspective, the part of a page that lifts towards the eye grows taller than the book. A real page does not
+// change height, so each strip is shortened by exactly as much as its height in the air would enlarge it, about the
+// point the perspective is centred on: the turning page keeps the book's height all the way over.
+const PERSP = 6000, PERSP_Y = 0.46 * 1006 - 3;       // as in .three (perspective, perspective-origin), in book units
 function poseLeaf(L, p, noCast) {
-  const { fr, bk, u, n } = L; const w = 608 / n * u;
+  const { fr, bk, u, n } = L; const w = 608 / n * u, P = PERSP * u, OY = (PERSP_Y * u).toFixed(2);
   const tip = Math.PI * ease(clamp(p / 0.86, 0, 1)), sp = Math.PI * ease(clamp((p - 0.14) / 0.86, 0, 1));
   let x = 0, z = 0, zmax = 0; const th = [];
   for (let i = 0; i <= n; i++) th.push(sp + (tip - sp) * Math.pow(i / n, 1.35));
   for (let i = 0; i < n; i++) {
     const a = (th[i] + th[i + 1]) / 2, deg = (-a * 180 / Math.PI).toFixed(3);
-    const base = `translate3d(${x.toFixed(2)}px,0,${z.toFixed(2)}px) rotateY(${deg}deg)`;
+    const k = ((P - (z + w / 2 * Math.sin(a))) / P).toFixed(5);
+    const base = `translate3d(${x.toFixed(2)}px,0,${z.toFixed(2)}px) translateY(${OY}px) scaleY(${k}) translateY(-${OY}px) rotateY(${deg}deg)`;
     fr[i].style.transform = base;
     bk[i].style.transform = `${base} translateX(${(w / 2).toFixed(2)}px) rotateY(180deg) translateX(${(-w / 2).toFixed(2)}px)`;
     fr[i]._sh.style.background = `linear-gradient(to right, ${tint(lit(th[i], false))}, ${tint(lit(th[i + 1], false))})`;
@@ -408,11 +441,14 @@ async function turn(dir) {
   if (to < 0) return closeBook();
   if (to > lastPos()) { if (wide()) return closeBack(); return; }
   busy = true;
+  await pagesReady([rightIdx(to), leftIdx(to), rightIdx(Math.min(pos, to)), leftIdx(Math.max(pos, to))], 700);
   const n = dir > 0 ? pos : to;                       // the leaf between position n and n + 1
   if (reduce.matches) { pos = to; show(); busy = false; return; }
   const L = buildLeaf(rightIdx(n), leftIdx(n + 1), leaf);
   poseLeaf(L, dir > 0 ? 0 : 1);
-  if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else slotL.replaceChildren(); leftBase(to); }
+  await ready([leaf]);                                // the leaf lies exactly over the page it lifts: nothing changes yet
+  if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else clearSlot(slotL); leftBase(to); }
+  await ready([dir > 0 ? slotR : slotL], 250);
   await animate(1050, t => poseLeaf(L, dir > 0 ? t : 1 - t));
   pos = to; show(); leaf.replaceChildren(); cast.style.background = 'none'; busy = false;
 }
@@ -428,10 +464,12 @@ async function riffle(to) {
     const k = Math.round(j * (steps - 1) / (m - 1));
     ns.push(dir > 0 ? from + k : from - 1 - k);       // leaf between n and n + 1: forwards from the top of the right stack, backwards from the top of the left
   }
-  const Ls = ns.map(n => { const pv = el('div', 'pivot'); three.insertBefore(pv, leaf); return buildLeaf(rightIdx(n), leftIdx(n + 1), pv, 18); });
-  Ls.forEach(L => poseLeaf(L, dir > 0 ? 0 : 1, true));
+  const Ls = ns.map(n => { const pv = el('div', 'pivot'); three.insertBefore(pv, leaf); return buildLeaf(rightIdx(n), leftIdx(n + 1), pv, 24); });
+  Ls.forEach((L, j) => { poseLeaf(L, dir > 0 ? 0 : 1, true); L.pivot.style.zIndex = 100 - j; });   // the first to go lies on top
+  await ready(Ls.map(L => L.pivot), 600);
   // underneath: the destination, on the side the leaves are leaving
-  if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else slotL.replaceChildren(); leftBase(to); }
+  if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else clearSlot(slotL); leftBase(to); }
+  await ready([dir > 0 ? slotR : slotL], 250);
   const ONE = 560, GAP = steps > 4 ? 85 : 110, T = ONE + (m - 1) * GAP;
   await animate(T, t => {
     let top = null;
@@ -452,6 +490,7 @@ async function go(pageIdx) {
   const to = posOf(pageIdx);
   if (shutBack) return openBack(to);
   if (!open || to === pos) return;
+  busy = true; await pagesReady([rightIdx(to), leftIdx(to)], 1500); busy = false;
   await riffle(to);
 }
 
@@ -470,7 +509,7 @@ function poseCover(t) {
 async function openBook() {
   if (busy || open || shutBack) return; busy = true;
   if (document.activeElement === $('pw')) { $('pw').blur(); await wait(380); }
-  $('pass').classList.add('gone'); pos = 0; setSlot(slotR, rightIdx(0), 'r'); document.body.classList.remove('closed'); document.body.classList.add('opening');
+  $('pass').classList.add('gone'); pos = 0; setSlot(slotR, rightIdx(0), 'r'); await ready([slotR]); document.body.classList.remove('closed'); document.body.classList.add('opening');
   if (reduce.matches) { cover.hidden = true; $('spineHold').style.visibility = 'hidden'; document.body.classList.remove('lidded'); } else {
     coverFront.classList.add('off'); await wait(430);
     await animate(2100, t => poseCover(swing(t)));
@@ -480,9 +519,9 @@ async function openBook() {
 }
 async function closeBook() {
   if (busy || !open) return; busy = true; open = false; updateControls();
-  cover.hidden = false; $('baseL').hidden = true; slotL.replaceChildren(); document.body.classList.add('opening');
+  cover.hidden = false; $('baseL').hidden = true; clearSlot(slotL); document.body.classList.add('opening');
   if (!reduce.matches) { poseCover(1); await animate(1800, t => poseCover(1 - swing(t))); }
-  poseCover(0); cast.style.background = 'none'; slotR.replaceChildren(); document.body.classList.add('closed'); document.body.classList.remove('opening'); coverFront.classList.remove('off'); busy = false;
+  poseCover(0); cast.style.background = 'none'; clearSlot(slotR); document.body.classList.add('closed'); document.body.classList.remove('opening'); coverFront.classList.remove('off'); busy = false;
   updateControls();
 }
 
@@ -557,16 +596,24 @@ async function unlock(pw) {
 }
 // Illustrations arrive page by page, nearest to the open page first, and fill in when they land
 let illLoading = false;
+const illP = {};
+// one page's illustrations: fetched once; when they land the page is laid out again and, if open, swapped in
+function ensureIll(n) {
+  if (!D || !ILL.includes(n)) return Promise.resolve();
+  return illP[n] || (illP[n] = fetchPictures(`data/ill-${String(n).padStart(2, '0')}.bin`).then(d => {
+    ILLD[n] = d; const box = measureBox(); fitOne(D.recipes[n - 1], box, px()); box.remove();
+    if (visible(n) && !busy) return showSmooth();
+  }).catch(() => {}));
+}
+// before moving to a page: its illustrations are there (or a moment has passed), so it never lands without them
+const pagesReady = (idxs, cap) => Promise.race([Promise.all(idxs.map(ensureIll)), wait(cap)]);
 async function loadIllustrations() {
   if (illLoading) return; illLoading = true;
   const here = () => Math.max(1, rightIdx(pos));
   const todo = ILL.slice();
   while (todo.length) {
     todo.sort((a, b) => Math.abs(a - here()) - Math.abs(b - here()));
-    const n = todo.shift();
-    try { ILLD[n] = await fetchPictures(`data/ill-${String(n).padStart(2, '0')}.bin`); } catch (e) { continue; }
-    const box = measureBox(); fitOne(D.recipes[n - 1], box, px()); box.remove();
-    if (visible(n) && !busy) show();
+    await ensureIll(todo.shift());
   }
 }
 let unlocking = false, passDone = false;

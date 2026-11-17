@@ -35,14 +35,18 @@ OLD = 77.5 + 29 * np.arange(K)
 OTOP, OBOT = 3.0, 1002.0                                                   # top of the board, foot of the board
 OGL, OGR = 640 - 60, 640 + 60                                              # gutter kept at its own size
 # new gutter: the darkest column near the middle
+# the foot of the paper in the new image: the last bright row above the board, away from the spine
+col = g[:, 880:920].mean(1); PAPER_END = float(max(y for y in range(int(lines[-1]), NY1) if col[y] > 200)) + 0.5
 mid = (NX0 + NX1) // 2; NSP = mid - 80 + int(np.argmin(g[500, mid - 80:mid + 80])) + 1
 print('new spine', NSP, 'book', NX0, NX1, NY0, NY1)
 
 # ---------- maps from the old frame to the new image ----------
 def ymap(yo, cut=None):
     yo = np.asarray(yo, np.float32); yn = np.empty_like(yo)
-    top = yo < OLD[0]; yn[top] = NY0 + (yo[top] - OTOP) * (lines[0] - NY0) / (OLD[0] - OTOP)
-    bot = yo >= OLD[-1]; yn[bot] = lines[-1] + (yo[bot] - OLD[-1]) * (NY1 - lines[-1]) / (OBOT - OLD[-1])
+    # above the first line and below the last: the board's edge and the paper's edge land exactly where the
+    # pages expect them (paper from row 4 to 996, as in the photo), so a turning sheet (rows 3 to 997) matches
+    top = yo < OLD[0]; yn[top] = np.interp(yo[top], [0.5, 4.0, OLD[0]], [NY0, NY0 + 3.5, lines[0]])
+    bot = yo >= OLD[-1]; yn[bot] = np.interp(yo[bot], [OLD[-1], 996.0, 1003.5], [lines[-1], PAPER_END, NY1])
     mid_ = ~top & ~bot
     k = np.clip(np.floor((yo[mid_] - OLD[0]) / 29).astype(int), 0, K - 2); t = (yo[mid_] - OLD[k]) / 29
     past = (k > MID) | ((k == MID) & (t >= 0.5)) if cut is None else np.full(k.shape, cut)

@@ -99,7 +99,7 @@ button { font: inherit; color: inherit; }
 .hand-in { display: inline-block; vertical-align: baseline; mix-blend-mode: multiply; opacity: 0.93; }
 .center { text-align: center; }
 /* Everything that lifts off the page lives here, so it is drawn in perspective */
-.three { z-index: 6; position: absolute; inset: 0; perspective: calc(var(--u) * 4600); perspective-origin: 50% 46%; pointer-events: none; }
+.three { z-index: 6; position: absolute; inset: 0; perspective: calc(var(--u) * 6000); perspective-origin: 50% 46%; pointer-events: none; }
 @media (max-aspect-ratio: 1/1), (max-width: 700px) { .three { perspective-origin: 75% 46%; } }
 .pivot { position: absolute; left: calc(640 * var(--u)); top: 0; width: 0; height: 100%; transform-style: preserve-3d; }
 .strip { position: absolute; top: calc(3 * var(--u)); left: 0; height: calc(994 * var(--u)); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform-origin: 0 0; will-change: transform; }
