@@ -154,4 +154,4 @@ education:
 
 I'm a life science strategy consultant based in Copenhagen, with a global perspective. I work with pharma and biotech companies on the commercial choices that shape therapeutics, from early assets to launch.
 
-Most of my work sits at the commercial core, from portfolio and therapeutic area choices to launch and go-to-market strategy. It extends into the commercial interfaces with R&D, CMC, and medical, where choices on indications, manufacturing economics, and the path from diagnosis to treatment influence an asset's value long before launch. Across both, I help leadership teams make the commercial case a driver of decisions along the value chain.
+Most of my work sits at the commercial core, from portfolio and therapeutic area choices to launch and go-to-market strategy. It extends into upstream commercial interfaces, where choices on indications, scaling, and the path from diagnosis to treatment influence an asset's value long before launch. Across both, I help leadership teams make the commercial case a driver of decisions along the value chain.
