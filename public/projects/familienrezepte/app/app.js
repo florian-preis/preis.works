@@ -112,6 +112,7 @@ const blank = side => el('div', 'sheet ' + side);
 // Every recipe is laid out once per language and screen shape: the text first, then Lena's illustrations go
 // as close as possible to where she put them on her page, without touching the text, scaled down only if needed.
 const GRID = 5, X0 = -25, X1 = 530, Y1 = 945, BASE_K = 0.44, MAXS = 270;
+const TOPM = 44, EDGEM = 14;            // a picture squeezed into the top corner keeps this far from the top edge, and this much further from the right
 function measureBox() { const box = el('div', 'slot slot-r'); box.style.visibility = 'hidden'; $('book').appendChild(box); return box; }
 function textRects(sheet, u) {
   const inn = sheet.querySelector('.in'), o = inn.getBoundingClientRect(), out = [];
@@ -135,7 +136,8 @@ function textRects(sheet, u) {
 // may start this high, e.g. next to the title), rot (degrees clockwise), gap (extra space before it in a row),
 // min (smallest scale it may shrink to), down (beside: lowered this much once placed), bx / by (below: the
 // whole group shifted right / down), rise (below: may rise beside the last
-// short lines when the space is tight). Pages not listed are laid out automatically.
+// short lines when the space is tight), stay (below: keeps its place below when the others have to move to the
+// side). For 'hl', dy / dx move the accent away from the top / left edge. Pages not listed are laid out automatically.
 const LAYOUT = {
   1: [[1, 'b', 0.8], [2, 'b', 1]],
   2: [[1, 'b', 0.9], [2, 'b', 1.3]],
@@ -152,22 +154,27 @@ const LAYOUT = {
   14: [[3, 'b', 1], [2, 's', 1], [1, 's', 1]],
   15: [[1, 'b', 1], [2, 's', 1.5, { dy: 6, snug: 1, dx: 15 }]],
   16: [[3, 's', 1.3], [1, 's', 1], [2, 'b', 1]],
-  17: [[1, 's', 1.12], [3, 'b', 1.7], [2, 'b', 1, { gap: 22 }]],
+  17: [[1, 's', 1.12], [3, 'b', 1.7, { stay: 1 }], [2, 'b', 1, { gap: 22 }]],
   19: [[1, 'b', 1], [2, 's', 1.1, { down: 15 }]],
   20: [[2, 'b', 1], [1, 's', 1], [3, 's', 1.15, { down: 18 }]],
   21: [[2, 's', 1.15], [1, 'b', 1]],
   22: [[2, 's', 1.2], [4, 'c', 1, 20], [1, 'c', 1], [3, 'cl', 1, { rot: 220 }]],
   23: [[3, 's', 1.3], [2, 'b', 1.22, { rot: -45 }], [1, 'b', 1]],
   24: [[1, 's', 1], [3, 'b', 1], [2, 'b', 1, { gap: 40 }]],
-  25: [[2, 'hl', 0.72], [3, 's', 0.72, { dx: 20 }], [1, 'b', 1]],
-  27: [[3, 'b', 1], [2, 'sr', 1], [1, 'sr', 0.88, { dy: 14 }]],
+  25: [[2, 'hl', 0.72, { dy: 22 }], [3, 's', 0.72, { dx: 20 }], [1, 'b', 1]],
+  27: [[3, 'b', 1], [2, 'sr', 0.8], [1, 'sr', 0.88, { dy: 14 }]],
   28: [[2, 'b', 1], [3, 's', 1.15], [1, 's', 1, { dx: -35 }]],
   29: [[1, 'b', 1], [2, 's', 1.3]],
   31: [[1, 's', 0.9], [2, 'c', 1]],
   32: [[3, 'b', 1], [2, 'b', 1], [1, 's', 1]],
   33: [[2, 'b', 1], [1, 'b', 1], [3, 's', 1, { top: 120, snug: 1, min: 0.55 }]],
 };
-function place(r, rects) {
+// Phone pages where the entry above does not work out, by page and language (Florian's review, 18 November):
+// '23en' = Grießklößchensuppe in English. Same notation as above
+const LAYOUT_PHONE = {
+  '23en': [[1, 's', 0.42, { top: 120 }], [3, 's', 1.3], [2, 'b', 0.84, { rot: -86, rise: 1 }]],
+};
+function place(r, rects, l = lang) {
   // Each page is composed around Lena's main dish. Below the text it stands in the middle of the free space with
   // its companions beside it on one line, smaller, with air around them. Pictures meant for the side sit in the
   // open space beside the ingredients, centred in that gap. Nothing ever touches the text: if a picture does not
@@ -236,17 +243,17 @@ function place(r, rects) {
     return false;
   };
   // beside the ingredients: the highest open spot below the title, centred in the gap between text and page edge
-  const beside = (it, fs, yMin = 170) => {
+  const beside = (it, fs, yMin = 170, xMax = X1) => {
     const group = Array.isArray(it) ? it : [it], lead = group[0], o = lead.o;
     if (o.min) fs = fs.filter(f => f >= o.min).concat(fs.some(f => f < o.min) ? [o.min] : []);
     if (o.top != null) yMin = o.top;
     for (const f of fs) {
       const C = compose(f, group), d = { w: C.w, h: C.h };
       for (let y = yMin + lead.dy; y + d.h <= Y1; y += GRID) {
-        let x1 = X1; while (x1 - d.w >= X0 && !free(x1 - d.w, y, d.w, d.h)) x1 -= GRID;
+        let x1 = xMax; while (x1 - d.w >= X0 && !free(x1 - d.w, y, d.w, d.h)) x1 -= GRID;
         if (x1 - d.w < X0) continue;
         let x0 = x1 - d.w; while (x0 - GRID >= X0 && free(x0 - GRID, y, x1 - x0 + GRID, d.h)) x0 -= GRID;
-        if (x1 < X1 - 40) continue;                                      // only the open space at the right, not a hole in the text
+        if (x1 < xMax - 40) continue;                                    // only the open space at the right, not a hole in the text
         let x = o.snug ? x0 + 4 : Math.max(x0 + (x1 - x0 - d.w) / 2, x1 - d.w - 60);
         if (o.dx) { const nx = clamp(x + o.dx, x0, x1 - d.w); x = nx; }
         if (!C.parts.every(p => free(x + p.x, y + p.y, p.d.w, p.d.h))) x = x1 - d.w;
@@ -265,7 +272,7 @@ function place(r, rects) {
     }
     return false;
   };
-  const spec = LAYOUT[r.no];
+  const spec = (tall.matches && (LAYOUT_PHONE[r.no + l] || LAYOUT_PHONE[r.no])) || LAYOUT[r.no];
   if (spec) {
     const b = [], s = [], c = [], cl = [], row = [], hl = [];
     for (const [n, zone, sc, opt] of spec) {
@@ -277,7 +284,8 @@ function place(r, rects) {
     for (const it of hl) {                                               // a small accent in the top left corner, by the title
       let done = false;
       for (const f of [1, 0.88, 0.76]) { const d = dims(it, f);
-        for (let y = 8; y < 120 && !done; y += GRID) for (let x = X0 + 30; x < 120 && !done; x += GRID) if (free(x, y, d.w, d.h)) { commit(it, d, x, y); done = true; }
+        const y0 = 8 + it.dy, x0 = X0 + 30 + (it.o.dx || 0);           // dy / dx: further from the top / left edge
+        for (let y = y0; y < y0 + 112 && !done; y += GRID) for (let x = x0; x < x0 + 95 && !done; x += GRID) if (free(x, y, d.w, d.h)) { commit(it, d, x, y); done = true; }
         if (done) break; }
       if (!done) s.push(it);
     }
@@ -287,13 +295,21 @@ function place(r, rects) {
     if (row.length && !beside(row, [1, 0.9, 0.8, 0.72])) spare.push(...row);
     for (const it of s) if (!beside(it, [1, 0.88, 0.76])) spare.push(it);
     if (!below([...b, ...spare], [1, 0.9, 0.8, 0.72, 0.64]) && !corner([...b, ...spare], [0.9, 0.8, 0.72, 0.64])) {
-      // not everything fits below: the largest stays, the rest tries the side
+      // not everything fits below: a picture marked 'stay' keeps its place below and the others go to the side;
+      // otherwise the largest stays and the rest tries the side
+      const stay = [...b, ...spare].filter(it => it.o.stay), FB = [1, 0.9, 0.8, 0.72, 0.64];
+      const fRow = FB.find(f => { const C = compose(f, b); return C.h <= bandH && C.w <= X1 - X0 - 20; });   // its size in the full row, where that row fits
+      if (stay.length && below(stay, fRow ? FB.filter(f => f <= fRow) : FB)) {
+        for (const it of [...b, ...spare].filter(it => !it.o.stay).sort((p, q) => q.size * q.scale - p.size * p.scale))
+          beside(it, [0.85, 0.7, 0.58, 0.48]) || corner([it], [0.7, 0.6, 0.5, 0.42]) || beside(it, [0.4, 0.34], TOPM, X1 - EDGEM) || beside(it, [0.4, 0.34], 0);
+        return out;
+      }
       const all = [...b, ...spare].sort((p, q) => q.size * q.scale - p.size * p.scale);
       for (let keep = all.length - 1; keep >= 1; keep--) {
         const kept = [...b, ...spare].filter(it => all.slice(0, keep).includes(it));
         if (below(kept, [1, 0.88, 0.76, 0.66])) { for (const it of all.slice(keep)) beside(it, [0.9, 0.76, 0.6]); return out; }
       }
-      for (const it of all) beside(it, [0.85, 0.7, 0.58, 0.48]) || corner([it], [0.7, 0.6, 0.5, 0.42]) || beside(it, [0.4, 0.34], 0);
+      for (const it of all) beside(it, [0.85, 0.7, 0.58, 0.48]) || corner([it], [0.7, 0.6, 0.5, 0.42]) || beside(it, [0.4, 0.34], TOPM, X1 - EDGEM) || beside(it, [0.4, 0.34], 0);
     }
     return out;
   }
@@ -309,7 +325,7 @@ function place(r, rects) {
     const kept = rest.slice(0, keep), list = [...kept.filter((_, n) => n % 2 === 1).reverse(), hero, ...kept.filter((_, n) => n % 2 === 0)];
     if (below(list, [1, 0.88, 0.76, 0.66])) { for (const it of rest.slice(keep)) beside(it, [0.9, 0.76, 0.62]); return out; }
   }
-  if (!beside(hero, [0.85, 0.72, 0.6, 0.48]) && !corner([hero], [0.7, 0.6, 0.5, 0.42])) beside(hero, [0.4, 0.34], 0);
+  if (!beside(hero, [0.85, 0.72, 0.6, 0.48]) && !corner([hero], [0.7, 0.6, 0.5, 0.42])) beside(hero, [0.4, 0.34], TOPM, X1 - EDGEM) || beside(hero, [0.4, 0.34], 0);
   for (const it of rest) beside(it, [0.8, 0.68, 0.56]);
   return out;
 }
@@ -324,7 +340,7 @@ function fitOne(r, box, u) {
     if (f.two) { s = recipePage(r, true)('r'); box.replaceChildren(s); }
     f.now = Math.round(s.querySelector('.body').getBoundingClientRect().height / (29 * u));
     rects[l] = textRects(s, u);
-    f.place = place(r, rects[l]);
+    f.place = place(r, rects[l], l);
   }
   lang = keep;
   // One arrangement for both languages wherever it costs little, so switching the language moves no picture. In
@@ -336,7 +352,7 @@ function fitOne(r, box, u) {
   if (!de.place || !en.place) return;
   if (clears(r, de.place, rects.en)) { en.place = de.place; de.shared = en.shared = 'de'; return; }
   if (clears(r, en.place, rects.de) && kept(en.place, de.place)) { de.place = en.place; de.shared = en.shared = 'en'; return; }
-  const both = place(r, rects.de.concat(rects.en));
+  const both = place(r, rects.de.concat(rects.en), 'de');
   if (both && kept(both, de.place) && kept(both, en.place) && (near(r, both, de.place) || near(r, both, en.place))) { de.place = en.place = both; de.shared = en.shared = 'both'; }
 }
 // does arrangement a keep every picture of arrangement b at least 80% as large?
