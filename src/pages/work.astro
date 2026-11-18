@@ -210,7 +210,7 @@ const jsonLd = {
   .refs-tools { display: flex; align-items: center; gap: 16px; margin-right: -12px; }
   .refs-nav { display: flex; gap: 4px; }
   .refs-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--text); cursor: pointer; transition: opacity var(--fast) ease, background var(--fast) ease; }
-  .refs-btn:hover:not(:disabled) { background: var(--hover); }
+  @media (hover: hover) { .refs-btn:hover:not(:disabled) { background: var(--hover); } }
   .refs-btn:disabled { opacity: 0.3; cursor: default; }
   .refs-btn[hidden] { display: none; }
   .track { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
@@ -226,7 +226,8 @@ const jsonLd = {
   /* Filter: a quiet text button, right-aligned to the content edge, that opens a paper menu of areas */
   .filter { position: relative; }
   .filter-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 2px; border: 0; background: transparent; font-size: 13px; color: var(--muted); cursor: pointer; transition: color var(--fast) ease; }
-  .filter-btn:hover, .filter-btn[aria-expanded='true'] { color: var(--text); }
+  .filter-btn[aria-expanded='true'] { color: var(--text); }
+  @media (hover: hover) { .filter-btn:hover { color: var(--text); } }
   .filter-btn.active { color: var(--text); font-weight: 600; }
   .filter-btn svg { transition: transform var(--base) var(--ease); }
   .filter-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
@@ -248,7 +249,7 @@ const jsonLd = {
   .bg-col { display: flex; flex-direction: column; gap: 12px; }
   .rows { display: flex; flex-direction: column; }
   .index-row { cursor: default; }
-  .index-row:hover { background: transparent; }
+  @media (hover: hover) { .index-row:hover { background: transparent; } }
 
   @media (max-width: 700px) {
     .work { padding-top: 16px; }

@@ -54,7 +54,7 @@ const what = variant === 'photo' ? 'photo' : 'screen';
   [data-variant='screen'] .lb-title { max-width: 760px; }
   [data-variant='screen'] .lb-img { box-shadow: 0 0 0 1px rgba(43, 43, 41, 0.1); }
   .lb-close { position: absolute; top: 12px; right: 16px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .lb-close:hover, .lb-nav:hover { color: var(--text); }
+  @media (hover: hover) { .lb-close:hover, .lb-nav:hover { color: var(--text); } }
   .lb-nav { width: 44px; height: 44px; border: 0; background: transparent; color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; justify-self: center; }
   @media (max-width: 700px) {
     .lightbox { grid-template-columns: 1fr; padding: 56px 12px 20px; }

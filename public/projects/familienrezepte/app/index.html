@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F2EF">
+<meta name="color-scheme" content="only light">
 <title>Familienrezepte</title>
 <meta name="description" content="Lena's handwritten book of our family's favourite recipes, as a notebook on the screen. Opens with a password.">
 <meta name="robots" content="noindex">
@@ -151,7 +152,7 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
   font-size: 11px; line-height: 1.4; color: var(--muted); }
 .app-foot nav { display: flex; gap: 16px; }
 .app-foot a { color: inherit; text-decoration: none; }
-.app-foot a:hover { color: var(--text); }
+@media (hover: hover) { .app-foot a:hover { color: var(--text); } }
 .pass .tick { display: none; color: var(--text); }
 .pass.ok .go { display: none; } .pass.ok .tick { display: block; }
 .pass.ok input { border-bottom-color: transparent; color: var(--muted); }
@@ -167,7 +168,7 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
 
 /* Controls: on the desk, never on the book */
 .ctl { position: absolute; color: var(--faint); background: transparent; border: 0; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color var(--fast) ease, opacity var(--base) ease; }
-.ctl:hover { color: var(--text); }
+@media (hover: hover) { .ctl:hover { color: var(--text); } }
 .ctl svg { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .prev { left: calc(var(--spine) - 640 * var(--u) - 60px); top: calc(var(--top) + 503 * var(--u) - 22px); }
 .next { left: calc(var(--spine) + 643 * var(--u) + 16px); top: calc(var(--top) + 503 * var(--u) - 22px); }
@@ -187,6 +188,7 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
 .pass input { width: 150px; height: 32px; border: 0; border-bottom: 1px solid #c9c8c3; background: transparent; font: inherit; font-size: 13px; color: var(--text); padding: 0 2px; border-radius: 0; outline: none; }
 .pass input::placeholder { color: var(--muted); }
 .pass input:focus { border-bottom-color: var(--text); }
+@media (hover: none), (pointer: coarse) { .pass input { font-size: 16px; } } /* stops phones zooming in on the field */
 .pass .ctl { margin-left: 0; }
 @media (max-aspect-ratio: 1/1), (max-width: 700px) {
   .prev, .next { display: none; }

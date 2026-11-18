@@ -29,7 +29,7 @@ import { nav } from '../data/site';
   p { margin: 0; color: var(--muted); }
   .rows { display: flex; flex-direction: column; max-width: 420px; margin-top: 40px; }
   .rows svg { transition: transform var(--base) var(--ease); }
-  .index-row:hover svg { transform: translateX(3px); }
+  @media (hover: hover) { .index-row:hover svg { transform: translateX(3px); } }
   @media (max-width: 700px) {
     .nf { padding-top: 56px; }
     h1 { font-size: 30px; }

@@ -34,6 +34,9 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { scrollbar-gutter: stable; -webkit-text-size-adjust: 100%; }
+/* No double-tap zoom on phones: every tap counts straight away, even in quick succession (such as
+   the photo switch on About). Pinch to zoom still works */
+html, body, a, button, label, [role='switch'] { touch-action: manipulation; }
 body {
   margin: 0;
   background: var(--paper);
@@ -70,7 +73,7 @@ button { font: inherit; color: inherit; }
 .skip { position: fixed; left: var(--gutter); top: 12px; z-index: 200; padding: 9px 16px; border-radius: 999px; font-size: 13px; transform: translateY(-64px); }
 .skip:focus-visible { transform: none; outline-offset: 2px; border-radius: 999px; }
 .link-muted { color: var(--muted); transition: color var(--fast) ease; }
-.link-muted:hover { color: var(--text); }
+@media (hover: hover) { .link-muted:hover { color: var(--text); } }
 
 /* Index rows: shared by the photo index and the project index */
 .index-row {
@@ -91,7 +94,7 @@ button { font: inherit; color: inherit; }
   transition: background var(--fast) ease;
 }
 .index-row:last-child { border-bottom: 1px solid var(--line-soft); }
-.index-row:hover { background: var(--hover); }
+@media (hover: hover) { .index-row:hover { background: var(--hover); } }
 .index-row .meta { color: var(--muted); white-space: nowrap; text-align: right; }
 .index-row[aria-current='page'] .name { font-weight: 600; }
 

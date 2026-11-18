@@ -60,6 +60,8 @@ body {
 body.font-sans { --read: var(--sans); }
 button, input, textarea { font: inherit; color: inherit; }
 button { background: none; border: 0; cursor: pointer; }
+/* No double-tap zoom on phones; pinch to zoom still works */
+html, body, a, button, label { touch-action: manipulation; }
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 .hidden { display: none !important; }
@@ -77,10 +79,10 @@ a { color: inherit; }
   display: inline-flex; align-items: center; gap: 6px;
   transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
 }
-.nav a:hover, .nav button:hover { color: var(--text); }
+@media (hover: hover) { .nav a:hover, .nav button:hover { color: var(--text); } }
 .nav a[aria-current="page"] { color: var(--text); background: var(--surface); }
 .nav .new { color: var(--text); border: 1px solid var(--line); }
-.nav .new:hover { border-color: var(--muted); }
+@media (hover: hover) { .nav .new:hover { border-color: var(--muted); } }
 .nav svg { width: 16px; height: 16px; }
 
 main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
@@ -92,9 +94,9 @@ main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
   font-size: 14px; font-weight: 500; border: 1px solid var(--line);
   transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), color var(--fast) var(--ease), opacity var(--fast);
 }
-.btn:hover { border-color: var(--muted); }
+@media (hover: hover) { .btn:hover { border-color: var(--muted); } }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.btn.primary:hover { filter: brightness(1.06); }
+@media (hover: hover) { .btn.primary:hover { filter: brightness(1.06); } }
 .btn:disabled { opacity: 0.35; cursor: default; }
 .btn.primary:disabled { opacity: 1; background: var(--surface-2); border-color: var(--surface-2); color: var(--faint); filter: none; }
 .btn svg { width: 16px; height: 16px; }
@@ -103,7 +105,7 @@ main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
   display: inline-grid; place-items: center; color: var(--muted);
   transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
 }
-.icon-btn:hover { color: var(--text); background: var(--surface-2); }
+@media (hover: hover) { .icon-btn:hover { color: var(--text); background: var(--surface-2); } }
 .icon-btn svg { width: 20px; height: 20px; }
 .icon-btn:disabled { opacity: 0.3; cursor: default; background: none; }
 
@@ -111,7 +113,7 @@ main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
 .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px; min-height: 24px; }
 .title { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .title a { color: var(--muted); font-weight: 400; text-decoration: none; margin-left: 8px; font-size: 13px; }
-.title a:hover { color: var(--text); }
+@media (hover: hover) { .title a:hover { color: var(--text); } }
 .left { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .stage {
@@ -140,14 +142,15 @@ main { flex: 1; padding: clamp(20px, 4vh, 40px) 0 48px; }
 .progress .track { position: absolute; left: 0; right: 0; top: 11px; height: 3px; border-radius: 3px; background: var(--line); }
 .progress .fill { position: absolute; left: 0; top: 11px; height: 3px; border-radius: 3px; background: var(--accent); width: 0; }
 .progress .knob { position: absolute; top: 6px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; background: var(--text); opacity: 0; transition: opacity var(--fast); }
-.progress:hover .knob, .progress.drag .knob { opacity: 1; }
+.progress.drag .knob { opacity: 1; }
+@media (hover: hover) { .progress:hover .knob { opacity: 1; } }
 
 .transport { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 8px 0 18px; }
 .play {
   width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
   display: grid; place-items: center; transition: transform var(--fast) var(--ease), filter var(--fast);
 }
-.play:hover { filter: brightness(1.06); }
+@media (hover: hover) { .play:hover { filter: brightness(1.06); } }
 .play:active { transform: scale(0.96); }
 .play svg { width: 24px; height: 24px; }
 .play:disabled { opacity: 0.35; cursor: default; }
@@ -185,7 +188,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .context p + p { margin-top: 0.9em; }
 .context p.dim { color: var(--muted); }
 .context span { cursor: pointer; border-radius: 4px; transition: background var(--fast); }
-.context span:hover { background: var(--surface-2); }
+@media (hover: hover) { .context span:hover { background: var(--surface-2); } }
 .context span.cur { background: var(--accent-soft); color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .end-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
 
@@ -235,17 +238,20 @@ body.dragging .drop { border-color: var(--accent); background: var(--accent-soft
   min-height: 64px; padding: 10px 12px; border-bottom: 1px solid var(--line);
   cursor: pointer; border-radius: 0; transition: background var(--fast) var(--ease);
 }
-.row:hover, .row:focus-within { background: var(--surface); }
+.row:focus-within { background: var(--surface); }
+@media (hover: hover) { .row:hover { background: var(--surface); } }
 .row .t { min-width: 0; }
 .row .t div:first-child { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row .t div + div { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row input { width: 100%; font-size: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; outline: none; }
+@media (hover: none), (pointer: coarse) { .row input { font-size: 16px; } } /* stops phones zooming in on the rename field */
 .row .pg { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .row .pg > span:last-child { min-width: 84px; text-align: right; }
 .row .mini { width: 56px; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .row .mini i { display: block; height: 100%; background: var(--accent); }
 .row .acts { display: flex; opacity: 0; transition: opacity var(--fast); }
-.row:hover .acts, .row:focus-within .acts { opacity: 1; }
+.row:focus-within .acts { opacity: 1; }
+@media (hover: hover) { .row:hover .acts { opacity: 1; } }
 .row .acts .icon-btn { width: 36px; height: 36px; }
 .row .acts svg { width: 17px; height: 17px; }
 .empty { text-align: center; padding: 80px 20px; color: var(--muted); }
@@ -256,7 +262,7 @@ body.dragging .drop { border-color: var(--accent); background: var(--accent-soft
 footer { padding: 24px 0 calc(16px + env(safe-area-inset-bottom)); }
 footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 11px; line-height: 1.4; color: var(--muted); }
 footer a, footer button { color: inherit; text-decoration: none; font: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-footer a:hover, footer button:hover { color: var(--text); }
+@media (hover: hover) { footer a:hover, footer button:hover { color: var(--text); } }
 footer .links { display: flex; gap: 16px; }
 .toast {
   position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px);
@@ -267,7 +273,7 @@ footer .links { display: flex; gap: 16px; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .toast button { color: var(--accent); font-weight: 500; padding: 6px 12px; border-radius: 999px; }
-.toast button:hover { background: var(--accent-soft); }
+@media (hover: hover) { .toast button:hover { background: var(--accent-soft); } }
 .overlay { position: fixed; inset: 0; background: rgba(10,10,11,0.7); display: grid; place-items: center; z-index: 60; opacity: 0; pointer-events: none; transition: opacity var(--fast) var(--ease); }
 .overlay.show { opacity: 1; pointer-events: auto; }
 .keys { background: var(--surface); border-radius: 22px; padding: 24px 28px; min-width: 300px; }

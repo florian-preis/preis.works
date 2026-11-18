@@ -90,7 +90,7 @@ const tileSizes = '(max-width: 700px) calc((100vw - 36px) / 3), (max-width: 1100
   .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(6px, 1.4vw, 18px); }
   .tile { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--panel); }
   .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--slow) cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-  .tile:hover img { transform: scale(1.05); }
+  @media (hover: hover) { .tile:hover img { transform: scale(1.05); } }
   /* Reveal: only when JavaScript runs, so the grid is never blank without it */
   :global(.js) .tile { opacity: 0; transform: translateY(14px); transition: opacity 0.55s ease, transform 0.55s ease; }
   :global(.js) .tile.shown { opacity: 1; transform: none; }

@@ -248,7 +248,7 @@ const jsonLd = {
   .about-text :global(p) { margin: 0 0 18px; }
   /* Links in the about text: a fine underline that darkens on hover */
   .about-text :global(p a) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--faint); transition: text-decoration-color var(--fast) ease; }
-  .about-text :global(p a:hover) { text-decoration-color: var(--text); }
+  @media (hover: hover) { .about-text :global(p a:hover) { text-decoration-color: var(--text); } }
   .contact { list-style: none; margin: 32px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
   /* Computers: two columns, email and phone on the left, LinkedIn and Instagram on the right */
   @media (min-width: 701px) {
