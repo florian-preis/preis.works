@@ -5,7 +5,7 @@ export const site = {
     'Life science consulting by day. Side projects, photography, and the occasional deep dive the rest of the time.',
   email: 'hello@preis.works',
   // The phone number never appears in the page source. It is stored as character
-  // codes and only assembled in the browser once a visitor scrolls, touches, or moves the mouse.
+  // codes and only assembled in the browser once a visitor scrolls or presses a key.
   phoneCodes: [52, 53, 53, 48, 51, 51, 49, 51, 55, 48],
   linkedin: 'https://www.linkedin.com/in/florianpreis/',
   instagram: 'https://www.instagram.com/florianprice/',

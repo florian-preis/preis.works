@@ -224,6 +224,9 @@ const jsonLd = {
   :global(html:has(#veil)) { scroll-snap-type: y mandatory; }
   .veil { scroll-snap-align: start; }
   :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; scroll-snap-align: start; }
+  /* The bottom of the page is a resting place of its own. Without it, phones (where the block is taller
+     than the screen) treated the very bottom as invalid and jumped back to the top of the profile */
+  :global(.after-lead > .site-footer) { scroll-snap-align: end; }
 
   /* ── About ── */
   /* Top space: once the page snaps past the veil, the menu sits in it (72 px tall), so the portrait
@@ -289,11 +292,13 @@ const jsonLd = {
   let homing = false;
   let from: 'veil' | 'profile' = 'veil';
   let lastY = window.scrollY;
+  const menuToggle = document.querySelector<HTMLElement>('.nav-toggle');
   const render = () => {
     p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
     // With scroll-linked CSS the fog needs no update from here, which keeps the main thread free
     if (!scrollTimeline) veil.style.setProperty('--p', p.toFixed(3));
-    nav?.classList.toggle('arrived', p >= 0.6 && !homing);
+    // The menu stays while the mobile menu sheet is open, whatever the scroll position does underneath
+    nav?.classList.toggle('arrived', (p >= 0.6 && !homing) || menuToggle?.getAttribute('aria-expanded') === 'true');
   };
   const setHoming = (on: boolean) => {
     if (on === homing) return;
@@ -368,11 +373,12 @@ const jsonLd = {
   }
 
   // Phone number: never in the page source. It is stored as character codes and only written
-  // into the page after the first sign of a person (scrolling, a touch, the mouse, or a key).
-  // Most scrapers don't run scripts, and the few that do rarely scroll or move a mouse.
+  // into the page after the first sign of a person: scrolling (it sits below the veil, so everyone
+  // scrolls to see it) or a key. Not on a touch or click: on iPhones, a page change during a tap
+  // can swallow that tap. Most scrapers don't run scripts, and the few that do rarely scroll.
   const phone = document.querySelector<HTMLElement>('.phone');
   if (phone) {
-    const human = ['scroll', 'wheel', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
+    const human = ['scroll', 'wheel', 'keydown'];
     const show = () => {
       human.forEach((t) => window.removeEventListener(t, show));
       const d = phone.dataset.codes!.split(',').map((c) => String.fromCharCode(Number(c))).join('');

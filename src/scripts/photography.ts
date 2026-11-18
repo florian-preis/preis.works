@@ -39,10 +39,13 @@ const hideLocation = () => {
   showing = false;
   slots.flat().forEach((el) => el.classList.remove('on'));
 };
+// Only with a mouse or trackpad, and for keyboard focus. On touch screens, iPhones treat a tap that
+// changes the page as a hover and swallow it, so the first tap on a photo would not open it
+const canHover = window.matchMedia('(hover: hover)').matches;
 tiles.forEach((t) => {
   const i = Number(t.dataset.i);
-  t.addEventListener('mouseenter', () => showLocation(data[i].caption));
-  t.addEventListener('focus', () => showLocation(data[i].caption));
+  if (canHover) t.addEventListener('mouseenter', () => showLocation(data[i].caption));
+  t.addEventListener('focus', () => { if (t.matches(':focus-visible')) showLocation(data[i].caption); });
 });
 grid.addEventListener('mouseleave', hideLocation);
 
