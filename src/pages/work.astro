@@ -100,10 +100,11 @@ const jsonLd = {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <div class="filter-menu" id="filter-menu" role="group" aria-label="Show work in these areas" hidden>
+              <button type="button" class="filter-row filter-all" aria-pressed="true"><span>All areas</span><span class="tick" aria-hidden="true"></span></button>
+              <div class="filter-sep" aria-hidden="true"></div>
               {tags.map((t) => (
-                <label class="filter-row"><input type="checkbox" value={t} /><span class="check" aria-hidden="true"></span><span>{t}</span></label>
+                <label class="filter-row"><input type="checkbox" value={t} /><span>{t}</span><span class="tick" aria-hidden="true"></span></label>
               ))}
-              <button type="button" class="filter-clear" hidden>Show all</button>
             </div>
           </div>
           <div class="refs-nav">
@@ -206,7 +207,7 @@ const jsonLd = {
   /* ── Selected work: the carousel from the project pages, with text cards ─ */
   .refs { margin-top: 120px; display: flex; flex-direction: column; gap: 12px; --per: 3.25; --gap: 16px; }
   .refs-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .refs-tools { display: flex; align-items: center; gap: 12px; margin-right: -12px; }
+  .refs-tools { display: flex; align-items: center; gap: 16px; margin-right: -12px; }
   .refs-nav { display: flex; gap: 4px; }
   .refs-btn { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--text); cursor: pointer; transition: opacity var(--fast) ease, background var(--fast) ease; }
   .refs-btn:hover:not(:disabled) { background: var(--hover); }
@@ -222,25 +223,24 @@ const jsonLd = {
   .card .part p { margin: 0; font-size: 14px; line-height: 1.65; }
   @media (max-width: 1100px) { .refs { --per: 2.2; } }
 
-  /* Filter: a quiet text button that opens a small panel of areas to tick */
+  /* Filter: a quiet text button, right-aligned to the content edge, that opens a paper menu of areas */
   .filter { position: relative; }
-  .filter-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; font-size: 13px; color: var(--muted); cursor: pointer; transition: color var(--fast) ease, background var(--fast) ease; }
-  .filter-btn:hover, .filter-btn[aria-expanded='true'] { color: var(--text); background: var(--hover); }
+  .filter-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 2px; border: 0; background: transparent; font-size: 13px; color: var(--muted); cursor: pointer; transition: color var(--fast) ease; }
+  .filter-btn:hover, .filter-btn[aria-expanded='true'] { color: var(--text); }
   .filter-btn.active { color: var(--text); font-weight: 600; }
   .filter-btn svg { transition: transform var(--base) var(--ease); }
   .filter-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
-  .filter-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 300px; padding: 6px; border-radius: 14px; background: var(--paper); box-shadow: 0 0 0 1px var(--line), 0 12px 32px rgba(0, 0, 0, 0.08); }
-  .filter-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: background var(--fast) ease; }
-  .filter-row:hover { background: var(--hover); }
+  .filter-menu { position: absolute; right: 0; top: calc(100% + 2px); z-index: 20; width: 336px; max-width: calc(100vw - 2 * var(--gutter)); padding: 6px; border-radius: 16px; background: var(--paper); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgba(0, 0, 0, 0.03), 0 18px 40px -10px rgba(0, 0, 0, 0.14); transform-origin: top right; animation: filter-in 0.22s var(--ease); }
+  @keyframes filter-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } }
+  .filter-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-size: 14px; color: var(--text); text-align: left; cursor: pointer; transition: background var(--fast) ease; }
+  @media (hover: hover) { .filter-row:hover { background: var(--hover); } }
   .filter-row input { position: absolute; opacity: 0; pointer-events: none; }
-  .check { flex: none; width: 16px; height: 16px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--faint); display: grid; place-items: center; transition: background var(--fast) ease, box-shadow var(--fast) ease; }
-  .check::after { content: ''; width: 8px; height: 4px; margin-top: -2px; border-left: 1.5px solid var(--paper); border-bottom: 1.5px solid var(--paper); transform: rotate(-45deg); opacity: 0; }
-  .filter-row input:checked + .check { background: var(--text); box-shadow: none; }
-  .filter-row input:checked + .check::after { opacity: 1; }
-  .filter-row input:focus-visible + .check { outline: 2px solid var(--text); outline-offset: 2px; }
-  .filter-clear { display: block; width: 100%; min-height: 40px; margin-top: 4px; padding: 0 12px; border: 0; border-top: 1px solid var(--line-soft); border-radius: 0 0 10px 10px; background: transparent; font-size: 13px; color: var(--muted); text-align: left; cursor: pointer; }
-  .filter-clear:hover { color: var(--text); }
-  .filter-clear[hidden] { display: none; }
+  .tick { flex: none; width: 10px; height: 5px; margin: -3px 2px 0 0; border-left: 1.6px solid var(--text); border-bottom: 1.6px solid var(--text); transform: rotate(-45deg); opacity: 0; transition: opacity var(--fast) ease; }
+  .filter-row input:checked ~ span:first-of-type, .filter-all[aria-pressed='true'] { font-weight: 600; }
+  .filter-row input:checked ~ .tick, .filter-all[aria-pressed='true'] .tick { opacity: 1; }
+  .filter-row:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: -2px; }
+  .filter-sep { height: 1px; margin: 6px 8px; background: var(--line-soft); }
+  @media (prefers-reduced-motion: reduce) { .filter-menu { animation: none; } }
   :global(html:not(.js)) .filter { display: none; }
 
   /* ── Background: experience and education side by side ───────────────── */
@@ -257,7 +257,7 @@ const jsonLd = {
     .refs, .background { margin-top: 88px; }
     .refs { --gap: 10px; }
     .refs-nav { display: none; }
-    .refs-tools { margin-right: -12px; }
+    .refs-tools { margin-right: 0; }
     .track { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
     .card { flex-basis: 86%; }
     .background { grid-template-columns: 1fr; gap: 40px; }
@@ -397,7 +397,6 @@ const jsonLd = {
     const max = track.scrollWidth - track.clientWidth;
     prev.disabled = track.scrollLeft <= 2;
     next.disabled = track.scrollLeft >= max - 2;
-    prev.hidden = next.hidden = max <= 2;
   };
   [prev, next].forEach((b) => b.addEventListener('click', () => track.scrollBy({ left: Number(b.dataset.dir) * step(), behavior: still ? 'auto' : 'smooth' })));
   track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
@@ -409,20 +408,20 @@ const jsonLd = {
   const menu = document.getElementById('filter-menu')!;
   const label = btn.querySelector('.filter-label')!;
   const boxes = [...menu.querySelectorAll<HTMLInputElement>('input')];
-  const clear = menu.querySelector<HTMLButtonElement>('.filter-clear')!;
+  const all = menu.querySelector<HTMLButtonElement>('.filter-all')!;
   const setOpen = (open: boolean) => { menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); };
   const apply = () => {
     const on = boxes.filter((b) => b.checked).map((b) => b.value);
     cards.forEach((c) => (c.hidden = on.length > 0 && !on.includes(c.dataset.tag!)));
     label.textContent = on.length === 0 ? 'All areas' : on.length === 1 ? on[0] : `${on.length} areas`;
     btn.classList.toggle('active', on.length > 0);
-    clear.hidden = on.length === 0;
+    all.setAttribute('aria-pressed', String(on.length === 0));
     track.scrollLeft = 0;
     update();
   };
   btn.addEventListener('click', () => setOpen(menu.hidden));
   boxes.forEach((b) => b.addEventListener('change', apply));
-  clear.addEventListener('click', () => { boxes.forEach((b) => (b.checked = false)); apply(); });
+  all.addEventListener('click', () => { boxes.forEach((b) => (b.checked = false)); apply(); });
   document.addEventListener('click', (e) => { if (!menu.hidden && !(e.target as Element).closest('.filter')) setOpen(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
 </script>

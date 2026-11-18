@@ -60,10 +60,10 @@ const tileSizes = '(max-width: 700px) calc((100vw - 36px) / 3), (max-width: 1100
 
     <div class="index wrap" id="index" hidden>
       {items.map((p, i) => (
-        <a class="index-row" href={p.view} data-i={i}>
+        <a class="index-row" href={p.view} data-i={i} title={p.caption}>
           {p.flag
-            ? <span class="name"><img class="flag" src={p.flag.url} alt={p.flag.country} width="20" height="15" loading="lazy">{p.flag.place}</span>
-            : <span class="name">{p.caption}</span>}
+            ? <span class="name"><img class="flag" src={p.flag.url} alt={p.flag.country} width="20" height="15" loading="lazy"><span class="title">{p.flag.place}</span></span>
+            : <span class="name"><span class="title">{p.caption}</span></span>}
           <span class="meta">{p.date}</span>
         </a>
       ))}
@@ -97,7 +97,12 @@ const tileSizes = '(max-width: 700px) calc((100vw - 36px) / 3), (max-width: 1100
   @media (max-width: 1100px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   @media (max-width: 700px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
+  /* One shared date column, as wide as the longest date, so every title is cut at the same line.
+     Rows join the parent grid through subgrid; [hidden] keeps working because display is set only when shown. */
   .index { padding-top: 8px; }
+  .index:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 24px; }
+  .index .index-row { grid-column: 1 / -1; grid-template-columns: subgrid; }
+  .index .title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .index .name { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .flag { width: 20px; height: auto; aspect-ratio: 4 / 3; flex: none; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
 
