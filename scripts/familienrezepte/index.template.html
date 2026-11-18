@@ -56,7 +56,7 @@ button { font: inherit; color: inherit; }
 .book { position: absolute; left: calc(var(--spine) - 640 * var(--u)); top: var(--top); width: calc(1283 * var(--u)); height: calc(1006 * var(--u)); }
 .book img { position: absolute; display: block; user-select: none; -webkit-user-drag: none; }
 /* The book's shadow on the desk: a tight contact shadow and a wide soft one. Closed, it covers the right half only */
-.shadow { z-index: 0; position: absolute; left: calc(9 * var(--u)); right: calc(16 * var(--u)); top: calc(10 * var(--u)); height: calc(982 * var(--u)); border-radius: calc(26 * var(--u));
+.shadow { z-index: 0; position: absolute; will-change: transform; left: calc(9 * var(--u)); right: calc(16 * var(--u)); top: calc(10 * var(--u)); height: calc(982 * var(--u)); border-radius: calc(26 * var(--u));
   box-shadow: 0 calc(1.5 * var(--u)) calc(3 * var(--u)) rgba(30, 28, 24, 0.34), calc(3 * var(--u)) calc(10 * var(--u)) calc(22 * var(--u)) rgba(30, 28, 24, 0.20), calc(8 * var(--u)) calc(34 * var(--u)) calc(70 * var(--u)) rgba(30, 28, 24, 0.16);
   transform-origin: 100% 50%; }
 .base-l { left: 0; top: 0; width: calc(640 * var(--u)); height: calc(1006 * var(--u)); }
@@ -102,9 +102,14 @@ button { font: inherit; color: inherit; }
 .three { z-index: 6; position: absolute; inset: 0; perspective: calc(var(--u) * 6000); perspective-origin: 50% 46%; pointer-events: none; }
 @media (max-aspect-ratio: 1/1), (max-width: 700px) { .three { perspective-origin: 75% 46%; } }
 .pivot { position: absolute; left: calc(640 * var(--u)); top: 0; width: 0; height: 100%; transform-style: preserve-3d; }
-.strip { position: absolute; top: calc(3 * var(--u)); left: 0; height: calc(994 * var(--u)); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform-origin: 0 0; will-change: transform; }
-.strip > .shade { position: absolute; inset: 0; }
-.cast { z-index: 3; position: absolute; left: calc(32 * var(--u)); top: calc(3 * var(--u)); width: calc(1216 * var(--u)); height: calc(994 * var(--u)); border-radius: calc(13 * var(--u)); pointer-events: none; }
+/* A page being turned: flat strips, each moved and narrowed to where its part of the bent sheet appears, with the
+   light on it as a thin layer of its own. The strips are painted once and then only moved */
+.leaves { z-index: 6; position: absolute; inset: 0; pointer-events: none; }
+.leaf { position: absolute; left: calc(640 * var(--u)); top: 0; width: 0; height: 100%; }
+.leaf > .strip { position: absolute; top: calc(3 * var(--u)); left: 0; height: calc(994 * var(--u)); transform-origin: 0 0; will-change: transform; overflow: hidden; contain: strict; }
+.leaf > .light { position: absolute; left: calc(-640 * var(--u)); top: calc(3 * var(--u)); width: calc(1283 * var(--u)); height: calc(994 * var(--u)); }
+.strip .sheet { border-radius: 0; }
+.cast { z-index: 3; will-change: transform; position: absolute; left: calc(32 * var(--u)); top: calc(3 * var(--u)); width: calc(1216 * var(--u)); height: calc(994 * var(--u)); border-radius: calc(13 * var(--u)); pointer-events: none; }
 .cover-face { position: absolute; top: 0; left: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 /* The cover photo is placed so that the cover reaches a hair past the pages on every side, as a real cover does */
 .cover-front { width: calc(703.5 * var(--u)); height: calc(1016.6 * var(--u)); left: calc(-23.7 * var(--u)); top: calc(-6.1 * var(--u)); }
@@ -194,17 +199,18 @@ body.closed #baseR, body.closed #slotR { visibility: hidden; }
 <body class="closed">
 <div class="book" id="book">
   <div class="shadow" id="shadow"></div>
-  <img class="base-l" id="baseL" alt="" hidden>
+  <img class="base-l" id="baseLE" alt="" style="visibility:hidden">
+  <img class="base-l" id="baseL" alt="" style="visibility:hidden">
   <img class="base-r" id="baseR" alt="">
   <div class="slot slot-l" id="slotL"></div>
   <div class="slot slot-r" id="slotR"></div>
-  <div class="cast" id="cast"></div>
+  <canvas class="cast" id="cast"></canvas>
   <div class="hit hit-l" id="hitL"></div>
   <div class="hit hit-r" id="hitR"></div>
   <div class="spine-hold" id="spineHold"></div>
   <div class="spine-hold-back" id="spineHoldBack"></div>
+  <div class="leaves" id="leaves" aria-hidden="true"></div>
   <div class="three">
-    <div class="pivot" id="leaf"></div>
     <div class="pivot" id="cover">
       <div class="cover-face cover-front" id="coverFront"><img id="imgCover" alt=""><img class="label-img" id="imgLabel" alt="Familienrezepte"><img class="elastic" id="imgElastic" alt=""><div class="shade"></div></div>
       <div class="cover-face cover-back"><img id="imgEnd" alt=""><div class="shade" id="coverBackShade"></div></div>
@@ -233,6 +239,7 @@ body.closed #baseR, body.closed #slotR { visibility: hidden; }
 const CRYPT = __CRYPT__;     // how the password becomes a key (the salt is not secret)
 const V = __VERSIONS__;      // file versions, so an updated book is fetched fresh
 const ILL = __ILL__;         // pages that have illustrations
+const OUTLINE = __OUTLINE__; // the top page's outline, for the light on a turning page (scripts/familienrezepte/sheets.py)
 </script>
 <script src="app.js?v=__APPV__"></script>
 </body>

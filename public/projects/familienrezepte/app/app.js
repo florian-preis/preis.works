@@ -12,7 +12,7 @@ root.style.setProperty('--img-l', `url(${A.pageL})`);
 root.style.setProperty('--img-e', `url(${A.endR})`);
 root.style.setProperty('--img-sr', `url(${A.sheetR})`);      // clean paper for a page in motion: white to every edge
 root.style.setProperty('--img-sl', `url(${A.sheetL})`);
-$('baseR').src = A.pageR; $('imgCover').src = A.cover; $('imgLabel').src = A.label; $('imgElastic').src = A.elastic; $('imgEnd').src = A.endL;
+$('baseR').src = A.pageR; $('baseL').src = A.pageL; $('baseLE').src = A.endL; $('imgCover').src = A.cover; $('imgLabel').src = A.label; $('imgElastic').src = A.elastic; $('imgEnd').src = A.endL;
 $('imgEndR').src = A.endR; $('imgBack').src = A.back;
 for (const [id, img] of [['coverBackShade', A.endL], ['backInShade', A.endR], ['backOutShade', A.back]]) {   // shading only where the board is
   const m = $(id).style; m.webkitMaskImage = m.maskImage = `url(${img})`; m.webkitMaskSize = m.maskSize = '100% 100%';
@@ -75,8 +75,9 @@ function header(r, inn) {
   hand(r.by, CX, 1, inn, (t.base - t.top) * t.s + 9);
   if (lang === 'en') inn.appendChild(row(2, `<span class="muted">${esc(r.title_en)}</span>`, 's center'));
 }
-// A recipe that would run past the foot of the page gets its ingredients in two columns
-const LINES = 26, fit = {};
+// A recipe that would run past the foot of the page gets its ingredients in two columns; so does a recipe listed
+// in TWO, on every screen, to leave room for its pictures below the text
+const LINES = 26, TWO = new Set([25]), fit = {};
 const fkey = (r, l) => r.no + l + (tall.matches ? 't' : 'w');
 function body(r, two) {
   const c = r[lang];
@@ -158,10 +159,11 @@ const LAYOUT = {
   22: [[2, 's', 1.2], [4, 'c', 1, 20], [1, 'c', 1], [3, 'cl', 1, { rot: 220 }]],
   23: [[3, 's', 1.3], [2, 'b', 1.22, { rot: -45 }], [1, 'b', 1]],
   24: [[1, 's', 1], [3, 'b', 1], [2, 'b', 1, { gap: 40 }]],
-  25: [[2, 'hl', 0.72], [1, 's', 1.15, { min: 0.95 }], [3, 's', 0.72, { dx: 20 }]],
+  25: [[2, 'hl', 0.72], [3, 's', 0.72, { dx: 20 }], [1, 'b', 1]],
   27: [[3, 'b', 1], [2, 'sr', 1], [1, 'sr', 0.88, { dy: 14 }]],
   28: [[2, 'b', 1], [3, 's', 1.15], [1, 's', 1, { dx: -35 }]],
   29: [[1, 'b', 1], [2, 's', 1.3]],
+  31: [[1, 's', 0.9], [2, 'c', 1]],
   32: [[3, 'b', 1], [2, 'b', 1], [1, 's', 1]],
   33: [[2, 'b', 1], [1, 'b', 1], [3, 's', 1, { top: 120, snug: 1, min: 0.55 }]],
 };
@@ -313,17 +315,47 @@ function place(r, rects) {
 }
 function fitOne(r, box, u) {
   r._v = (r._v || 0) + 1;
-  const keep = lang;
+  const keep = lang, rects = {};
   for (const l of ['de', 'en']) {
     lang = l; const key = fkey(r, l); delete fit[key];
     let s = recipePage(r, true)('r'); box.replaceChildren(s);
     const one = Math.round(s.querySelector('.body').getBoundingClientRect().height / (29 * u));
-    const f = fit[key] = { one, two: one > LINES && r[l].ingredients.length === 1 };
+    const f = fit[key] = { one, two: (one > LINES || TWO.has(r.no)) && r[l].ingredients.length === 1 };
     if (f.two) { s = recipePage(r, true)('r'); box.replaceChildren(s); }
     f.now = Math.round(s.querySelector('.body').getBoundingClientRect().height / (29 * u));
-    f.place = place(r, textRects(s, u));
+    rects[l] = textRects(s, u);
+    f.place = place(r, rects[l]);
   }
   lang = keep;
+  // One arrangement for both languages wherever it costs little, so switching the language moves no picture. In
+  // order: the German arrangement, if it clears the English text; the English one, if it clears the German text
+  // and keeps the German pictures nearly as large; the pictures placed once against the text of both languages,
+  // if that keeps every picture nearly as large as in either language and looks like one of the two arrangements
+  // (no picture far from where it stood there). Only if none works does each language keep its own arrangement
+  const de = fit[fkey(r, 'de')], en = fit[fkey(r, 'en')];
+  if (!de.place || !en.place) return;
+  if (clears(r, de.place, rects.en)) { en.place = de.place; de.shared = en.shared = 'de'; return; }
+  if (clears(r, en.place, rects.de) && kept(en.place, de.place)) { de.place = en.place; de.shared = en.shared = 'en'; return; }
+  const both = place(r, rects.de.concat(rects.en));
+  if (both && kept(both, de.place) && kept(both, en.place) && (near(r, both, de.place) || near(r, both, en.place))) { de.place = en.place = both; de.shared = en.shared = 'both'; }
+}
+// does arrangement a keep every picture of arrangement b at least 80% as large?
+const kept = (a, b) => a.length === b.length && b.every(q => { const m = a.find(x => x.i === q.i); return m && m.k >= q.k * 0.8; });
+// does arrangement a put every picture within 80 units (centre to centre) of where arrangement b has it?
+function near(r, a, b) {
+  const it = ILLD[r.no].items, c = p => [p.x + it[p.i].w * p.k / 2, p.y + it[p.i].h * p.k / 2];
+  return b.every(q => { const m = a.find(x => x.i === q.i); if (!m) return false; const [x0, y0] = c(m), [x1, y1] = c(q); return Math.hypot(x0 - x1, y0 - y1) <= 80; });
+}
+// does an arrangement of pictures keep clear of a page's text (with the same margin the layout keeps)?
+function clears(r, placed, rects) {
+  const il = ILLD[r.no]; if (!il) return false;
+  const hit = (x0, y0, x1, y1) => rects.some(q => x0 < q[2] + 10 && x1 > q[0] - 10 && y0 < q[3] + 10 && y1 > q[1] - 10);
+  return placed.every(p => {
+    const it = il.items[p.i], iw = it.w * p.k, ih = it.h * p.k, a = (p.r || 0) * Math.PI / 180;
+    const c = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a)), w = iw * c + ih * sn, h = iw * sn + ih * c;
+    const x0 = p.x - (w - iw) / 2, y0 = p.y - (h - ih) / 2;
+    return x0 >= X0 && x0 + w <= X1 && y0 >= 0 && y0 + h <= Y1 && !hit(x0, y0, x0 + w, y0 + h);
+  });
 }
 function fitAll() { const box = measureBox(), u = px(); for (const r of D.recipes) fitOne(r, box, u); box.remove(); }
 
@@ -340,7 +372,7 @@ const make = (i, side) => (pages[i] || blank)(side);
 
 // ---------- state ----------
 let pos = 0, open = false, busy = false, shutBack = false;
-const slotL = $('slotL'), slotR = $('slotR'), leaf = $('leaf'), cast = $('cast');
+const slotL = $('slotL'), slotR = $('slotR'), cast = $('cast');
 // A page that is already showing is not built again (rebuilding it would flicker its pictures for a frame)
 let layoutVer = 0;
 const slotKey = (i, side) => `${i}|${side}|${lang}|${layoutVer}|${tall.matches}|${(D && D.recipes[i - 1] && D.recipes[i - 1]._v) || 0}`;
@@ -359,13 +391,19 @@ async function showSmooth() {
   await Promise.race([Promise.all(imgs.map(im => (im.decode ? im.decode() : Promise.resolve()).catch(() => {}))), wait(500)]);
   if (busy || !open) return;                          // something moved in the meantime; the next show() builds it
   for (const [s, key, node] of jobs) { s._key = key; s.replaceChildren(node); }
+  prepare();
 }
-function leftBase(n) { $('baseL').src = n === 0 ? A.endL : A.pageL; }   // inside cover first, ruled paper after that
+// The left half of the open book: the inside of the cover first, ruled paper after that. Both pictures are loaded
+// from the start and only shown or hidden, so the left half is never empty for a moment
+let leftOn = false;
+function leftBase(n) { $('baseLE').style.visibility = leftOn && n === 0 ? 'visible' : 'hidden'; $('baseL').style.visibility = leftOn && n !== 0 ? 'visible' : 'hidden'; }
+function showLeft(on) { leftOn = on; leftBase(pos); }
 function show() {
   setSlot(slotR, rightIdx(pos), 'r');
   if (leftIdx(pos) >= 0) setSlot(slotL, leftIdx(pos), 'l'); else clearSlot(slotL);
   leftBase(pos);
   updateControls();
+  prepare();
 }
 const visible = n => open && (rightIdx(pos) === n || leftIdx(pos) === n);
 function updateControls() {
@@ -386,52 +424,173 @@ function animate(ms, fn) { return new Promise(res => { const t0 = performance.no
 // How a face of paper is lit: light comes from above and a little from the left
 function lit(theta, back) { const d = (Math.cos(theta) * 0.94 + Math.sin(theta) * 0.34) * (back ? -1 : 1); return 0.66 + 0.34 * clamp(d, -0.25, 1.1) / 0.94; }
 const tint = v => v >= 1 ? `rgba(255,255,255,${((v - 1) * 0.9).toFixed(3)})` : `rgba(38,32,18,${((1 - v) * 0.5).toFixed(3)})`;
+// The shadow a lifted page casts on the page beneath: drawn into a canvas, so moving it repaints nothing else
+const castCtx = cast.getContext('2d');
+let castOn = false;
+function castCanvas() {
+  const u = px(), w = 1216 * u, h = 994 * u, cs = Math.min(devicePixelRatio || 1, 1.5);
+  const W = Math.ceil(w * cs), H = Math.ceil(h * cs);
+  if (cast.width !== W || cast.height !== H) { cast.width = W; cast.height = H; }
+  castCtx.setTransform(W / w, 0, 0, H / h, 0, 0);
+  return { u, w, h };
+}
+function noCast() { if (!castOn) return; castOn = false; castCtx.setTransform(1, 0, 0, 1, 0, 0); castCtx.clearRect(0, 0, cast.width, cast.height); }
 function setCast(tipX, lift, reach) {
-  if (lift < 0.004) { cast.style.background = 'none'; return; }
-  const a = (0.26 * Math.pow(lift, 0.6)).toFixed(3), w = 10 + reach * lift;
-  const X = tipX >= 0 ? 608 + tipX : 608 - tipX, dir = tipX >= 0 ? 'to right' : 'to left';
-  cast.style.background = `linear-gradient(${dir}, transparent ${U(X - 1)}, rgba(20,16,8,${a}) ${U(X)}, rgba(20,16,8,${(a * 0.35).toFixed(3)}) ${U(X + w * 0.4)}, transparent ${U(X + w)})`;
+  if (lift < 0.004) return noCast();
+  const { u, w, h } = castCanvas(); castCtx.clearRect(0, 0, w, h); castOn = true;
+  const a = 0.26 * Math.pow(lift, 0.6), wd = (10 + reach * lift) * u;
+  const X = (608 + tipX) * u, dir = tipX >= 0 ? 1 : -1;   // where the free edge is, over the spread; the shadow falls away from the spine
+  const x0 = X, x1 = X + dir * wd, g = castCtx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0, `rgba(20,16,8,${a.toFixed(3)})`); g.addColorStop(0.4, `rgba(20,16,8,${(a * 0.35).toFixed(3)})`); g.addColorStop(1, 'rgba(20,16,8,0)');
+  castCtx.fillStyle = g; castCtx.fillRect(Math.min(x0, x1), 0, wd, h);
 }
 
 // ---------- turning a page ----------
-// A leaf is a sheet of paper cut into vertical strips, each its own plane in 3D, so the sheet can bend.
-const N = 40;
-const three = document.querySelector('.three');
-function buildLeaf(frontIdx, backIdx, pivot, n) {
-  n = n || N; const sw = 608 / n;
-  pivot.replaceChildren(); const u = px(); const fr = [], bk = [];
+// A leaf is the sheet of paper being turned, cut into narrow vertical strips. Each strip is a flat slice of the
+// page, moved and narrowed to where that part of the bent sheet appears on the screen (seen in perspective, from
+// the eye's distance PERSP), so the sheet bends while every strip stays a plain rectangle of the page's height: the
+// turning page keeps the book's height, its top and foot stay straight, and the browser never sorts planes in 3D.
+// The sheet only ever bends one way, so the strips nearer its free edge are always nearer the eye: each strip lies
+// on top of the one before it. A strip has two slices, the page being lifted and the page on its back, and shows
+// whichever faces the reader. The light on a strip is a thin layer of its own, so the slices are painted once and
+// then only moved; the paper (sheet-left/right) is cut to the photographed top page, so it fits the book exactly.
+const N = 30, NR = 14, NR_MID = 10;   // strips for a single turn; for the first and last leaf of a riffle; for those in between
+const PERSP = 6000;                   // the eye's distance, in book units
+const OV = 6;                         // px each slice reaches under its neighbour (unscaled), so no seam shows even where a strip is steep
+const leavesHost = $('leaves');
+// the top page's outline (sheets.py): top and foot of the paper every 2 units across a sheet, in sheet units
+function paperAt(o, X) {
+  const i = clamp(X / 2, 0, o.top.length - 1), a = Math.floor(i), b = Math.min(a + 1, o.top.length - 1), f = i - a;
+  const t0 = o.top[a], t1 = o.top[b], f0 = o.foot[a], f1 = o.foot[b];
+  if (t0 == null && t1 == null) return null;
+  return [t0 == null ? t1 : t1 == null ? t0 : t0 + (t1 - t0) * f, f0 == null ? f1 : f1 == null ? f0 : f0 + (f1 - f0) * f];
+}
+// A slice only needs the pictures that reach into it: the others are left out of its copy of the page
+const unitsOf = v => { const m = /calc\(([-\d.e]+) \* var\(--u\)\)/.exec(v || ''); return m ? parseFloat(m[1]) : null; };
+function prune(copy, side, a, b) {
+  const off = side === 'r' ? 62 : 41;                  // .in sits this far into the sheet
+  for (const im of copy.querySelectorAll('img')) {
+    const l = unitsOf(im.style.left), w = unitsOf(im.style.width); if (l == null || w == null) continue;
+    const x0 = off + l - w * 0.25, x1 = off + l + w * 1.25;   // generous: pictures may be turned
+    if (x1 < a || x0 > b) im.remove();
+  }
+  return copy;
+}
+function buildLeaf(frontIdx, backIdx, n) {
+  n = n || N; const u = px(), w = 608 / n, wp = w * u, m = OV / u + 2;
+  const box = el('div', 'leaf'), F = [], B = [];
   const front = make(frontIdx, 'r'), back = make(backIdx, 'l');
   for (let i = 0; i < n; i++) {
-    for (const [arr, src, off] of [[fr, front, -i * sw], [bk, back, -(n - 1 - i) * sw]]) {
-      const s = el('div', 'strip'); s.style.width = (sw * u + 1.2) + 'px';
-      const c = src.cloneNode(true); c.style.left = (off * u) + 'px'; s.appendChild(c);
-      const sh = el('div', 'shade'); s.appendChild(sh); s._sh = sh; pivot.appendChild(s); arr.push(s);
-    }
+    const f = el('div', 'strip'), b = el('div', 'strip');
+    f.style.width = b.style.width = (wp + OV) + 'px';
+    const cf = prune(front.cloneNode(true), 'r', i * w - 2, (i + 1) * w + m); cf.style.left = (-i * wp) + 'px'; f.appendChild(cf);
+    const cb = prune(back.cloneNode(true), 'l', 608 - (i + 1) * w - m, 608 - i * w + 2); cb.style.left = (OV - (608 - (i + 1) * w) * u) + 'px'; b.appendChild(cb);
+    box.append(f, b); F.push(f); B.push(b);
   }
-  return { fr, bk, u, n, pivot };
+  // the light on the sheet: one canvas over the whole leaf, drawn afresh every frame (nothing is repainted)
+  const cv = document.createElement('canvas'); cv.className = 'light';
+  const cs = Math.min(devicePixelRatio || 1, tall.matches ? 1.25 : 2);
+  cv.width = Math.ceil(1283 * u * cs); cv.height = Math.ceil(994 * u * cs);
+  box.appendChild(cv);
+  leavesHost.appendChild(box);
+  return { F, B, face: [], u, n, w, box, cv, ctx: cv.getContext('2d'), cs };
+}
+// The light on a leaf: every visible piece of every strip, nearest first, is filled with its own shading, cut to the
+// top page's outline. Pieces hidden behind nearer strips are skipped, so no shading is laid twice
+function lightLeaf(L, xs, vf, face) {
+  const { ctx, cv, u, n, w } = L, ox = 640 * u;
+  ctx.setTransform(cv.width / (1283 * u), 0, 0, cv.height / (994 * u), 0, 0); ctx.clearRect(0, 0, 1283 * u, 994 * u);
+  const cov = [];
+  const free = (lo, hi) => {                            // the parts of [lo, hi] not yet covered by nearer strips
+    let out = [[lo, hi]];
+    for (const [c0, c1] of cov) out = out.flatMap(([a, b]) => (c1 <= a || c0 >= b) ? [[a, b]] : [[a, Math.min(b, c0)], [Math.max(a, c1), b]].filter(([p, q]) => q - p > 0.01));
+    return out;
+  };
+  for (let i = n - 1; i >= 0; i--) {
+    const a = xs[i], b = xs[i + 1], lo = Math.min(a, b), hi = Math.max(a, b);
+    if (hi - lo < 0.02) continue;
+    const o = face[i] ? OUTLINE.r : OUTLINE.l;
+    const X = x => face[i] ? i * w + (x - a) / (b - a) * w : 608 - i * w - (x - a) / (b - a) * w;   // sheet column under x
+    const V = x => vf[i][0] + (vf[i][1] - vf[i][0]) * (x - a) / (b - a);                             // light at x
+    for (const [p0, p1] of free(lo, hi)) {
+      const steps = Math.max(1, Math.ceil(Math.abs(X(p1) - X(p0)) / 2)), top = [], foot = [];
+      for (let k = 0; k <= steps; k++) { const x = p0 + (p1 - p0) * k / steps, q = paperAt(o, X(x)); if (q) { top.push([x, q[0]]); foot.push([x, q[1]]); } }
+      if (top.length < 2) continue;
+      ctx.beginPath(); ctx.moveTo(ox + top[0][0], top[0][1] * u);
+      for (const [x, y] of top.slice(1)) ctx.lineTo(ox + x, y * u);
+      for (let k = foot.length - 1; k >= 0; k--) ctx.lineTo(ox + foot[k][0], foot[k][1] * u);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(ox + p0, 0, ox + p1, 0); g.addColorStop(0, tint(V(p0))); g.addColorStop(1, tint(V(p1)));
+      ctx.fillStyle = g; ctx.fill();
+    }
+    cov.push([lo, hi]);
+  }
 }
 // The sheet bends: the free edge leads, the part by the fold follows, and it lands with a soft bulge that flattens
-// In perspective, the part of a page that lifts towards the eye grows taller than the book. A real page does not
-// change height, so each strip is shortened by exactly as much as its height in the air would enlarge it, about the
-// point the perspective is centred on: the turning page keeps the book's height all the way over.
-const PERSP = 6000, PERSP_Y = 0.46 * 1006 - 3;       // as in .three (perspective, perspective-origin), in book units
-function poseLeaf(L, p, noCast) {
-  const { fr, bk, u, n } = L; const w = 608 / n * u, P = PERSP * u, OY = (PERSP_Y * u).toFixed(2);
+function poseLeaf(L, p, quiet) {
+  const { F, B, u, n, w } = L, wp = w * u, P = PERSP * u, O = (tall.matches ? 322.25 : 1.5) * u;
   const tip = Math.PI * ease(clamp(p / 0.86, 0, 1)), sp = Math.PI * ease(clamp((p - 0.14) / 0.86, 0, 1));
-  let x = 0, z = 0, zmax = 0; const th = [];
-  for (let i = 0; i <= n; i++) th.push(sp + (tip - sp) * Math.pow(i / n, 1.35));
+  const th = []; for (let i = 0; i <= n; i++) th.push(sp + (tip - sp) * Math.pow(i / n, 1.35));
+  let x = 0, z = 0, zmax = 0; const xs = [0], face = [];
   for (let i = 0; i < n; i++) {
-    const a = (th[i] + th[i + 1]) / 2, deg = (-a * 180 / Math.PI).toFixed(3);
-    const k = ((P - (z + w / 2 * Math.sin(a))) / P).toFixed(5);
-    const base = `translate3d(${x.toFixed(2)}px,0,${z.toFixed(2)}px) translateY(${OY}px) scaleY(${k}) translateY(-${OY}px) rotateY(${deg}deg)`;
-    fr[i].style.transform = base;
-    bk[i].style.transform = `${base} translateX(${(w / 2).toFixed(2)}px) rotateY(180deg) translateX(${(-w / 2).toFixed(2)}px)`;
-    fr[i]._sh.style.background = `linear-gradient(to right, ${tint(lit(th[i], false))}, ${tint(lit(th[i + 1], false))})`;
-    bk[i]._sh.style.background = `linear-gradient(to left, ${tint(lit(th[i], true))}, ${tint(lit(th[i + 1], true))})`;
-    x += w * Math.cos(a); z += w * Math.sin(a); zmax = Math.max(zmax, z);
+    const a = (th[i] + th[i + 1]) / 2, x1 = x + wp * Math.cos(a), z1 = z + wp * Math.sin(a);
+    xs.push(O + (x1 - O) * P / (P - z1));             // where this strip's far edge appears on the screen
+    x = x1; z = z1; zmax = Math.max(zmax, z);
   }
-  if (!noCast) setCast(x / u, zmax / (608 * u), 300);
+  for (let i = 0; i < n; i++) {
+    const s0 = xs[i], s1 = xs[i + 1], front = s1 >= s0; face.push(front);
+    if (L.face[i] !== front) { L.face[i] = front; F[i].style.opacity = front ? '1' : '0.001'; B[i].style.opacity = front ? '0.001' : '1'; }
+    if (front) F[i].style.transform = `translate(${s0.toFixed(2)}px,0) scaleX(${((s1 - s0) / wp).toFixed(5)})`;
+    else { const k = (s0 - s1) / wp; B[i].style.transform = `translate(${(s1 - OV * k).toFixed(2)}px,0) scaleX(${k.toFixed(5)})`; }
+  }
+  // the light changes along each strip from one edge to the other, by the angle there, on whichever face shows
+  const vf = []; for (let i = 0; i < n; i++) vf.push([lit(th[i], !face[i]), lit(th[i + 1], !face[i])]);
+  lightLeaf(L, xs, vf, face);
+  if (!quiet) setCast(x / u, zmax / (608 * u), 300);
   return { tip: x / u, lift: zmax / (608 * u) };
+}
+// The next turn either way is prepared while the reader reads: its leaf is built, laid out and painted, lying
+// invisibly in place, so a turn starts the moment it is asked for. A prepared leaf belongs to the exact pages,
+// language, layout and size it was built for; anything else is thrown away
+const ahead = new Map();
+const leafKey = n => `${slotKey(rightIdx(n), 'r')}/${slotKey(leftIdx(n + 1), 'l')}/${N}/${px().toFixed(4)}`;
+function dropAhead() { clearTimeout(prepTimer); for (const L of ahead.values()) L.box.remove(); ahead.clear(); }
+function takeLeaf(n) {
+  const k = leafKey(n), L = ahead.get(k); if (!L) return null;
+  ahead.delete(k); L.box.style.opacity = ''; return L;
+}
+let prepTimer = 0;
+function prepare() {
+  clearTimeout(prepTimer);
+  prepTimer = setTimeout(() => {
+    if (busy || !open || reduce.matches || !D) return;
+    const want = [pos, pos - 1].filter(n => n >= 0 && n < lastPos());
+    if (tall.matches) want.length = Math.min(want.length, 1);            // phones keep only the next leaf ready
+    const keys = new Map(want.map(n => [leafKey(n), n]));
+    for (const [k, L] of ahead) if (!keys.has(k)) { L.box.remove(); ahead.delete(k); }
+    const next = [...keys].find(([k]) => !ahead.has(k));
+    if (!next) return;
+    const [k, n] = next, L = buildLeaf(rightIdx(n), leftIdx(n + 1));
+    L.box.style.opacity = '0.001';                      // drawn, so it is painted and ready, but not seen
+    poseLeaf(L, n === pos ? 0 : 1, true); ahead.set(k, L);
+    prepare();                                          // and the other one, a moment later
+  }, 180);
+}
+// While pages move, nothing else may claim the main thread: work that arrives meanwhile (an illustration file
+// landing, a page to lay out again) waits until the movement has finished
+let animating = false;
+const later = [];
+function afterMotion(fn) { if (animating || later.length) { later.push(fn); if (!animating) setTimeout(drain, 0); } else fn(); }
+async function moving(ms, fn) {
+  animating = true;
+  try { await animate(ms, fn); } finally { animating = false; }
+  drain();
+}
+// work held back during a movement is done afterwards in small portions, so the screen keeps drawing in between
+function drain() {
+  const t0 = performance.now();
+  while (later.length && !animating && performance.now() - t0 < 12) later.shift()();
+  if (later.length && !animating) setTimeout(drain, 0);
 }
 async function turn(dir) {
   if (busy) return;
@@ -444,46 +603,52 @@ async function turn(dir) {
   await pagesReady([rightIdx(to), leftIdx(to), rightIdx(Math.min(pos, to)), leftIdx(Math.max(pos, to))], 700);
   const n = dir > 0 ? pos : to;                       // the leaf between position n and n + 1
   if (reduce.matches) { pos = to; show(); busy = false; return; }
-  const L = buildLeaf(rightIdx(n), leftIdx(n + 1), leaf);
+  const key = leafKey(n), L = takeLeaf(n) || buildLeaf(rightIdx(n), leftIdx(n + 1));
   poseLeaf(L, dir > 0 ? 0 : 1);
-  await ready([leaf]);                                // the leaf lies exactly over the page it lifts: nothing changes yet
+  await ready([L.box]);                               // the leaf lies exactly over the page it lifts: nothing changes yet
   if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else clearSlot(slotL); leftBase(to); }
   await ready([dir > 0 ? slotR : slotL], 250);
-  await animate(1050, t => poseLeaf(L, dir > 0 ? t : 1 - t));
-  pos = to; show(); leaf.replaceChildren(); cast.style.background = 'none'; busy = false;
+  await moving(1050, t => poseLeaf(L, dir > 0 ? t : 1 - t));
+  // the leaf just turned is the one the next turn back (or forth) needs: it stays, invisibly, where it landed,
+  // unless its pages changed while it turned (their pictures arrived, say)
+  L.box.style.opacity = '0.001'; noCast();
+  pos = to; if (leafKey(n) === key && !ahead.has(key)) ahead.set(key, L); else L.box.remove();
+  show(); busy = false;
 }
-// Going further than one page: the pages riffle past under the thumb, a handful of real leaves in quick
-// succession, and the book lands open at the destination. One page away is an ordinary turn.
+// Going further than one page: the pages riffle past under the thumb, a few real leaves in quick succession, and
+// the book lands open at the destination. One page away is an ordinary turn.
+const RIFFLE = 5;                                     // leaves that fly past at most
 async function riffle(to) {
   const from = pos, dir = Math.sign(to - from), steps = Math.abs(to - from);
   if (!steps) return;
   if (steps === 1 || reduce.matches) { if (reduce.matches) { pos = to; show(); return; } return turn(dir); }
   busy = true;
-  const m = Math.min(steps, 7), ns = [];
+  const m = Math.min(steps, RIFFLE), ns = [];
   for (let j = 0; j < m; j++) {
     const k = Math.round(j * (steps - 1) / (m - 1));
     ns.push(dir > 0 ? from + k : from - 1 - k);       // leaf between n and n + 1: forwards from the top of the right stack, backwards from the top of the left
   }
-  const Ls = ns.map(n => { const pv = el('div', 'pivot'); three.insertBefore(pv, leaf); return buildLeaf(rightIdx(n), leftIdx(n + 1), pv, 24); });
-  Ls.forEach((L, j) => { poseLeaf(L, dir > 0 ? 0 : 1, true); L.pivot.style.zIndex = 100 - j; });   // the first to go lies on top
-  await ready(Ls.map(L => L.pivot), 600);
+  // the first leaf is often prepared already; the ones flying past in between need fewer strips
+  const Ls = ns.map((n, j) => (j === 0 && takeLeaf(n)) || buildLeaf(rightIdx(n), leftIdx(n + 1), j === 0 || j === m - 1 ? NR : NR_MID));
+  Ls.forEach((L, j) => { poseLeaf(L, dir > 0 ? 0 : 1, true); L.box.style.zIndex = 100 - j; });   // the first to go lies on top
+  await ready(Ls.map(L => L.box), 600);
   // underneath: the destination, on the side the leaves are leaving
   if (dir > 0) setSlot(slotR, rightIdx(to), 'r'); else { if (leftIdx(to) >= 0) setSlot(slotL, leftIdx(to), 'l'); else clearSlot(slotL); leftBase(to); }
   await ready([dir > 0 ? slotR : slotL], 250);
-  const ONE = 560, GAP = steps > 4 ? 85 : 110, T = ONE + (m - 1) * GAP;
-  await animate(T, t => {
+  const ONE = 560, GAP = steps > 4 ? 95 : 120, T = ONE + (m - 1) * GAP;
+  await moving(T, t => {
     let top = null;
     Ls.forEach((L, j) => {
       const q = clamp((t * T - j * GAP) / ONE, 0, 1);
-      const r = poseLeaf(L, dir > 0 ? q : 1 - q, true);
-      // on the side it leaves, the earlier leaf lies on top; on the side it lands, the later one does
-      L.pivot.style.zIndex = q < 0.5 ? 100 - j : 200 + j;
+      const z = q < 0.5 ? 100 - j : 200 + j;           // on the side it leaves, the earlier leaf lies on top; on the side it lands, the later one does
+      if (L.z !== z) { L.z = z; L.box.style.zIndex = z; }
+      if (L.q === q) return;                            // still waiting to go, or already landed: nothing to move
+      L.q = q; const r = poseLeaf(L, dir > 0 ? q : 1 - q, true);
       if (q > 0 && q < 1 && (!top || r.lift > top.lift)) top = r;
     });
-    if (top) setCast(top.tip, top.lift * 0.8, 260); else cast.style.background = 'none';
+    if (top) setCast(top.tip, top.lift * 0.8, 260); else noCast();
   });
-  Ls.forEach(L => L.pivot.remove());
-  pos = to; show(); cast.style.background = 'none'; busy = false;
+  pos = to; show(); Ls.forEach(L => L.box.remove()); noCast(); busy = false;
 }
 async function go(pageIdx) {
   if (busy) return;
@@ -504,7 +669,7 @@ function poseCover(t) {
   shadow.style.transform = `scaleX(${((618 + (t > 0.5 ? 643 * Math.abs(Math.cos(a)) : 0)) / 1258).toFixed(4)})`;
   document.body.classList.toggle('lidded', t < 0.5);
   $('spineHold').style.visibility = t < 0.5 ? 'visible' : 'hidden';   // the spine shows until the cover stands upright, then it is gone
-  if (t < 0.5) setCast(636 * Math.cos(a), Math.sin(a) * 0.9, 210); else cast.style.background = 'none';
+  if (t < 0.5) setCast(636 * Math.cos(a), Math.sin(a) * 0.9, 210); else noCast();
 }
 async function openBook() {
   if (busy || open || shutBack) return; busy = true;
@@ -512,16 +677,18 @@ async function openBook() {
   $('pass').classList.add('gone'); pos = 0; setSlot(slotR, rightIdx(0), 'r'); await ready([slotR]); document.body.classList.remove('closed'); document.body.classList.add('opening');
   if (reduce.matches) { cover.hidden = true; $('spineHold').style.visibility = 'hidden'; document.body.classList.remove('lidded'); } else {
     coverFront.classList.add('off'); await wait(430);
-    await animate(2100, t => poseCover(swing(t)));
+    await moving(2100, t => poseCover(swing(t)));
+    showLeft(true); await frames(2);                  // the inside cover is drawn under the open cover first, so taking the cover away changes nothing
     cover.hidden = true;
   }
-  $('baseL').hidden = false; shadow.style.transform = 'none'; open = true; document.body.classList.remove('opening'); show(); busy = false;
+  showLeft(true); shadow.style.transform = 'none'; open = true; document.body.classList.remove('opening'); show(); busy = false;
 }
 async function closeBook() {
-  if (busy || !open) return; busy = true; open = false; updateControls();
-  cover.hidden = false; $('baseL').hidden = true; clearSlot(slotL); document.body.classList.add('opening');
-  if (!reduce.matches) { poseCover(1); await animate(1800, t => poseCover(1 - swing(t))); }
-  poseCover(0); cast.style.background = 'none'; clearSlot(slotR); document.body.classList.add('closed'); document.body.classList.remove('opening'); coverFront.classList.remove('off'); busy = false;
+  if (busy || !open) return; busy = true; open = false; updateControls(); dropAhead();
+  poseCover(1); cover.hidden = false; clearSlot(slotL); document.body.classList.add('opening');
+  await frames(2); showLeft(false);                 // the cover lies over the left half before it is taken away underneath
+  if (!reduce.matches) await moving(1800, t => poseCover(1 - swing(t)));
+  poseCover(0); noCast(); clearSlot(slotR); document.body.classList.add('closed'); document.body.classList.remove('opening'); coverFront.classList.remove('off'); busy = false;
   updateControls();
 }
 
@@ -536,20 +703,20 @@ function poseBack(t) {
   shadow.style.transform = `scaleX(${((622 + (t < 0.5 ? 643 * Math.abs(Math.cos(a)) : 0)) / 1258).toFixed(4)})`;
   document.body.classList.toggle('backlid', t > 0.5);
   $('spineHoldBack').style.visibility = t > 0.5 ? 'visible' : 'hidden';
-  if (t > 0.5) setCast(-636 * Math.cos(Math.PI - a), Math.sin(a) * 0.9, 210); else cast.style.background = 'none';
+  if (t > 0.5) setCast(-636 * Math.cos(Math.PI - a), Math.sin(a) * 0.9, 210); else noCast();
 }
 async function closeBack() {
-  if (busy || !open) return; busy = true; open = false; updateControls();
+  if (busy || !open) return; busy = true; open = false; updateControls(); dropAhead();
   backB.hidden = false; poseBack(0); document.body.classList.add('backshut');
-  if (!reduce.matches) await animate(2100, t => poseBack(swing(t)));
-  poseBack(1); cast.style.background = 'none'; shutBack = true; busy = false; updateControls();
+  if (!reduce.matches) await moving(2100, t => poseBack(swing(t)));
+  poseBack(1); noCast(); shutBack = true; busy = false; updateControls();
 }
 async function openBack(to) {
   if (busy || !shutBack) return; busy = true; shutBack = false;
   const onward = to != null && to < lastPos();
-  if (!reduce.matches) { poseBack(1); await animate(onward ? 1300 : 1800, t => poseBack(1 - swing(t))); }
+  if (!reduce.matches) { poseBack(1); await moving(onward ? 1300 : 1800, t => poseBack(1 - swing(t))); }
   poseBack(0); backB.hidden = true; document.body.classList.remove('backshut', 'backlid'); $('spineHoldBack').style.visibility = 'hidden';
-  shadow.style.transform = 'none'; cast.style.background = 'none'; open = true; pos = lastPos(); show(); busy = false;
+  shadow.style.transform = 'none'; noCast(); open = true; pos = lastPos(); show(); busy = false;
   if (onward) await riffle(to);                         // straight on, without stopping on the last page
 }
 poseCover(0);
@@ -601,8 +768,11 @@ const illP = {};
 function ensureIll(n) {
   if (!D || !ILL.includes(n)) return Promise.resolve();
   return illP[n] || (illP[n] = fetchPictures(`data/ill-${String(n).padStart(2, '0')}.bin`).then(d => {
-    ILLD[n] = d; const box = measureBox(); fitOne(D.recipes[n - 1], box, px()); box.remove();
-    if (visible(n) && !busy) return showSmooth();
+    ILLD[n] = d;
+    return new Promise(res => afterMotion(() => {
+      const box = measureBox(); fitOne(D.recipes[n - 1], box, px()); box.remove();
+      res(visible(n) && !busy ? showSmooth() : null);
+    }));
   }).catch(() => {}));
 }
 // before moving to a page: its illustrations are there (or a moment has passed), so it never lands without them
@@ -711,11 +881,12 @@ function resume() {
   if (r.lang && r.lang !== lang) setLang(r.lang);
   if (!r.open || !D || open || busy) return;
   document.body.classList.remove('closed', 'lidded'); $('pass').classList.add('gone');
-  cover.hidden = true; $('spineHold').style.visibility = 'hidden'; $('baseL').hidden = false; shadow.style.transform = 'none'; cast.style.background = 'none';
+  cover.hidden = true; $('spineHold').style.visibility = 'hidden'; leftOn = true; shadow.style.transform = 'none'; noCast();
   open = true; pos = Math.min(posOf(r.page), lastPos()); show(); updateControls();
 }
 
 function setLang(l) {
+  dropAhead();                                         // the prepared leaves are in the old language; dropped first, so the switch restyles only the open pages
   lang = l; root.lang = l; $('lang').setAttribute('aria-checked', String(l === 'en'));
   $('lblDE').classList.toggle('is-on', l === 'de'); $('lblEN').classList.toggle('is-on', l === 'en');
   if (open) show(); else updateControls();
@@ -726,8 +897,9 @@ tall.addEventListener('change', async () => {
   while (busy) await wait(100);
   if (!D) return;
   if (shutBack && !wide()) { shutBack = false; backB.hidden = true; document.body.classList.remove('backshut', 'backlid'); $('spineHoldBack').style.visibility = 'hidden'; shadow.style.transform = 'none'; open = true; }
-  const page = open ? Math.max(rightIdx(pos), 0) : 0; fitAll(); buildPages(); pos = Math.min(posOf(page), lastPos()); if (open) show();
+  const page = open ? Math.max(rightIdx(pos), 0) : 0; dropAhead(); fitAll(); buildPages(); pos = Math.min(posOf(page), lastPos()); if (open) show();
 });
+addEventListener('resize', () => { if (open && !busy) prepare(); });
 updateControls();
 // for checking the book in a test browser
-window.__book = { riffle, forget: () => store.set(null), unlock, tryOpen, data: () => D, ill: () => ILLD, fit, setLang, recipePage, openBook, closeBook, closeBack, openBack, turn, go, poseLeaf, buildLeaf, poseCover, poseBack, setSlot, rightIdx, leftIdx, coverFront, state: () => ({ pos, open, busy, shutBack, last: lastPos() }) };
+window.__book = { riffle, forget: () => store.set(null), unlock, tryOpen, data: () => D, ill: () => ILLD, fit, setLang, recipePage, openBook, closeBook, closeBack, openBack, turn, go, poseLeaf, buildLeaf, poseCover, poseBack, setSlot, rightIdx, leftIdx, coverFront, state: () => ({ pos, open, busy, shutBack, last: lastPos(), animating }) };

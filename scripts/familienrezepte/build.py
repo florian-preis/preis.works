@@ -6,7 +6,7 @@ browser that has unlocked the book once keeps working after content updates; onl
 The password is read from the environment variable FR_PASS and is never written anywhere.
 
 Usage: FR_PASS=... python3 build.py <work folder> <app folder>
-  work folder: content.json, lettering.json, ill/ill_<page>.json, assets/*.png (see README.md)
+  work folder: content.json, lettering.json, ill/ill_<page>.json, assets/*.png and assets/outline.json (see README.md)
   app folder:  public/projects/familienrezepte/app"""
 import sys, os, json, math, gzip, hashlib, re, io
 from PIL import Image
@@ -23,15 +23,28 @@ key = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=SALT, iterations=ITE
 os.makedirs(os.path.join(app, 'data'), exist_ok=True); os.makedirs(os.path.join(app, 'assets'), exist_ok=True)
 versions = {}
 
+def keep(path, blob, same):
+    """Write blob to path, unless the file already there holds the same content (same(old bytes) says so): then it
+    stays as it is. Another computer's gzip or WebP encoder can make different bytes from the same content; this
+    way an unchanged file stays byte-identical and git shows only real changes"""
+    if os.path.exists(path):
+        old = open(path, 'rb').read()
+        try:
+            if old == blob or same(old): return old
+        except Exception: pass                      # unreadable (another password, say): written anew
+    open(path, 'wb').write(blob); return blob
+def opened(blob): return AESGCM(key).decrypt(blob[:12], blob[12:], None)
+def pixels(data): return (lambda im: (im.size, im.tobytes()))(Image.open(io.BytesIO(data)).convert('RGBA'))
+
 def seal(name, obj):
-    """gzip, then AES-GCM; file = 12-byte IV + ciphertext. Keeps the IV when the content is unchanged,
-    so an unchanged file stays byte-identical and git sees no change"""
-    plain = gzip.compress(json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode(), 9, mtime=0)
+    """gzip, then AES-GCM; file = 12-byte IV + ciphertext. The IV is derived from the content, and an existing
+    file with the same content is kept, so an unchanged file stays byte-identical"""
+    raw = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode()
+    plain = gzip.compress(raw, 9, mtime=0)
     path = os.path.join(app, 'data', name)
     tag = hashlib.sha256(key + plain).digest()
     iv = tag[:12]                                   # deterministic per content: same content, same file
-    blob = iv + AESGCM(key).encrypt(iv, plain, None)
-    open(path, 'wb').write(blob)
+    blob = keep(path, iv + AESGCM(key).encrypt(iv, plain, None), lambda old: gzip.decompress(opened(old)) == raw)
     versions['data/' + name] = hashlib.sha256(blob).hexdigest()[:10]
     return len(blob)
 
@@ -39,8 +52,9 @@ def seal(name, obj):
 for f in ['sheet-right', 'sheet-left', 'page-right', 'page-left', 'endpaper-left', 'endpaper-right', 'cover-front', 'cover-elastic', 'cover-label', 'cover-back']:
     im = Image.open(os.path.join(work, 'assets', f + '.png'))
     out = os.path.join(app, 'assets', f + '.webp')
-    im.save(out, 'WEBP', quality=90, method=6)
-    versions['assets/' + f + '.webp'] = hashlib.sha256(open(out, 'rb').read()).hexdigest()[:10]
+    buf = io.BytesIO(); im.save(buf, 'WEBP', quality=90, method=6); data = buf.getvalue()
+    data = keep(out, data, lambda old: pixels(old) == pixels(data))
+    versions['assets/' + f + '.webp'] = hashlib.sha256(data).hexdigest()[:10]
 
 # ---------- content ----------
 C = json.load(open(os.path.join(work, 'content.json')))
@@ -86,8 +100,17 @@ for r in C['recipes']:
     head = json.dumps(dict(items=idx), separators=(',', ':')).encode()
     plain = struct.pack('>I', len(head)) + head + b''.join(blobs)
     iv = hashlib.sha256(key + plain).digest()[:12]
-    blob = iv + AESGCM(key).encrypt(iv, plain, None)
-    path = os.path.join(app, 'data', f'ill-{n:02d}.bin'); open(path, 'wb').write(blob)
+    def same(old, idx=idx, blobs=blobs):            # the same pictures, in the same roles and sizes, pixel for pixel
+        p = opened(old); h = struct.unpack('>I', p[:4])[0]; items = json.loads(p[4:4 + h])['items']
+        strip = lambda its: [{k: v for k, v in it.items() if k != 'len'} for it in its]
+        if strip(items) != strip(idx): return False
+        o = 4 + h
+        for it, data in zip(items, blobs):
+            if pixels(p[o:o + it['len']]) != pixels(data): return False
+            o += it['len']
+        return True
+    path = os.path.join(app, 'data', f'ill-{n:02d}.bin')
+    blob = keep(path, iv + AESGCM(key).encrypt(iv, plain, None), same)
     versions[f'data/ill-{n:02d}.bin'] = hashlib.sha256(blob).hexdigest()[:10]
     sizes[n] = len(blob)
 
@@ -99,5 +122,10 @@ html = html.replace('__CRYPT__', json.dumps(dict(salt=__import__('base64').b64en
 html = html.replace('__APPV__', versions['app.js'])
 html = html.replace('__VERSIONS__', json.dumps(versions, separators=(',', ':')))
 html = html.replace('__ILL__', json.dumps([r['no'] for r in C['recipes'] if glob.glob(os.path.join(work, 'ill-new', f'{r["no"]:02d}_*.webp'))]))
+# the outline of the top page (from sheets.py): top and foot of the paper every 2 units across a sheet, for the light
+# on a turning page
+O = json.load(open(os.path.join(work, 'assets', 'outline.json')))
+pick = lambda a: [None if v is None else round(v, 1) for v in a[::2]]
+html = html.replace('__OUTLINE__', json.dumps({s[0]: dict(edge=O[s]['edge'], top=pick(O[s]['top']), foot=pick(O[s]['foot'])) for s in ('right', 'left')}, separators=(',', ':')))
 open(os.path.join(app, 'index.html'), 'w').write(html)
 print('built:', {k: f'{v//1024} KB' for k, v in list(sizes.items())[:3]}, '... total', sum(sizes.values())//1024, 'KB encrypted')

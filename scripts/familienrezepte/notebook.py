@@ -126,21 +126,10 @@ def endpaper(half, box):
 cv2.imwrite(f'{out}/endpaper-left.png', endpaper(spread[:, :SP], (30, 975, 12, SP)))
 cv2.imwrite(f'{out}/endpaper-right.png', endpaper(spread[:, SP:], (30, 975, 0, W - SP - 12)))
 
-# ---------- paper for a page in motion: no cover, no page-block lines, paper to every edge ----------
-def clean_sheet(page, x0, x1, src_cols, dst_cols):
-    sh = page[3:997, x0:x1, :3].astype(np.float32).copy()
-    a, b = src_cols; c, d = dst_cols; w = d - c
-    sh[:, c:d] = sh[:, a:a + w]
-    lum = sh.mean(2); bad = (lum < 175).astype(np.uint8); bad[40:-40, 40:-40] = 0
-    bad = cv2.dilate(bad, np.ones((3, 3), np.uint8))
-    sh = cv2.inpaint(np.clip(sh, 0, 255).astype(np.uint8), bad, 4, cv2.INPAINT_TELEA)
-    # the image draws a bright rim where the paper meets the board, and the pages dip at the spine; a page in
-    # motion has no board, so its top and foot are rebuilt from the plain margin next to them (mirrored, so the
-    # paper runs on without a seam). Without this the turning page shows a white edge
-    T, B = 22, 16
-    sh[:T] = sh[2 * T:T:-1]
-    sh[-B:] = sh[-B - 1:-2 * B - 1:-1]
-    return sh
-cv2.imwrite(f'{out}/sheet-right.png', clean_sheet(spread[:, SP:], 0, 608, (555, 580), (583, 608)))
-cv2.imwrite(f'{out}/sheet-left.png', clean_sheet(spread[:, :SP], 32, 640, (50, 75), (0, 25)))
+# ---------- paper for a page in motion ----------
+# cut from the page pictures along the outline of the top page, so a turning page dips into the gutter and meets the
+# stack of pages exactly like the pages lying open (sheets.py; it also writes outline.json for the app)
+import os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sheets
+sheets.make(out)
 print('ok')
