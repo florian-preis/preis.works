@@ -217,16 +217,17 @@ const jsonLd = {
   }
   @media (orientation: portrait) { .veil { --lift: 30px; } }
 
-  /* ── Two resting places: the veil, and everything after it ──
+  /* ── Two resting places: the veil, and the top of everything after it ──
      The block after the veil is at least as tall as the largest screen height (100vh is the
      height with the phone's browser bars hidden), so you can always scroll the veil fully out
-     of view. Scrolling snaps to one place or the other; inside the block you scroll freely. */
+     of view. Scrolling from the veil snaps to one place or the other. Once the page rests on the
+     profile, snapping switches off (class "free", set by the script) and the page scrolls like any
+     other; heading back up into the veil, the script finishes the move. Snapping across the whole
+     page made iPhones jump between the top and bottom of the profile and swallow the first tap */
   :global(html:has(#veil)) { scroll-snap-type: y mandatory; }
+  :global(html:has(#veil).free) { scroll-snap-type: none; }
   .veil { scroll-snap-align: start; }
   :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; scroll-snap-align: start; }
-  /* The bottom of the page is a resting place of its own. Without it, phones (where the block is taller
-     than the screen) treated the very bottom as invalid and jumped back to the top of the profile */
-  :global(.after-lead > .site-footer) { scroll-snap-align: end; }
 
   /* ── About ── */
   /* Top space: once the page snaps past the veil, the menu sits in it (72 px tall), so the portrait
@@ -278,20 +279,19 @@ const jsonLd = {
 <script>
   // Scrolling down from the veil: the fog returns over the name within the first quarter of the veil
   // (at most 240 px), and the menu arrives once the name is mostly fogged.
-  // Scrolling back up from the profile: the menu stays while you drag into the veil, and as soon as
-  // the veil is sure to snap into place ("homing"), the menu leaves quickly and the name clears fast,
-  // so both are done before the veil settles. Browsers that report the coming snap target
-  // (scrollsnapchanging) know this exactly; the others go by direction and the halfway point.
+  // Scrolling back up from the profile: the menu stays while you drag into the veil, and once you
+  // have pulled it 60 px down while heading up ("homing"), the menu leaves quickly and the name
+  // clears fast, so both are done before the veil settles.
   const veil = document.getElementById('veil')!;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
   const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
-  const snapEvents = 'onscrollsnapchanging' in window;
   const scrollTimeline = CSS.supports('animation-timeline: scroll()');
   let p = 0;
   let ticking = false;
   let homing = false;
   let from: 'veil' | 'profile' = 'veil';
   let lastY = window.scrollY;
+  let lastUp = false;
   const menuToggle = document.querySelector<HTMLElement>('.nav-toggle');
   const render = () => {
     p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
@@ -312,22 +312,46 @@ const jsonLd = {
     ticking = false;
     const y = window.scrollY;
     const up = y < lastY;
+    // Direction of the last real movement, for finishing a move between veil and profile
+    if (y !== lastY) lastUp = up;
     lastY = y;
     if (y <= 1) { from = 'veil'; setHoming(false); }
     else if (y >= veil.offsetHeight - 1) { from = 'profile'; setHoming(false); }
-    else if (!snapEvents && from === 'profile') setHoming(up ? y < veil.offsetHeight / 2 || homing : false);
+    else if (from === 'profile') setHoming(up && y < veil.offsetHeight - 60);
     render();
   };
-  if (snapEvents) {
-    document.addEventListener('scrollsnapchanging', (e) => {
-      const target = (e as Event & { snapTargetBlock?: Element | null }).snapTargetBlock;
-      if (from === 'profile') setHoming(target === veil);
-    });
-  }
   window.addEventListener('scroll', () => {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
+
+  // Snapping only around the veil. Once the page has come to rest on the profile (no finger on the
+  // screen, no scroll for 150 ms), snapping switches off and the profile scrolls like any other page.
+  // Back at the veil it switches on again. If you stop between the two while snapping is off (on the
+  // way up from the profile), the page finishes the move: to the veil if you were heading up and
+  // pulled it more than 60 px, otherwise back to the profile.
+  const root = document.documentElement;
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let touching = false;
+  let lastScroll = 0;
+  let settleTimer = 0;
+  const settle = () => {
+    if (touching) return;
+    const wait = 150 - (performance.now() - lastScroll);
+    if (wait > 0) { settleTimer = window.setTimeout(settle, wait); return; }
+    const y = window.scrollY;
+    const h = veil.offsetHeight;
+    if (y >= h - 1) root.classList.add('free');
+    else if (y <= 1) root.classList.remove('free');
+    else if (root.classList.contains('free')) {
+      window.scrollTo({ top: lastUp && y < h - 60 ? 0 : h, behavior: still ? 'auto' : 'smooth' });
+    }
+  };
+  const later = () => { clearTimeout(settleTimer); settleTimer = window.setTimeout(settle, 150); };
+  window.addEventListener('scroll', () => { lastScroll = performance.now(); later(); }, { passive: true });
+  window.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+  ['touchend', 'touchcancel'].forEach((t) => window.addEventListener(t, () => { touching = false; later(); }, { passive: true }));
   update();
+  settle();
 
   // Nudge: if nobody has scrolled, touched, clicked, or pressed a key after two photos have gone by,
   // the veil peeks up a little (in the middle of the third photo, not during a change). It repeats
