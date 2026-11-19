@@ -59,10 +59,7 @@ const jsonLd = {
       <div class="slide"><img class="drift" alt=""></div>
     </div>
     <div class="haze" aria-hidden="true"></div>
-    <svg class="condensation" aria-hidden="true">
-      <filter id="condensation"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-      <rect width="100%" height="100%" filter="url(#condensation)"/>
-    </svg>
+    <div class="condensation" aria-hidden="true"></div>
     <div class="layer clear" aria-hidden="true">
       <div class="slide"><img class="drift" alt=""></div>
       <div class="slide"><img class="drift" alt=""></div>
@@ -166,7 +163,9 @@ const jsonLd = {
      below (transform only, so it never repaints). Touches on it never scroll the page */
   :global(html.js) .veil { position: fixed; inset: 0; height: auto; min-height: 0; z-index: 40; touch-action: none; box-shadow: 0 10px 40px rgba(43, 43, 41, 0.14); }
   /* The soft shadow under the veil's lower edge shows while it moves, so it reads as a sheet lifting off the page */
-  .veil.lifted { visibility: hidden; }
+  /* Lifted, the veil stays drawn just above the screen instead of being hidden, so bringing it back
+     never has to redraw the photos, fog, and condensation first (that redraw made the return stutter) */
+  .veil.lifted { pointer-events: none; }
   .layer { position: absolute; inset: 0; }
   .fog { inset: -40px; }
   .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity var(--fade) linear; }
@@ -177,9 +176,13 @@ const jsonLd = {
   .drift.go { animation: veilSettle 4.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes veilSettle { from { transform: scale(1.12); } to { transform: scale(1); } }
   .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
-  .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
+  /* Condensation grain: a small tile of the same fine noise the veil used to compute live with an SVG
+     filter (fractal noise, frequency 1.4, two octaves, grey), rendered once at twice the size and
+     repeated. Phones drew the live filter slowly, which made the veil stutter whenever it came back */
+  .condensation { position: absolute; inset: 0; background: url('/brand/condensation.webp') 0 0 / 160px 160px repeat; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
   /* The sharp photo shows only through the handwritten name and the smiley under it, and fogs over as you scroll away */
   .clear {
+    will-change: opacity;  /* its own layer: the fog over the name changes without redrawing the photo */
     -webkit-mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     opacity: clamp(0, calc(1 - var(--p)), 1);
@@ -213,6 +216,9 @@ const jsonLd = {
      One block, footer included, at least as tall as the largest screen height, so on computers the
      footer sits at the bottom of the screen. It scrolls like any other page; the veil lies over it */
   :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; }
+  /* With scripts, the profile is its own layer for good, so it can rise and fade in under the veil
+     without being redrawn. The paper background keeps text as crisp as on the other pages */
+  :global(html.js .after-lead) { will-change: transform, opacity; background: var(--paper); }
 
   /* ── About ── */
   /* Top space: once the veil has lifted, the menu sits in it (72 px tall), so the portrait
@@ -269,7 +275,6 @@ const jsonLd = {
   // of the profile, the same gestures in the other direction bring it back. Everywhere else the
   // profile scrolls natively. As the veil lifts, the fog returns over the name (within a quarter of
   // the screen, at most 240 px), the profile rises into place, and the menu arrives.
-  const root = document.documentElement;
   const veil = document.getElementById('veil')!;
   const lead = document.querySelector<HTMLElement>('.after-lead')!;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
@@ -291,23 +296,29 @@ const jsonLd = {
   let raf = 0;
   let going: 'up' | 'down' = 'up';
 
+  // Each frame only changes what actually changed: the veil's position, the fog over the name, and
+  // the profile's rise. All three are their own layers, so the browser moves them without redrawing
+  const clear = veil.querySelector<HTMLElement>('.clear')!;
+  let drawn = { veil: '', clear: '', rise: '', fade: '', arrived: false, fast: false, lifted: false };
   const paint = () => {
-    veil.style.transform = lift > 0 ? `translate3d(0, ${(-lift * 100).toFixed(3)}%, 0)` : '';
+    const up = lift >= 1;
+    const veilT = lift > 0 ? `translate3d(0, ${(-lift * 100).toFixed(2)}%, 0)` : '';
     const fog = Math.min(Math.max((lift * H()) / Math.min(H() * 0.25, 240), 0), 1);
-    veil.style.setProperty('--p', fog.toFixed(3));
-    veil.classList.toggle('lifted', lift >= 1);
-    root.classList.toggle('veiled', lift < 1);
-    if (lift >= 1) { lead.style.transform = ''; lead.style.opacity = ''; lead.style.willChange = ''; }
-    else {
-      const e = easeOut(lift);
-      lead.style.willChange = 'transform, opacity';
-      lead.style.transform = `translate3d(0, ${((1 - e) * RISE).toFixed(2)}px, 0)`;
-      lead.style.opacity = (0.35 + 0.65 * e).toFixed(3);
-    }
-    // The menu arrives once the name is mostly fogged, leaves quickly when the veil comes back,
+    const clearO = (1 - fog).toFixed(3);
+    const e = easeOut(lift);
+    const rise = up ? '' : `translate3d(0, ${((1 - e) * RISE).toFixed(1)}px, 0)`;
+    const fade = up ? '' : (0.35 + 0.65 * e).toFixed(3);
+    // The menu arrives as the page settles, leaves as soon as the veil starts coming back,
     // and stays while the mobile menu is open
-    nav?.classList.toggle('arrived', fog >= 0.6 || menuOpen());
-    nav?.classList.toggle('leave-fast', going === 'down');
+    const arrived = (lift >= 0.85 && !(going === 'down' && !up)) || menuOpen();
+    const fast = going === 'down';
+    if (veilT !== drawn.veil) veil.style.transform = drawn.veil = veilT;
+    if (clearO !== drawn.clear) clear.style.opacity = drawn.clear = clearO;
+    if (rise !== drawn.rise) lead.style.transform = drawn.rise = rise;
+    if (fade !== drawn.fade) lead.style.opacity = drawn.fade = fade;
+    if (up !== drawn.lifted) { drawn.lifted = up; veil.classList.toggle('lifted', up); }
+    if (fast !== drawn.fast) nav?.classList.toggle('leave-fast', drawn.fast = fast);
+    if (arrived !== drawn.arrived) nav?.classList.toggle('arrived', drawn.arrived = arrived);
   };
 
   const rest = () => {
