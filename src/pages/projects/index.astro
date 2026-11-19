@@ -25,7 +25,7 @@ const spots = [
           <a class={`card glass-card ${s ? 'placed' : ''}`} href={`/projects/${p.id}/`} style={style}>
             <div class="shot">
               {p.data.image
-                ? <Image src={p.data.image} alt="" widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" style={`object-position:${p.data.focus}`} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+                ? <Image src={p.data.image} alt={`Screens of ${p.data.name}`} widths={[480, 960]} sizes="(max-width: 700px) 84vw, 30vw" style={`object-position:${p.data.focus}`} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
                 : <span class="hand">{p.data.name}</span>}
             </div>
             <div class="label">

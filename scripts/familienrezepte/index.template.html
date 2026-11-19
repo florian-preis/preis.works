@@ -194,9 +194,12 @@ body.backshut #baseR, body.backshut #slotR { visibility: hidden; }
 }
 body.closed #baseR, body.closed #slotR { visibility: hidden; }
 @media (min-aspect-ratio: 1/1) and (min-width: 701px) { body.closed .bar, body.opening .bar { left: var(--spine); } }
+/* Page heading for search engines and screen readers */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 </style>
 </head>
 <body class="closed">
+<h1 class="visually-hidden">Familienrezepte</h1>
 <div class="book" id="book">
   <div class="shadow" id="shadow"></div>
   <img class="base-l" id="baseLE" alt="" style="visibility:hidden">

@@ -64,6 +64,7 @@ html,body{height:100%;background:var(--bg)}
 body{font-family:var(--font);color:var(--ink);display:flex;flex-direction:column;height:100dvh;overflow:hidden;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;color:inherit;touch-action:manipulation}
 html,body,a,label{touch-action:manipulation}
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 svg{display:block}
 .hidden{display:none!important}
@@ -437,6 +438,7 @@ html.night .seg button.on{background:#34322F;box-shadow:none}
 </style>
 </head>
 <body>
+<h1 class="visually-hidden">knowhere, a geography quiz</h1>
 <nav class="nav">
   <button class="nav-logo" id="nav-logo">knowhere</button>
   <div class="nav-right">
