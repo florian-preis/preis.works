@@ -59,10 +59,7 @@ const jsonLd = {
       <div class="slide"><img class="drift" alt=""></div>
     </div>
     <div class="haze" aria-hidden="true"></div>
-    <svg class="condensation" aria-hidden="true">
-      <filter id="condensation"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-      <rect width="100%" height="100%" filter="url(#condensation)"/>
-    </svg>
+    <div class="condensation" aria-hidden="true"></div>
     <div class="layer clear" aria-hidden="true">
       <div class="slide"><img class="drift" alt=""></div>
       <div class="slide"><img class="drift" alt=""></div>
@@ -97,14 +94,21 @@ const jsonLd = {
         function show(s) {
           [fogSlides, clearSlides].forEach(function (set) { set[s].classList.add('on'); set[1 - s].classList.remove('on'); });
         }
-        function preload(p) { var a = new Image(); a.src = p.f; var b = new Image(); b.src = phone ? p.s : p.v; return b; }
+        // The next photo is fetched and decoded ahead, so showing it never has to wait for the decoding
+        function preload(p) {
+          var a = new Image(); a.src = p.f; if (a.decode) a.decode().catch(function () {});
+          var b = new Image(); b.src = phone ? p.s : p.v; if (b.decode) b.decode().catch(function () {});
+          return b;
+        }
 
         put(0, pool[0]); show(0);
         if (still || pool.length < 2) return;
         var next = preload(pool[1]);
 
         function advance() {
-          if (!visible || document.hidden) return;
+          // No new photo while the veil is moving (class set by the curtain script), so the change of
+          // photo never competes with the movement; it comes at the next turn instead
+          if (!visible || document.hidden || veil.classList.contains('moving')) return;
           k = (k + 1) % pool.length; slot = 1 - slot;
           var go = function () { put(slot, pool[k]); show(slot); next = preload(pool[(k + 1) % pool.length]); };
           next.complete ? go() : (next.onload = go, next.onerror = go);
@@ -162,6 +166,13 @@ const jsonLd = {
 <style>
   /* ── Veil ── */
   .veil { position: relative; height: 100vh; height: 100svh; min-height: 520px; overflow: hidden; background: #9a9994; --p: 0; }
+  /* With scripts, the veil is a curtain lying over the About page, lifted and lowered by the script
+     below (transform only, so it never repaints). Touches on it never scroll the page */
+  :global(html.js) .veil { position: fixed; inset: 0; height: auto; min-height: 0; z-index: 40; touch-action: none; box-shadow: 0 10px 40px rgba(43, 43, 41, 0.14); }
+  /* The soft shadow under the veil's lower edge shows while it moves, so it reads as a sheet lifting off the page */
+  /* Lifted, the veil stays drawn just above the screen instead of being hidden, so bringing it back
+     never has to redraw the photos, fog, and condensation first (that redraw made the return stutter) */
+  .veil.lifted { pointer-events: none; }
   .layer { position: absolute; inset: 0; }
   .fog { inset: -40px; }
   .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity var(--fade) linear; }
@@ -172,9 +183,13 @@ const jsonLd = {
   .drift.go { animation: veilSettle 4.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes veilSettle { from { transform: scale(1.12); } to { transform: scale(1); } }
   .haze { position: absolute; inset: 0; background: rgba(235, 235, 235, 0.42); }
-  .condensation { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
+  /* Condensation grain: a small tile of the same fine noise the veil used to compute live with an SVG
+     filter (fractal noise, frequency 1.4, two octaves, grey), rendered once at twice the size and
+     repeated. Phones drew the live filter slowly, which made the veil stutter whenever it came back */
+  .condensation { position: absolute; inset: 0; background: url('/brand/condensation.webp') 0 0 / 160px 160px repeat; mix-blend-mode: soft-light; opacity: 0.5; pointer-events: none; }
   /* The sharp photo shows only through the handwritten name and the smiley under it, and fogs over as you scroll away */
   .clear {
+    will-change: opacity;  /* its own layer: the fog over the name changes without redrawing the photo */
     -webkit-mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     mask: url('/brand/name-smiley-mask.png') center / min(84vw, 1080px) auto no-repeat;
     opacity: clamp(0, calc(1 - var(--p)), 1);
@@ -186,51 +201,34 @@ const jsonLd = {
       mask: url('/brand/name-smiley-mask-stacked.png') center / min(92vw, 660px) auto no-repeat;
     }
   }
-  /* On the way back up: once the veil is sure to win, the name clears quickly instead of with the scroll */
-  /* Fogging as you scroll, smooth on every frame: browsers that can tie an animation to the scroll
-     position (Chrome, Edge, Safari 26 and later) run it off the main thread, straight from the finger.
-     The range matches the script: a quarter of the veil (whose height is the screen, at least 520 px),
-     at most 240 px. Other browsers use --p, set by the script */
-  @supports (animation-timeline: scroll()) {
-    /* Longhands on purpose: the build would otherwise merge them into one shorthand that browsers reject */
-    .clear { animation-name: veilFog; animation-timing-function: linear; animation-fill-mode: both; animation-timeline: scroll(root block); animation-range: 0 min(max(25svh, 130px), 240px); }
-  }
-  @keyframes veilFog { from { opacity: 1; } to { opacity: 0; } }
-  /* On the way back up: once the veil is sure to win, the name clears quickly instead of with the scroll,
-     starting from wherever the fog is (--from, set by the script) */
-  .veil.homing .clear { animation: veilClear 0.3s ease-out both; animation-timeline: auto; }
-  @keyframes veilClear { from { opacity: var(--from, 0); } to { opacity: 1; } }
   .veil[data-tone='muted'] .fog { filter: saturate(0.7); }
   .veil[data-tone='muted'] .clear .drift { filter: saturate(0.8); }
   .veil[data-tone='mono'] .fog, .veil[data-tone='mono'] .clear .drift { filter: grayscale(1) contrast(1.05); }
   @media (prefers-reduced-motion: reduce) { .drift.go { animation: none; } .slide { transition: none; } }
   /* Nudge ("peek"): if nobody scrolls, the veil lifts a little in one smooth motion, pauses, and slides
-     back, showing a strip of the page underneath. Started from the script below. The veil keeps its
-     own compositing layer, so the movement never has to repaint the fog, mask, or condensation */
+     back, showing a strip of the page underneath. Started from the script below. It moves the veil with
+     `translate`, separate from the curtain's `transform`. The veil keeps its own compositing layer, so
+     the movement never has to repaint the fog, mask, or condensation */
   .veil { --lift: 22px; will-change: transform; }
   .veil.nudge { animation: veilPeek 1.8s both; }
   @keyframes veilPeek {
-    0%   { transform: translateY(0); animation-timing-function: cubic-bezier(0.25, 0.7, 0.3, 1); }
-    38%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: linear; }
-    50%  { transform: translateY(calc(-1 * var(--lift))); animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1); }
-    100% { transform: translateY(0); }
+    0%   { translate: 0 0; animation-timing-function: cubic-bezier(0.25, 0.7, 0.3, 1); }
+    38%  { translate: 0 calc(-1 * var(--lift)); animation-timing-function: linear; }
+    50%  { translate: 0 calc(-1 * var(--lift)); animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1); }
+    100% { translate: 0 0; }
   }
   @media (orientation: portrait) { .veil { --lift: 30px; } }
 
-  /* ── Two resting places: the veil, and the top of everything after it ──
-     The block after the veil is at least as tall as the largest screen height (100vh is the
-     height with the phone's browser bars hidden), so you can always scroll the veil fully out
-     of view. Scrolling from the veil snaps to one place or the other. Once the page rests on the
-     profile, snapping switches off (class "free", set by the script) and the page scrolls like any
-     other; heading back up into the veil, the script finishes the move. Snapping across the whole
-     page made iPhones jump between the top and bottom of the profile and swallow the first tap */
-  :global(html:has(#veil)) { scroll-snap-type: y mandatory; }
-  :global(html:has(#veil).free) { scroll-snap-type: none; }
-  .veil { scroll-snap-align: start; }
-  :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; scroll-snap-align: start; }
+  /* ── The About page under the veil ──
+     One block, footer included, at least as tall as the largest screen height, so on computers the
+     footer sits at the bottom of the screen. It scrolls like any other page; the veil lies over it */
+  :global(.after-lead) { min-height: max(100vh, 520px); display: flex; flex-direction: column; }
+  /* With scripts, the profile is its own layer for good, so it can rise and fade in under the veil
+     without being redrawn. The paper background keeps text as crisp as on the other pages */
+  :global(html.js .after-lead) { will-change: transform, opacity; background: var(--paper); }
 
   /* ── About ── */
-  /* Top space: once the page snaps past the veil, the menu sits in it (72 px tall), so the portrait
+  /* Top space: once the veil has lifted, the menu sits in it (72 px tall), so the portrait
      starts 48 px below the menu on computers and 32 px below it on phones */
   .about { display: flex; flex-wrap: wrap; gap: 72px; align-items: flex-start; padding-top: 120px; }
   .portrait-col { flex: 1 1 260px; max-width: 320px; }
@@ -257,7 +255,7 @@ const jsonLd = {
   .contact li { display: flex; align-items: center; gap: 14px; min-height: 28px; }
   .contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--faint); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .phone { min-width: 9em; }
-  /* Computers: once the page snaps past the veil, the profile and the footer fit on one screen.
+  /* Computers: once the veil has lifted, the profile and the footer fit on one screen.
      On shorter screens (most laptops) the photo gives way, down to 220 px wide, instead of the footer
      being cut off. 287 px is everything else in the photo's column: the space above it (120), the
      switch (50), the gap to the footer (48), and the footer (69). The text column needs about 650 px of
@@ -277,81 +275,310 @@ const jsonLd = {
 </style>
 
 <script>
-  // Scrolling down from the veil: the fog returns over the name within the first quarter of the veil
-  // (at most 240 px), and the menu arrives once the name is mostly fogged.
-  // Scrolling back up from the profile: the menu stays while you drag into the veil, and once you
-  // have pulled it 60 px down while heading up ("homing"), the menu leaves quickly and the name
-  // clears fast, so both are done before the veil settles.
+  // ── Curtain: the veil lies over the About page and lifts off it ──
+  // `lift` is how far the veil has lifted: 0 covers the screen, 1 is gone. On phones the veil follows
+  // the finger and settles with a spring when you let go. With a mouse wheel, trackpad, or keys, a
+  // small movement springs back and a deliberate one lifts the veil in one movement. At the very top
+  // of the profile, the same gestures in the other direction bring it back. Everywhere else the
+  // profile scrolls natively. As the veil lifts, the fog returns over the name (within a quarter of
+  // the screen, at most 240 px), the profile rises into place, and the menu arrives.
   const veil = document.getElementById('veil')!;
+  const lead = document.querySelector<HTMLElement>('.after-lead')!;
   const nav = document.querySelector<HTMLElement>('.nav-wrap');
-  const fadeDistance = () => Math.min(veil.offsetHeight * 0.25, 240);
-  const scrollTimeline = CSS.supports('animation-timeline: scroll()');
-  let p = 0;
-  let ticking = false;
-  let homing = false;
-  let from: 'veil' | 'profile' = 'veil';
-  let lastY = window.scrollY;
-  let lastUp = false;
   const menuToggle = document.querySelector<HTMLElement>('.nav-toggle');
-  const render = () => {
-    p = Math.min(Math.max(window.scrollY / fadeDistance(), 0), 1);
-    // With scroll-linked CSS the fog needs no update from here, which keeps the main thread free
-    if (!scrollTimeline) veil.style.setProperty('--p', p.toFixed(3));
-    // The menu stays while the mobile menu sheet is open, whatever the scroll position does underneath
-    nav?.classList.toggle('arrived', (p >= 0.6 && !homing) || menuToggle?.getAttribute('aria-expanded') === 'true');
-  };
-  const setHoming = (on: boolean) => {
-    if (on === homing) return;
-    homing = on;
-    if (on) veil.style.setProperty('--from', (1 - p).toFixed(3));
-    veil.classList.toggle('homing', on);
-    nav?.classList.toggle('leave-fast', on);
-    render();
-  };
-  const update = () => {
-    ticking = false;
-    const y = window.scrollY;
-    const up = y < lastY;
-    // Direction of the last real movement, for finishing a move between veil and profile
-    if (y !== lastY) lastUp = up;
-    lastY = y;
-    if (y <= 1) { from = 'veil'; setHoming(false); }
-    else if (y >= veil.offsetHeight - 1) { from = 'profile'; setHoming(false); }
-    else if (from === 'profile') setHoming(up && y < veil.offsetHeight - 60);
-    render();
-  };
-  window.addEventListener('scroll', () => {
-    if (!ticking) { ticking = true; requestAnimationFrame(update); }
-  }, { passive: true });
-
-  // Snapping only around the veil. Once the page has come to rest on the profile (no finger on the
-  // screen, no scroll for 150 ms), snapping switches off and the profile scrolls like any other page.
-  // Back at the veil it switches on again. If you stop between the two while snapping is off (on the
-  // way up from the profile), the page finishes the move: to the veil if you were heading up and
-  // pulled it more than 60 px, otherwise back to the profile.
-  const root = document.documentElement;
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let touching = false;
-  let lastScroll = 0;
-  let settleTimer = 0;
-  const settle = () => {
-    if (touching) return;
-    const wait = 150 - (performance.now() - lastScroll);
-    if (wait > 0) { settleTimer = window.setTimeout(settle, wait); return; }
-    const y = window.scrollY;
-    const h = veil.offsetHeight;
-    if (y >= h - 1) root.classList.add('free');
-    else if (y <= 1) root.classList.remove('free');
-    else if (root.classList.contains('free')) {
-      window.scrollTo({ top: lastUp && y < h - 60 ? 0 : h, behavior: still ? 'auto' : 'smooth' });
+  const RISE = 36;          // px the profile rises as it arrives
+  const COMMIT = 0.12;      // share of the screen a drag must travel to switch ...
+  const FLICK = 0.4;        // ... or the speed of a flick, in px per ms
+  const WHEEL_COMMIT = 60;  // px of wheel movement that switches (one mouse-wheel notch is 100)
+  const GAP = 180;          // ms without wheel events that ends a wheel gesture
+  const SPRING = 9;         // spring frequency: most of the way in about 0.4 s, critically damped (no bounce)
+  const H = () => window.innerHeight;
+  const menuOpen = () => menuToggle?.getAttribute('aria-expanded') === 'true';
+  const easeOut = (x: number) => 1 - Math.pow(1 - x, 3);
+
+  let lift = 0;
+  let target: 0 | 1 | null = null;     // where the veil is heading, null when at rest or held
+  let going: 'up' | 'down' = 'up';
+
+  // What the page looks like at a given lift: the veil's position, the fog over the name, and the
+  // profile's rise and fade. All three are their own layers, so the browser only moves them
+  const clear = veil.querySelector<HTMLElement>('.clear')!;
+  const look = (x: number) => {
+    const fog = Math.min(Math.max((x * H()) / Math.min(H() * 0.25, 240), 0), 1);
+    const e = easeOut(x);
+    return {
+      veil: `translate3d(0, ${(-x * 100).toFixed(2)}%, 0)`,
+      clear: (1 - fog).toFixed(3),
+      rise: `translate3d(0, ${((1 - e) * RISE).toFixed(1)}px, 0)`,
+      fade: (0.35 + 0.65 * e).toFixed(3),
+    };
+  };
+
+  // Sets the page to the current lift; only what changed is written. While a movement runs, the
+  // menu and the veil's lifted state wait for their moment (`hold`)
+  let drawn = { veil: '', clear: '', rise: '', fade: '', arrived: false, fast: false, lifted: false };
+  const paint = (hold = false) => {
+    const up = lift >= 1;
+    const l = look(lift);
+    const veilT = lift > 0 ? l.veil : '';
+    const rise = up ? '' : l.rise;
+    const fade = up ? '' : l.fade;
+    // The menu arrives as the page settles, leaves as soon as the veil starts coming back,
+    // and stays while the mobile menu is open
+    const arrived = (lift >= 0.85 && !(going === 'down' && !up)) || menuOpen();
+    const fast = going === 'down';
+    if (veilT !== drawn.veil) veil.style.transform = drawn.veil = veilT;
+    if (l.clear !== drawn.clear) clear.style.opacity = drawn.clear = l.clear;
+    if (rise !== drawn.rise) lead.style.transform = drawn.rise = rise;
+    if (fade !== drawn.fade) lead.style.opacity = drawn.fade = fade;
+    if (fast !== drawn.fast) nav?.classList.toggle('leave-fast', drawn.fast = fast);
+    if (hold && going === 'up') return;
+    if (up !== drawn.lifted) { drawn.lifted = up; veil.classList.toggle('lifted', up); }
+    if (arrived !== drawn.arrived) nav?.classList.toggle('arrived', drawn.arrived = arrived);
+  };
+
+  const rest = () => {
+    target = null;
+    // Remembered for Back and Forward, so returning to Home lands where you left it
+    history.replaceState({ ...(history.state || {}), veil: lift >= 1 ? 'lifted' : null }, '');
+    if (lift >= 1) window.dispatchEvent(new Event('veillift'));
+    else window.scrollTo(0, 0);
+  };
+
+  // Movements: a spring (quick start, gentle landing, no bounce), worked out in advance and handed to
+  // the browser as animations. The browser then plays them on its own, at the screen's full frame
+  // rate, with no work for the page while they run. Fingers and wheels that hold the veil set it
+  // directly instead (below); a movement takes over from wherever they let go, at their speed.
+  let anims: Animation[] = [];
+  let timers: number[] = [];
+  let from = 0;
+  let startSpeed = 0;
+  let started = 0;
+  let length = 0;  // seconds
+  const springAt = (s: number, to: number) => {
+    const d = from - to;
+    return to + (d + (startSpeed + SPRING * d) * s) * Math.exp(-SPRING * s);
+  };
+  // Where a running movement is right now, so a new gesture can take hold of it there
+  const stopMovement = () => {
+    if (!anims.length || target === null) return;
+    const s = Math.min((performance.now() - started) / 1000, length);
+    lift = Math.min(Math.max(springAt(s, target), 0), 1);
+    anims.forEach((a) => a.cancel());
+    timers.forEach(clearTimeout);
+    anims = [];
+    timers = [];
+    target = null;
+    veil.classList.remove('moving');
+    paint();
+  };
+
+  const settleTo = (to: 0 | 1, speedNow = 0) => {
+    stopMovement();
+    target = to;
+    going = to === 1 ? 'up' : 'down';
+    if (still || Math.abs(lift - to) * H() < 1) { lift = to; paint(); rest(); return; }
+    from = lift;
+    startSpeed = speedNow;
+    // The path: until it is within half a pixel of the end, or reaches the end it heads for
+    let s = 0;
+    for (; s < 2; s += 1 / 240) {
+      const x = springAt(s, to);
+      if (Math.abs(x - to) * H() < 0.5 || (to === 1 ? x >= 1 : x <= 0)) break;
+    }
+    length = s;
+    const n = Math.max(2, Math.min(72, Math.round(length * 60)));
+    const veilFrames: Keyframe[] = [];
+    const clearFrames: Keyframe[] = [];
+    const leadFrames: Keyframe[] = [];
+    let arriveAt = -1;
+    for (let i = 0; i <= n; i++) {
+      const t = (length * i) / n;
+      const x = i === n ? to : Math.min(Math.max(springAt(t, to), 0), 1);
+      const l = look(x);
+      const offset = i / n;
+      veilFrames.push({ transform: l.veil, offset });
+      clearFrames.push({ opacity: l.clear, offset });
+      leadFrames.push({ transform: l.rise, opacity: l.fade, offset });
+      if (arriveAt < 0 && to === 1 && x >= 0.85) arriveAt = t;
+    }
+    const timing: KeyframeAnimationOptions = { duration: length * 1000, easing: 'linear' };
+    started = performance.now();
+    anims = [veil.animate(veilFrames, timing), clear.animate(clearFrames, timing), lead.animate(leadFrames, timing)];
+    veil.classList.add('moving');
+    // Underneath the animations, the page already holds its final state, so the end is seamless
+    lift = to;
+    paint(true);
+    if (arriveAt >= 0) timers.push(window.setTimeout(() => { if (target === 1) nav?.classList.toggle('arrived', drawn.arrived = true); }, arriveAt * 1000));
+    anims[0].onfinish = () => {
+      if (target !== to) return;
+      veil.classList.remove('moving');
+      anims.forEach((a) => a.cancel());
+      timers.forEach(clearTimeout);
+      anims = [];
+      timers = [];
+      paint();
+      rest();
+    };
+  };
+
+  // A new gesture in the last few pixels of a movement finishes it at once, so the page under it
+  // responds straight away instead of waiting for the spring's long, invisible tail
+  const finishIfNearlyThere = () => {
+    if (target === null || !anims.length) return;
+    const to = target;
+    const s = (performance.now() - started) / 1000;
+    if (Math.abs(springAt(Math.min(s, length), to) - to) < 0.04) {
+      veil.classList.remove('moving');
+      anims.forEach((a) => a.cancel());
+      timers.forEach(clearTimeout);
+      anims = [];
+      timers = [];
+      lift = to;
+      paint();
+      rest();
     }
   };
-  const later = () => { clearTimeout(settleTimer); settleTimer = window.setTimeout(settle, 150); };
-  window.addEventListener('scroll', () => { lastScroll = performance.now(); later(); }, { passive: true });
-  window.addEventListener('touchstart', () => { touching = true; }, { passive: true });
-  ['touchend', 'touchcancel'].forEach((t) => window.addEventListener(t, () => { touching = false; later(); }, { passive: true }));
-  update();
-  settle();
+
+  // Touch: drag the veil directly
+  let touchMode: 'none' | 'drag' | 'native' = 'none';
+  let touchY = 0;
+  let touchFrom = 0;
+  let lastY = 0;
+  let lastTime = 0;
+  let fingerSpeed = 0;  // px per ms, positive while the finger moves up
+  let scrollAtStart = 0;
+  window.addEventListener('touchstart', (e) => {
+    touchMode = 'none';
+    if (e.touches.length > 1 || menuOpen()) { touchMode = 'native'; return; }
+    finishIfNearlyThere();
+    touchY = lastY = e.touches[0].clientY;
+    lastTime = e.timeStamp;
+    fingerSpeed = 0;
+    scrollAtStart = window.scrollY;
+    // On the veil, or catching it mid-movement: take hold of it where it is
+    if (lift < 1 || target !== null) { stopMovement(); target = null; touchMode = 'drag'; touchFrom = lift; }
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (touchMode === 'native' || e.touches.length > 1) return;
+    const y = e.touches[0].clientY;
+    if (touchMode === 'none') {
+      // Profile: pulling down at the very top brings the veil back; anything else scrolls the page
+      if (scrollAtStart <= 0 && window.scrollY <= 0 && y > touchY) { touchMode = 'drag'; touchFrom = 1; }
+      else { touchMode = 'native'; return; }
+    }
+    if (e.cancelable) e.preventDefault();
+    const dt = e.timeStamp - lastTime;
+    if (dt > 0) fingerSpeed = 0.7 * ((lastY - y) / dt) + 0.3 * fingerSpeed;
+    lastY = y;
+    lastTime = e.timeStamp;
+    going = fingerSpeed >= 0 ? 'up' : 'down';
+    lift = Math.min(Math.max(touchFrom + (touchY - y) / H(), 0), 1);
+    paint();
+  }, { passive: false });
+  const release = () => {
+    if (touchMode !== 'drag') { touchMode = 'none'; return; }
+    touchMode = 'none';
+    // A finger that stopped before letting go has no speed left
+    if (performance.now() - lastTime > 100 && Math.abs(fingerSpeed) > 0) fingerSpeed = 0;
+    const moved = lift - touchFrom;
+    let to: 0 | 1 = touchFrom >= 0.5 ? 1 : 0;
+    if (fingerSpeed > FLICK) to = 1;
+    else if (fingerSpeed < -FLICK) to = 0;
+    else if (Math.abs(moved) > COMMIT) to = moved > 0 ? 1 : 0;
+    settleTo(to, (fingerSpeed * 1000) / H());
+  };
+  window.addEventListener('touchend', release, { passive: true });
+  window.addEventListener('touchcancel', release, { passive: true });
+
+  // Mouse wheel and trackpad: the veil gives a little, then switches past the hurdle and carries on
+  // at the gesture's own speed. A gesture that began further down the profile never brings the veil
+  // back, even when it reaches the top; a new gesture at the top does.
+  // Trackpads keep sending a fading stream of momentum for a second or more after the fingers lift
+  // (moving the pointer stops it, which is why a nudge of the cursor used to help). That momentum is
+  // absorbed, but a new gesture is recognised straight away: after a pause, on a change of
+  // direction, or when a fresh swipe rises out of the fading stream.
+  let wheelMode: 'drag' | 'absorb' | 'native' = 'native';
+  let wheelSum = 0;
+  let wheelFrom = 0;
+  let lastWheel = 0;
+  let lastDir = 0;
+  let trough = 0;                        // smallest movement in the current stream so far
+  let samples: [number, number][] = [];  // recent [time, distance] of the gesture, for its speed
+  let wheelTimer = 0;
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || menuOpen()) return;  // pinch to zoom on trackpads, or the menu is open
+    const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * H() : e.deltaY;
+    if (!dy) return;
+    const now = performance.now();
+    const dir = Math.sign(dy);
+    const size = Math.abs(dy);
+    const rising = wheelMode !== 'drag' && target === null && size > Math.max(trough * 2, trough + 6);
+    const fresh = now - lastWheel > GAP || dir !== lastDir || rising;
+    lastWheel = now;
+    lastDir = dir;
+    if (fresh) {
+      finishIfNearlyThere();
+      wheelSum = 0;
+      samples = [];
+      trough = size;
+      wheelFrom = lift >= 0.5 ? 1 : 0;
+      if (target !== null) wheelMode = 'absorb';
+      else if (lift < 1 || (window.scrollY <= 0 && dy < 0)) wheelMode = 'drag';
+      else wheelMode = 'native';
+    } else trough = Math.min(trough, size);
+    if (wheelMode === 'native') return;
+    e.preventDefault();
+    if (wheelMode === 'absorb') return;
+    wheelSum += dy;
+    const along = wheelFrom === 0 ? wheelSum : -wheelSum;
+    samples.push([now, along]);
+    while (samples.length > 2 && now - samples[0][0] > 80) samples.shift();
+    if (along >= WHEEL_COMMIT) {
+      wheelMode = 'absorb';
+      trough = size;
+      // The veil has been giving at half the gesture's speed; the movement starts at that speed,
+      // so there is no pause between the give and the lift (a single mouse-wheel notch has no speed)
+      const [t0, a0] = samples[0];
+      const pxPerMs = now > t0 ? Math.max(along - a0, 0) / (now - t0) : 0;
+      const speedNow = Math.min((0.5 * pxPerMs * 1000) / H(), 6);
+      settleTo(wheelFrom === 0 ? 1 : 0, wheelFrom === 0 ? speedNow : -speedNow);
+      return;
+    }
+    stopMovement();
+    const give = (Math.max(along, 0) * 0.5) / H();
+    lift = wheelFrom === 0 ? give : 1 - give;
+    going = wheelFrom === 0 ? 'up' : 'down';
+    paint();
+    clearTimeout(wheelTimer);
+    wheelTimer = window.setTimeout(() => { if (wheelMode === 'drag' && target === null && lift !== wheelFrom) settleTo(wheelFrom as 0 | 1); }, GAP);
+  }, { passive: false });
+
+  // Keys: Space, Page Down, the down arrow, or End lift the veil; at the top of the profile,
+  // Page Up, the up arrow, or Home bring it back
+  window.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || menuOpen()) return;
+    const el = e.target as HTMLElement;
+    if (el.closest('input, textarea, select, [contenteditable]')) return;
+    if (e.key === ' ' && el.closest('a, button')) return;
+    const down = ['ArrowDown', 'PageDown', 'End'].includes(e.key) || (e.key === ' ' && !e.shiftKey);
+    const up = ['ArrowUp', 'PageUp', 'Home'].includes(e.key) || (e.key === ' ' && e.shiftKey);
+    if (down && lift < 1 && target !== 1) { e.preventDefault(); settleTo(1); }
+    else if (up && lift >= 1 && target === null && window.scrollY <= 0) { e.preventDefault(); settleTo(0); }
+  });
+
+  // Keyboard focus moving into the profile (Tab, or the skip link), the scroll bar being dragged,
+  // or a link to a place further down: the veil lifts
+  lead.addEventListener('focusin', () => { if (lift < 1 && target !== 1) settleTo(1); });
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 0 && lift < 1 && target === null && touchMode !== 'drag') settleTo(1);
+  }, { passive: true });
+  window.addEventListener('resize', paint);
+
+  // Start: covered, unless coming back to a page where the veil was already lifted
+  lift = history.state?.veil === 'lifted' || window.scrollY > 0 || location.hash === '#main' ? 1 : 0;
+  paint();
 
   // Nudge: if nobody has scrolled, touched, clicked, or pressed a key after two photos have gone by,
   // the veil peeks up a little (in the middle of the third photo, not during a change). It repeats
@@ -367,7 +594,7 @@ const jsonLd = {
       document.removeEventListener('visibilitychange', resume);
     };
     const nudge = () => {
-      if (document.hidden || window.scrollY > 0) return;
+      if (document.hidden || lift > 0 || target !== null) return;
       veil.classList.remove('nudge'); void veil.offsetWidth; veil.classList.add('nudge');
       if (++count < 3) timer = window.setTimeout(nudge, hold * 2 * 1000);
     };
@@ -397,12 +624,12 @@ const jsonLd = {
   }
 
   // Phone number: never in the page source. It is stored as character codes and only written
-  // into the page after the first sign of a person: scrolling (it sits below the veil, so everyone
-  // scrolls to see it) or a key. Not on a touch or click: on iPhones, a page change during a tap
+  // into the page after the first sign of a person: lifting the veil (it sits under it, so everyone
+  // lifts it to see it), scrolling, or a key. Not on a touch or click: on iPhones, a page change during a tap
   // can swallow that tap. Most scrapers don't run scripts, and the few that do rarely scroll.
   const phone = document.querySelector<HTMLElement>('.phone');
   if (phone) {
-    const human = ['scroll', 'wheel', 'keydown'];
+    const human = ['veillift', 'scroll', 'wheel', 'keydown'];
     const show = () => {
       human.forEach((t) => window.removeEventListener(t, show));
       const d = phone.dataset.codes!.split(',').map((c) => String.fromCharCode(Number(c))).join('');
