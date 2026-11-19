@@ -74,6 +74,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 button, input, textarea, select { font: inherit; color: inherit; }
 /* No double-tap zoom on phones; pinch to zoom still works */
 html, body, a, button, label { touch-action: manipulation; }
+/* Page heading for search engines and screen readers; the visible name is in the header */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
@@ -287,6 +289,7 @@ input[type="range"] { width: 100%; accent-color: var(--text); }
 </style>
 </head>
 <body>
+<h1 class="visually-hidden">zine maker, print-at-home photo zines</h1>
 <header class="bar">
   <div class="brand"><b>zine</b><span>Print-at-home photo zines</span></div>
   <button type="button" class="btn" id="libBtn">Your zines</button>
