@@ -492,33 +492,60 @@ const jsonLd = {
   window.addEventListener('touchend', release, { passive: true });
   window.addEventListener('touchcancel', release, { passive: true });
 
-  // Mouse wheel and trackpad: the veil gives a little, then switches past the hurdle. A wheel gesture
-  // that began further down the profile never brings the veil back, even when it reaches the top;
-  // a new gesture at the top does. Movement left over after a switch (trackpad inertia) is absorbed.
+  // Mouse wheel and trackpad: the veil gives a little, then switches past the hurdle and carries on
+  // at the gesture's own speed. A gesture that began further down the profile never brings the veil
+  // back, even when it reaches the top; a new gesture at the top does.
+  // Trackpads keep sending a fading stream of momentum for a second or more after the fingers lift
+  // (moving the pointer stops it, which is why a nudge of the cursor used to help). That momentum is
+  // absorbed, but a new gesture is recognised straight away: after a pause, on a change of
+  // direction, or when a fresh swipe rises out of the fading stream.
   let wheelMode: 'drag' | 'absorb' | 'native' = 'native';
   let wheelSum = 0;
   let wheelFrom = 0;
   let lastWheel = 0;
+  let lastDir = 0;
+  let trough = 0;                        // smallest movement in the current stream so far
+  let samples: [number, number][] = [];  // recent [time, distance] of the gesture, for its speed
   let wheelTimer = 0;
   window.addEventListener('wheel', (e) => {
     if (e.ctrlKey || menuOpen()) return;  // pinch to zoom on trackpads, or the menu is open
     const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * H() : e.deltaY;
+    if (!dy) return;
     const now = performance.now();
-    if (now - lastWheel > GAP) {
+    const dir = Math.sign(dy);
+    const size = Math.abs(dy);
+    const rising = wheelMode !== 'drag' && target === null && size > Math.max(trough * 2, trough + 6);
+    const fresh = now - lastWheel > GAP || dir !== lastDir || rising;
+    lastWheel = now;
+    lastDir = dir;
+    if (fresh) {
       finishIfNearlyThere();
       wheelSum = 0;
+      samples = [];
+      trough = size;
       wheelFrom = lift >= 0.5 ? 1 : 0;
       if (target !== null) wheelMode = 'absorb';
       else if (lift < 1 || (window.scrollY <= 0 && dy < 0)) wheelMode = 'drag';
       else wheelMode = 'native';
-    }
-    lastWheel = now;
+    } else trough = Math.min(trough, size);
     if (wheelMode === 'native') return;
     e.preventDefault();
     if (wheelMode === 'absorb') return;
     wheelSum += dy;
     const along = wheelFrom === 0 ? wheelSum : -wheelSum;
-    if (along >= WHEEL_COMMIT) { wheelMode = 'absorb'; settleTo(wheelFrom === 0 ? 1 : 0); return; }
+    samples.push([now, along]);
+    while (samples.length > 2 && now - samples[0][0] > 80) samples.shift();
+    if (along >= WHEEL_COMMIT) {
+      wheelMode = 'absorb';
+      trough = size;
+      // The veil has been giving at half the gesture's speed; the movement starts at that speed,
+      // so there is no pause between the give and the lift (a single mouse-wheel notch has no speed)
+      const [t0, a0] = samples[0];
+      const pxPerMs = now > t0 ? Math.max(along - a0, 0) / (now - t0) : 0;
+      const speedNow = Math.min((0.5 * pxPerMs * 1000) / H(), 6);
+      settleTo(wheelFrom === 0 ? 1 : 0, wheelFrom === 0 ? speedNow : -speedNow);
+      return;
+    }
     stopMovement();
     const give = (Math.max(along, 0) * 0.5) / H();
     lift = wheelFrom === 0 ? give : 1 - give;
