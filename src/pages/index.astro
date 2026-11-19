@@ -94,14 +94,21 @@ const jsonLd = {
         function show(s) {
           [fogSlides, clearSlides].forEach(function (set) { set[s].classList.add('on'); set[1 - s].classList.remove('on'); });
         }
-        function preload(p) { var a = new Image(); a.src = p.f; var b = new Image(); b.src = phone ? p.s : p.v; return b; }
+        // The next photo is fetched and decoded ahead, so showing it never has to wait for the decoding
+        function preload(p) {
+          var a = new Image(); a.src = p.f; if (a.decode) a.decode().catch(function () {});
+          var b = new Image(); b.src = phone ? p.s : p.v; if (b.decode) b.decode().catch(function () {});
+          return b;
+        }
 
         put(0, pool[0]); show(0);
         if (still || pool.length < 2) return;
         var next = preload(pool[1]);
 
         function advance() {
-          if (!visible || document.hidden) return;
+          // No new photo while the veil is moving (class set by the curtain script), so the change of
+          // photo never competes with the movement; it comes at the next turn instead
+          if (!visible || document.hidden || veil.classList.contains('moving')) return;
           k = (k + 1) % pool.length; slot = 1 - slot;
           var go = function () { put(slot, pool[k]); show(slot); next = preload(pool[(k + 1) % pool.length]); };
           next.complete ? go() : (next.onload = go, next.onerror = go);
@@ -285,76 +292,153 @@ const jsonLd = {
   const FLICK = 0.4;        // ... or the speed of a flick, in px per ms
   const WHEEL_COMMIT = 60;  // px of wheel movement that switches (one mouse-wheel notch is 100)
   const GAP = 180;          // ms without wheel events that ends a wheel gesture
-  const SPRING = 9;         // spring frequency: settles in about 0.7 s, critically damped (no bounce)
+  const SPRING = 9;         // spring frequency: most of the way in about 0.4 s, critically damped (no bounce)
   const H = () => window.innerHeight;
   const menuOpen = () => menuToggle?.getAttribute('aria-expanded') === 'true';
   const easeOut = (x: number) => 1 - Math.pow(1 - x, 3);
 
   let lift = 0;
-  let speed = 0;                       // in lifts per second, while the spring runs
-  let target: 0 | 1 | null = null;     // where the spring is heading, null when at rest or dragged
-  let raf = 0;
+  let target: 0 | 1 | null = null;     // where the veil is heading, null when at rest or held
   let going: 'up' | 'down' = 'up';
 
-  // Each frame only changes what actually changed: the veil's position, the fog over the name, and
-  // the profile's rise. All three are their own layers, so the browser moves them without redrawing
+  // What the page looks like at a given lift: the veil's position, the fog over the name, and the
+  // profile's rise and fade. All three are their own layers, so the browser only moves them
   const clear = veil.querySelector<HTMLElement>('.clear')!;
+  const look = (x: number) => {
+    const fog = Math.min(Math.max((x * H()) / Math.min(H() * 0.25, 240), 0), 1);
+    const e = easeOut(x);
+    return {
+      veil: `translate3d(0, ${(-x * 100).toFixed(2)}%, 0)`,
+      clear: (1 - fog).toFixed(3),
+      rise: `translate3d(0, ${((1 - e) * RISE).toFixed(1)}px, 0)`,
+      fade: (0.35 + 0.65 * e).toFixed(3),
+    };
+  };
+
+  // Sets the page to the current lift; only what changed is written. While a movement runs, the
+  // menu and the veil's lifted state wait for their moment (`hold`)
   let drawn = { veil: '', clear: '', rise: '', fade: '', arrived: false, fast: false, lifted: false };
-  const paint = () => {
+  const paint = (hold = false) => {
     const up = lift >= 1;
-    const veilT = lift > 0 ? `translate3d(0, ${(-lift * 100).toFixed(2)}%, 0)` : '';
-    const fog = Math.min(Math.max((lift * H()) / Math.min(H() * 0.25, 240), 0), 1);
-    const clearO = (1 - fog).toFixed(3);
-    const e = easeOut(lift);
-    const rise = up ? '' : `translate3d(0, ${((1 - e) * RISE).toFixed(1)}px, 0)`;
-    const fade = up ? '' : (0.35 + 0.65 * e).toFixed(3);
+    const l = look(lift);
+    const veilT = lift > 0 ? l.veil : '';
+    const rise = up ? '' : l.rise;
+    const fade = up ? '' : l.fade;
     // The menu arrives as the page settles, leaves as soon as the veil starts coming back,
     // and stays while the mobile menu is open
     const arrived = (lift >= 0.85 && !(going === 'down' && !up)) || menuOpen();
     const fast = going === 'down';
     if (veilT !== drawn.veil) veil.style.transform = drawn.veil = veilT;
-    if (clearO !== drawn.clear) clear.style.opacity = drawn.clear = clearO;
+    if (l.clear !== drawn.clear) clear.style.opacity = drawn.clear = l.clear;
     if (rise !== drawn.rise) lead.style.transform = drawn.rise = rise;
     if (fade !== drawn.fade) lead.style.opacity = drawn.fade = fade;
-    if (up !== drawn.lifted) { drawn.lifted = up; veil.classList.toggle('lifted', up); }
     if (fast !== drawn.fast) nav?.classList.toggle('leave-fast', drawn.fast = fast);
+    if (hold && going === 'up') return;
+    if (up !== drawn.lifted) { drawn.lifted = up; veil.classList.toggle('lifted', up); }
     if (arrived !== drawn.arrived) nav?.classList.toggle('arrived', drawn.arrived = arrived);
   };
 
   const rest = () => {
     target = null;
-    speed = 0;
     // Remembered for Back and Forward, so returning to Home lands where you left it
     history.replaceState({ ...(history.state || {}), veil: lift >= 1 ? 'lifted' : null }, '');
     if (lift >= 1) window.dispatchEvent(new Event('veillift'));
     else window.scrollTo(0, 0);
   };
 
-  const settleTo = (to: 0 | 1, startSpeed = 0) => {
-    cancelAnimationFrame(raf);
+  // Movements: a spring (quick start, gentle landing, no bounce), worked out in advance and handed to
+  // the browser as animations. The browser then plays them on its own, at the screen's full frame
+  // rate, with no work for the page while they run. Fingers and wheels that hold the veil set it
+  // directly instead (below); a movement takes over from wherever they let go, at their speed.
+  let anims: Animation[] = [];
+  let timers: number[] = [];
+  let from = 0;
+  let startSpeed = 0;
+  let started = 0;
+  let length = 0;  // seconds
+  const springAt = (s: number, to: number) => {
+    const d = from - to;
+    return to + (d + (startSpeed + SPRING * d) * s) * Math.exp(-SPRING * s);
+  };
+  // Where a running movement is right now, so a new gesture can take hold of it there
+  const stopMovement = () => {
+    if (!anims.length || target === null) return;
+    const s = Math.min((performance.now() - started) / 1000, length);
+    lift = Math.min(Math.max(springAt(s, target), 0), 1);
+    anims.forEach((a) => a.cancel());
+    timers.forEach(clearTimeout);
+    anims = [];
+    timers = [];
+    target = null;
+    veil.classList.remove('moving');
+    paint();
+  };
+
+  const settleTo = (to: 0 | 1, speedNow = 0) => {
+    stopMovement();
     target = to;
     going = to === 1 ? 'up' : 'down';
-    speed = startSpeed;
-    if (still) { lift = to; paint(); rest(); return; }
-    let last = performance.now();
-    const step = (now: number) => {
-      const dt = Math.min(Math.max((now - last) / 1000, 0), 1 / 20);
-      last = now;
-      speed += (-SPRING * SPRING * (lift - to) - 2 * SPRING * speed) * dt;
-      lift += speed * dt;
-      // At rest once within a pixel and barely moving, or on reaching the end it heads for
-      const done = (Math.abs(lift - to) * H() < 1 && Math.abs(speed) * H() < 30) || (to === 1 ? lift >= 1 : lift <= 0);
-      lift = done ? to : lift;
+    if (still || Math.abs(lift - to) * H() < 1) { lift = to; paint(); rest(); return; }
+    from = lift;
+    startSpeed = speedNow;
+    // The path: until it is within half a pixel of the end, or reaches the end it heads for
+    let s = 0;
+    for (; s < 2; s += 1 / 240) {
+      const x = springAt(s, to);
+      if (Math.abs(x - to) * H() < 0.5 || (to === 1 ? x >= 1 : x <= 0)) break;
+    }
+    length = s;
+    const n = Math.max(2, Math.min(72, Math.round(length * 60)));
+    const veilFrames: Keyframe[] = [];
+    const clearFrames: Keyframe[] = [];
+    const leadFrames: Keyframe[] = [];
+    let arriveAt = -1;
+    for (let i = 0; i <= n; i++) {
+      const t = (length * i) / n;
+      const x = i === n ? to : Math.min(Math.max(springAt(t, to), 0), 1);
+      const l = look(x);
+      const offset = i / n;
+      veilFrames.push({ transform: l.veil, offset });
+      clearFrames.push({ opacity: l.clear, offset });
+      leadFrames.push({ transform: l.rise, opacity: l.fade, offset });
+      if (arriveAt < 0 && to === 1 && x >= 0.85) arriveAt = t;
+    }
+    const timing: KeyframeAnimationOptions = { duration: length * 1000, easing: 'linear' };
+    started = performance.now();
+    anims = [veil.animate(veilFrames, timing), clear.animate(clearFrames, timing), lead.animate(leadFrames, timing)];
+    veil.classList.add('moving');
+    // Underneath the animations, the page already holds its final state, so the end is seamless
+    lift = to;
+    paint(true);
+    if (arriveAt >= 0) timers.push(window.setTimeout(() => { if (target === 1) nav?.classList.toggle('arrived', drawn.arrived = true); }, arriveAt * 1000));
+    anims[0].onfinish = () => {
+      if (target !== to) return;
+      veil.classList.remove('moving');
+      anims.forEach((a) => a.cancel());
+      timers.forEach(clearTimeout);
+      anims = [];
+      timers = [];
       paint();
-      if (done) rest(); else raf = requestAnimationFrame(step);
+      rest();
     };
-    raf = requestAnimationFrame(step);
   };
 
   // A new gesture in the last few pixels of a movement finishes it at once, so the page under it
   // responds straight away instead of waiting for the spring's long, invisible tail
   const finishIfNearlyThere = () => {
-    if (target !== null && Math.abs(lift - target) < 0.04) { cancelAnimationFrame(raf); lift = target; paint(); rest(); }
+    if (target === null || !anims.length) return;
+    const to = target;
+    const s = (performance.now() - started) / 1000;
+    if (Math.abs(springAt(Math.min(s, length), to) - to) < 0.04) {
+      veil.classList.remove('moving');
+      anims.forEach((a) => a.cancel());
+      timers.forEach(clearTimeout);
+      anims = [];
+      timers = [];
+      lift = to;
+      paint();
+      rest();
+    }
   };
 
   // Touch: drag the veil directly
@@ -374,7 +458,7 @@ const jsonLd = {
     fingerSpeed = 0;
     scrollAtStart = window.scrollY;
     // On the veil, or catching it mid-movement: take hold of it where it is
-    if (lift < 1 || target !== null) { cancelAnimationFrame(raf); target = null; touchMode = 'drag'; touchFrom = lift; }
+    if (lift < 1 || target !== null) { stopMovement(); target = null; touchMode = 'drag'; touchFrom = lift; }
   }, { passive: true });
   window.addEventListener('touchmove', (e) => {
     if (touchMode === 'native' || e.touches.length > 1) return;
@@ -435,7 +519,7 @@ const jsonLd = {
     wheelSum += dy;
     const along = wheelFrom === 0 ? wheelSum : -wheelSum;
     if (along >= WHEEL_COMMIT) { wheelMode = 'absorb'; settleTo(wheelFrom === 0 ? 1 : 0); return; }
-    cancelAnimationFrame(raf);
+    stopMovement();
     const give = (Math.max(along, 0) * 0.5) / H();
     lift = wheelFrom === 0 ? give : 1 - give;
     going = wheelFrom === 0 ? 'up' : 'down';
